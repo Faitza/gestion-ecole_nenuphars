@@ -15,13 +15,14 @@
             <span>Les Cayes</span>
         </div>
         <nav>
-            <a href="{% url 'core:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Tableau de Bord</a>
-            <a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in request.resolver_match.url_name %}active{% endif %}">🧒 Élèves</a>
-            <a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in request.resolver_match.url_name %}active{% endif %}">🏷️ Classes</a>
-            <a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in request.resolver_match.url_name %}active{% endif %}">💰 Paiements</a>
-            <a href="{% url 'core:note_liste' %}" style="--accent:#8b5cf6" class="{% if 'note' in request.resolver_match.url_name %}active{% endif %}">📝 Notes</a>
-            <a href="{% url 'core:professeur_liste' %}" style="--accent:#ef4444" class="{% if 'professeur' in request.resolver_match.url_name %}active{% endif %}">👨‍🏫 Professeurs</a>
-            <a href="{% url 'core:employe_liste' %}" style="--accent:#f59e0b" class="{% if 'employe' in request.resolver_match.url_name %}active{% endif %}">👔 Employés</a>
+            {% if utilise_la_gestion %}<a href="{% url 'core:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Tableau de Bord</a>{% endif %}
+            {% if acces.eleves.lire %}<a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in request.resolver_match.url_name %}active{% endif %}">🧒 Élèves</a>{% endif %}
+            {% if acces.classes.lire %}<a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in request.resolver_match.url_name %}active{% endif %}">🏷️ Classes</a>{% endif %}
+            {% if acces.paiements.lire %}<a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in request.resolver_match.url_name %}active{% endif %}">💰 Paiements</a>{% endif %}
+            {% if acces.notes.lire %}<a href="{% url 'core:note_liste' %}" style="--accent:#8b5cf6" class="{% if 'note' in request.resolver_match.url_name %}active{% endif %}">📝 Notes</a>{% endif %}
+            {% if acces.professeurs.lire %}<a href="{% url 'core:professeur_liste' %}" style="--accent:#ef4444" class="{% if 'professeur' in request.resolver_match.url_name %}active{% endif %}">👨‍🏫 Professeurs</a>{% endif %}
+            {% if acces.employes.lire %}<a href="{% url 'core:employe_liste' %}" style="--accent:#f59e0b" class="{% if 'employe' in request.resolver_match.url_name %}active{% endif %}">👔 Employés</a>{% endif %}
+            <a href="{% url 'core:mot_de_passe' %}" class="{% if request.resolver_match.url_name == 'mot_de_passe' %}active{% endif %}">🔑 Mot de passe</a>
             <form method="post" action="{% url 'core:logout' %}">
                 {% csrf_token %}
                 <a href="#" class="logout" onclick="this.closest('form').submit(); return false;">🚪 Déconnexion</a>

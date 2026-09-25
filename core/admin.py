@@ -1,18 +1,30 @@
 # core/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Utilisateur, Classe, Eleve, Professeur, Employe, Paiement, Note
+from .models import Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note
 
 
 @admin.register(Utilisateur)
 class UtilisateurAdmin(UserAdmin):
-    pass
+    list_display = ("username", "first_name", "last_name", "telephone", "email", "is_active")
+    search_fields = ("username", "first_name", "last_name", "email", "telephone")
+    fieldsets = UserAdmin.fieldsets + (
+        ("École", {"fields": ("telephone", "doit_changer_mot_de_passe")}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ("École", {"fields": ("telephone", "doit_changer_mot_de_passe")}),
+    )
+
+
+@admin.register(Section)
+class SectionAdmin(admin.ModelAdmin):
+    list_display = ("nom", "ordre")
 
 
 @admin.register(Classe)
 class ClasseAdmin(admin.ModelAdmin):
-    list_display = ("nom", "cycle", "annee_scolaire")
-    list_filter = ("cycle", "annee_scolaire")
+    list_display = ("nom", "section", "cycle", "annee_scolaire")
+    list_filter = ("section", "cycle", "annee_scolaire")
 
 
 @admin.register(Eleve)
@@ -24,16 +36,16 @@ class EleveAdmin(admin.ModelAdmin):
 
 @admin.register(Professeur)
 class ProfesseurAdmin(admin.ModelAdmin):
-    list_display = ("nom", "prenom", "matiere_principale")
-    list_filter = ("matiere_principale",)
+    list_display = ("nom", "prenom", "section", "matiere_principale", "utilisateur")
+    list_filter = ("section", "matiere_principale")
     search_fields = ("nom", "prenom", "email")
     filter_horizontal = ("classes",)
 
 
 @admin.register(Employe)
 class EmployeAdmin(admin.ModelAdmin):
-    list_display = ("nom", "prenom", "poste", "salaire")
-    list_filter = ("poste",)
+    list_display = ("nom", "prenom", "poste", "section", "utilisateur")
+    list_filter = ("poste", "section")
     search_fields = ("nom", "prenom", "email")
 
 

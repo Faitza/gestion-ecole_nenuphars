@@ -35,6 +35,36 @@ CLASSES_PAR_DEFAUT = [
 ]
 
 # ========================================
+# SECTIONS DE L'ÉCOLE (organisation interne, chacune avec sa direction)
+# Elles ne suivent pas les cycles officiels : 7ème-9ème AF sont en
+# « Fondamentale » mais dépendent du directeur pédagogique du secondaire.
+# ========================================
+SECTION_KINDERGARTEN = "Kindergarten"
+SECTION_PRIMAIRE = "Primaire"
+SECTION_SECONDAIRE = "Secondaire"
+
+SECTIONS_PAR_DEFAUT = [SECTION_KINDERGARTEN, SECTION_PRIMAIRE, SECTION_SECONDAIRE]
+
+SECTION_PAR_CLASSE = {
+    "1ère Année Kinder": SECTION_KINDERGARTEN,
+    "2ème Année Kinder": SECTION_KINDERGARTEN,
+    "3ème Année Kinder": SECTION_KINDERGARTEN,
+    "1ère AF": SECTION_PRIMAIRE,
+    "2ème AF": SECTION_PRIMAIRE,
+    "3ème AF": SECTION_PRIMAIRE,
+    "4ème AF": SECTION_PRIMAIRE,
+    "5ème AF": SECTION_PRIMAIRE,
+    "6ème AF": SECTION_PRIMAIRE,
+    "7ème AF": SECTION_SECONDAIRE,
+    "8ème AF": SECTION_SECONDAIRE,
+    "9ème AF": SECTION_SECONDAIRE,
+    "NSI": SECTION_SECONDAIRE,
+    "NSII": SECTION_SECONDAIRE,
+    "NSIII": SECTION_SECONDAIRE,
+    "NSIV": SECTION_SECONDAIRE,
+}
+
+# ========================================
 # MATIÈRES (utilisées pour les professeurs et les notes)
 # ========================================
 MATIERES = [
@@ -48,9 +78,17 @@ MATIERES_CHOICES = _vers_choix(MATIERES)
 # ========================================
 # POSTES DES EMPLOYÉS (personnel non-enseignant)
 # ========================================
+POSTE_DIRECTION_GENERALE = "Directeur(trice) en chef"
+POSTES_DIRECTION_SECTION = [
+    "Directeur(trice) du Kindergarten",
+    "Directeur(trice) du primaire",
+    "Directeur(trice) pédagogique du secondaire",
+]
+
 POSTES_EMPLOYES = [
-    "Directeur(trice)", "Directeur(trice) Adjoint(e)", "Secrétaire",
-    "Comptable", "Caissier(ère)", "Surveillant(e)", "Bibliothécaire",
+    POSTE_DIRECTION_GENERALE, *POSTES_DIRECTION_SECTION,
+    "Directeur(trice) Adjoint(e)", "Secrétaire",
+    "Comptable", "Caissier(ère)", "Surveillant(e)", "Censeur", "Bibliothécaire",
     "Agent d'Entretien", "Gardien", "Infirmier(ère)", "Cuisinier(ère)",
     "Chauffeur", "Technicien Informatique", "Autre",
 ]

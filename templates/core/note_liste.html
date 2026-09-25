@@ -4,23 +4,23 @@
 {% block header_title %}📝 GESTION DES NOTES{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    <a href="{% url 'core:note_creer' %}" class="btn btn-add">➕ Ajouter une Note</a>
+    {% if acces.notes.ecrire %}<a href="{% url 'core:note_creer' %}" class="btn btn-add">➕ Ajouter une Note</a>{% endif %}
     <form method="get">
         <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="🔍 Rechercher par élève ou matière...">
     </form>
 </div>
 <div class="table-wrapper">
 <table>
-    <thead><tr><th>Élève</th><th>Professeur</th><th>Matière</th><th>Note</th><th>Période</th><th>Année</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Élève</th><th>Professeur</th><th>Matière</th><th>Note</th><th>Période</th><th>Année</th>{% if acces.notes.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
     <tbody>
         {% for n in notes %}
         <tr>
             <td>{{ n.eleve }}</td><td>{{ n.professeur|default:"—" }}</td><td>{{ n.matiere }}</td>
             <td>{{ n.note }}/100</td><td>{{ n.periode }}</td><td>{{ n.annee_scolaire|default:"—" }}</td>
-            <td>
+            {% if acces.notes.ecrire %}<td>
                 <a href="{% url 'core:note_modifier' n.pk %}" class="btn-sm btn-edit">Modifier</a>
                 <a href="{% url 'core:note_supprimer' n.pk %}" class="btn-sm btn-delete">Supprimer</a>
-            </td>
+            </td>{% endif %}
         </tr>
         {% empty %}<tr><td colspan="7">Aucune note trouvée.</td></tr>{% endfor %}
     </tbody>

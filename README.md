@@ -11,24 +11,51 @@ python -m venv venv
 source venv/bin/activate        # Windows : venv\Scripts\activate
 pip install -r requirements.txt
 
-python manage.py migrate
+cp .env.example .env            # Windows : copy .env.example .env
+python manage.py migrate        # kreye tab yo + 3 seksyon yo + wòl yo
 python manage.py seed_data      # kreye tout klas yo + kont admin + kèk done egzanp
 python manage.py runserver
 ```
 
-Louvri http://127.0.0.1:8000/login/ → **admin / admin123**
+Louvri http://127.0.0.1:8000/connexion/ → **admin / admin123** (pou esè sèlman)
 
-⚠️ Chanje mo de pas admin default la anvan w mete sistèm nan an sèvis.
+⚠️ `seed_data` mache sèlman lè `DJANGO_DEBUG=1`. An pwodiksyon, kreye kont
+direktris an chèf la ak `python manage.py createsuperuser`.
+
+## Paramèt (fichye `.env`)
+
+Pa gen okenn sekrè nan kòd la ankò. Tout paramèt yo nan fichye `.env`
+(li pa janm monte sou GitHub). Gade `.env.example` pou lis la.
+
+- **Devlopman**: `DJANGO_DEBUG=1` ak `DB_ENGINE=sqlite` (pa gen anyen pou enstale).
+- **Pwodiksyon**: `DJANGO_DEBUG=0`, yon `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`,
+  epi `DB_ENGINE=postgresql` ak `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`.
+
+## Seksyon ak wòl
+
+- 3 seksyon: **Kindergarten** (1ère–3ème Année Kinder), **Primaire** (1ère–6ème AF),
+  **Secondaire** (7ème AF–NSIV, yon sèl direktè pedagojik).
+- Wòl yo se gwoup Django: Parent, Professeur, Surveillant, Censeur, Secrétariat,
+  Caisse, Direction de section, Directrice en chef. Dwa chak wòl nan `core/roles.py`,
+  menm jan ak tablo « Droits d'accès » nan kaye chaj la.
+- Wòl yon anplwaye swiv pòs li: lè w konekte yon kont ak fich anplwaye a
+  (chan « utilisateur »), kont lan jwenn wòl ki koresponn ak pòs la.
+  Direksyon seksyon, siveyan ak sansè wè sèlman seksyon ki sou fich yo.
+- Yon sèl paj koneksyon pou tout moun: telefòn, imèl oswa non itilizatè.
+  Yon kont ki gen « doit changer son mot de passe » dwe chanje modpas li anvan l fè lòt bagay.
 
 ## Estrikti pwojè a
 
 ```
 gestion_ecole/            → paramèt Django (settings.py, urls.py)
 core/
-    models.py             → Utilisateur, Classe, Eleve, Professeur, Employe, Paiement, Note
-    choices.py            → non lekòl la, tout klas yo (Kinder→NS4), matyè, pòs, tip peman
+    models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note
+    choices.py            → non lekòl la, tout klas yo (Kinder→NS4), seksyon, matyè, pòs, tip peman
+    roles.py              → wòl yo ak dwa chak wòl
+    backends.py           → koneksyon ak telefòn, imèl oswa non itilizatè
     forms.py              → fòm + validasyon
-    views.py              → login, dashboard, CRUD chak seksyon
+    views.py              → koneksyon, espas chak moun, dashboard, CRUD chak seksyon
+    tests.py              → tès otomatik (python manage.py test)
     admin.py              → jesyon done nan /admin/
     management/commands/seed_data.py → kreye tout klas yo + done egzanp
 templates/core/           → tout paj HTML

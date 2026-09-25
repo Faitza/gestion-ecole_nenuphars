@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block title %}Mon espace{% endblock %}
+{% block header_title %}👋 BIENVENUE{% endblock %}
+{% block content %}
+<div class="form-card">
+    {% if roles %}
+        <p>Vous êtes connecté(e) en tant que <strong>{{ roles|join:", " }}</strong>.</p>
+        <p>Votre espace est en préparation. Il sera ouvert dans une prochaine étape du projet.</p>
+    {% else %}
+        <p>Votre compte n'a pas encore de rôle dans l'école.</p>
+        <p>Adressez-vous au secrétariat ou à la direction pour qu'il soit activé.</p>
+    {% endif %}
+</div>
+{% endblock %}
