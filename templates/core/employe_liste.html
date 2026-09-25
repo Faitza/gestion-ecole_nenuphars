@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block title %}Employés{% endblock %}
+{% block header_color %}#f59e0b{% endblock %}
+{% block header_title %}👔 GESTION DES EMPLOYÉS{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <a href="{% url 'core:employe_creer' %}" class="btn btn-add">➕ Nouvel Employé</a>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Nom</th><th>Prénom</th><th>Poste</th><th>Salaire</th><th>Téléphone</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for emp in employes %}
+        <tr>
+            <td>{{ emp.nom }}</td><td>{{ emp.prenom }}</td><td>{{ emp.poste|default:"—" }}</td>
+            <td>{{ emp.salaire|default:"—" }}</td><td>{{ emp.telephone|default:"—" }}</td>
+            <td>
+                <a href="{% url 'core:employe_modifier' emp.pk %}" class="btn-sm btn-edit">Modifier</a>
+                <a href="{% url 'core:employe_supprimer' emp.pk %}" class="btn-sm btn-delete">Supprimer</a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="6">Aucun employé trouvé.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

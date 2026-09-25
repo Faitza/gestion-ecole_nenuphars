@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Élèves{% endblock %}
+{% block header_color %}#3b82f6{% endblock %}
+{% block header_title %}🧒 GESTION DES ÉLÈVES{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <a href="{% url 'core:eleve_creer' %}" class="btn btn-add">➕ Nouvel Élève</a>
+    <form method="get">
+        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="🔍 Rechercher par nom, prénom ou parent...">
+    </form>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Nom</th><th>Prénom</th><th>Classe</th><th>Parent/Tuteur</th><th>Tél. Parent</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for e in eleves %}
+        <tr>
+            <td>{{ e.nom }}</td><td>{{ e.prenom }}</td><td>{{ e.classe|default:"—" }}</td>
+            <td>{{ e.nom_parent_tuteur|default:"—" }}</td><td>{{ e.telephone_parent|default:"—" }}</td>
+            <td>
+                <a href="{% url 'core:eleve_modifier' e.pk %}" class="btn-sm btn-edit">Modifier</a>
+                <a href="{% url 'core:eleve_supprimer' e.pk %}" class="btn-sm btn-delete">Supprimer</a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="6">Aucun élève trouvé.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

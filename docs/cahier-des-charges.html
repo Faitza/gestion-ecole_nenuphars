@@ -1,0 +1,475 @@
+<title>Cahier des charges Nénuphars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+:root{
+  --navy:#1e3a8a; --navy-soft:#e3e9f7; --lily:#c2416d; --lily-soft:#fbe7ee;
+  --leaf:#2f7d5b; --leaf-soft:#e2f2ea; --amber:#b45309; --amber-soft:#fdf0dc;
+  --bg:#f5f6fa; --surface:#ffffff; --ink:#1b2333; --muted:#566079; --line:#dfe3ec;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --navy:#9db4f0; --navy-soft:#1c2744; --lily:#f08bab; --lily-soft:#3a1f2a;
+    --leaf:#7fd0a8; --leaf-soft:#18342a; --amber:#f2b563; --amber-soft:#3a2a14;
+    --bg:#11141c; --surface:#181c26; --ink:#e7eaf2; --muted:#a2aac0; --line:#2c3243;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --navy:#9db4f0; --navy-soft:#1c2744; --lily:#f08bab; --lily-soft:#3a1f2a;
+  --leaf:#7fd0a8; --leaf-soft:#18342a; --amber:#f2b563; --amber-soft:#3a2a14;
+  --bg:#11141c; --surface:#181c26; --ink:#e7eaf2; --muted:#a2aac0; --line:#2c3243;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;gap:48px}
+header.doc{max-width:980px;margin:0 auto;padding-block:48px 32px;border-bottom:1px solid var(--line);margin-bottom:40px}
+.eyebrow{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--lily);font-weight:700}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,5vw,52px);line-height:1.05;margin:.3em 0 .35em;text-wrap:balance;color:var(--navy)}
+.lead{font-size:19px;color:var(--muted);max-width:62ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:24px;font-size:14px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:14px}
+nav.toc ol{list-style:none;padding:0;margin:0;display:grid;gap:6px;counter-reset:s}
+nav.toc li{counter-increment:s}
+nav.toc a{color:var(--muted);text-decoration:none;display:flex;gap:8px}
+nav.toc a::before{content:counter(s);font-variant-numeric:tabular-nums;color:var(--lily);font-weight:700;min-width:1.4em}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink)}
+main{min-width:0}
+section{padding-block:8px 28px;counter-increment:sec}
+main{counter-reset:sec}
+h2{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15;margin:0 0 14px;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2::before{content:counter(sec);font-size:16px;color:var(--lily);font-variant-numeric:tabular-nums}
+h3{font-family:var(--display);font-weight:600;font-size:20px;margin:26px 0 8px;color:var(--navy)}
+p,li{max-width:68ch}
+ul,ol{padding-left:1.3em}
+li{margin-bottom:4px}
+code{font-size:.88em;background:var(--navy-soft);padding:1px 5px;border-radius:4px}
+.tbl{overflow-x:auto;margin:14px 0 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+table.wide{min-width:900px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.c{text-align:center}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.must{background:var(--lily-soft);color:var(--lily)}
+.should{background:var(--navy-soft);color:var(--navy)}
+.could{background:var(--leaf-soft);color:var(--leaf)}
+.exist{background:var(--amber-soft);color:var(--amber)}
+.yes{color:var(--leaf);font-weight:700}
+.no{color:var(--muted)}
+.note{border-left:3px solid var(--amber);background:var(--amber-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:15px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h4{margin:0 0 4px;font-size:16px}
+.card p{margin:0;font-size:15px;color:var(--muted)}
+.gantt{display:grid;grid-template-columns:minmax(170px,1.5fr) repeat(17,1fr);font-size:13px;min-width:780px}
+.gantt div{padding:7px 4px;border-bottom:1px solid var(--line)}
+.gantt .hd{color:var(--muted);font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.gantt .lbl{font-weight:600;font-size:14px;padding-left:12px}
+.bar{height:14px;border-radius:4px;align-self:center;padding:0!important;border:0!important;margin:0 1px}
+.b1{background:var(--muted)} .b2{background:var(--navy)} .b3{background:var(--lily)} .b4{background:var(--leaf)} .b5{background:var(--amber)}
+@media (max-width:760px){
+  .wrap{grid-template-columns:1fr;gap:8px}
+  nav.toc{position:static;border:1px solid var(--line);border-radius:8px;padding:12px 16px;background:var(--surface)}
+  nav.toc ol{grid-template-columns:1fr 1fr}
+}
+</style>
+
+<header class="doc">
+  <div class="eyebrow">Institution Les Nénuphars · Les Cayes</div>
+  <h1>Cahier des charges du site web de l’école</h1>
+  <p class="lead">Ce document décrit le site public, les espaces parents et professeurs, et l’évolution du back-office Django déjà commencé. Il sert de référence pour développer, tester et recetter le projet.</p>
+  <div class="meta">
+    <span><b>Version</b> 1.7 (brouillon)</span>
+    <span><b>Date</b> 25 septembre 2026</span>
+    <span><b>Nouveau</b> problématique (tout se fait à la main aujourd’hui), reprise des données papier, un seul directeur de la 7<sup>e</sup> AF à la NSIV</span>
+    <span><b>Technologie</b> Python · Django 6.1</span>
+    <span><b>Année scolaire cible</b> 2026-2027</span>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sommaire">
+  <ol>
+    <li><a href="#contexte">Contexte</a></li>
+    <li><a href="#problematique">Problématique</a></li>
+    <li><a href="#objectifs">Objectifs et périmètre</a></li>
+    <li><a href="#existant">Existant</a></li>
+    <li><a href="#publics">Organisation et rôles</a></li>
+    <li><a href="#fonctions">Fonctionnalités</a></li>
+    <li><a href="#droits">Droits d’accès</a></li>
+    <li><a href="#donnees">Modèle de données</a></li>
+    <li><a href="#technique">Contraintes techniques</a></li>
+    <li><a href="#qualite">Exigences de qualité</a></li>
+    <li><a href="#planning">Planning</a></li>
+    <li><a href="#recette">Livrables et recette</a></li>
+    <li><a href="#questions">Questions ouvertes</a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="contexte">
+  <h2>Contexte</h2>
+  <p>L’Institution Les Nénuphars, aux Cayes, accueille des élèves de la 1<sup>re</sup> année Kindergarten jusqu’à la NS4. L’école est organisée en trois sections, chacune avec sa direction, sous l’autorité d’une directrice en chef.</p>
+  <p>Aujourd’hui, toute la gestion de l’école se fait à la main, sur papier. Une première application Django de gestion (élèves, notes, paiements) a été commencée, mais l’école ne l’utilise pas encore. L’école veut un vrai site web qui remplace le papier, présente l’établissement au public et ouvre l’information aux familles et aux enseignants.</p>
+</section>
+
+<section id="problematique">
+  <h2>Problématique</h2>
+  <p>Tout se fait à la main dans l’établissement : fiches d’inscription, registres d’appel, carnets de notes, reçus de paiement, emplois du temps. Ce fonctionnement prend beaucoup de temps au personnel, et l’information est difficile à trouver, à vérifier et à partager.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Domaine</th><th>Aujourd’hui, à la main</th><th>Conséquences</th></tr></thead>
+    <tbody>
+      <tr><td>Inscriptions</td><td>Dossiers papier remplis au secrétariat</td><td>Les familles doivent se déplacer, parfois plusieurs fois. Un dossier incomplet ou égaré retarde l’inscription.</td></tr>
+      <tr><td>Notes et bulletins</td><td>Notes dans les carnets des professeurs, moyennes et rangs calculés à la main, bulletins recopiés</td><td>Beaucoup d’heures de travail à chaque trimestre, des erreurs de calcul ou de recopie possibles, des bulletins remis plus tard.</td></tr>
+      <tr><td>Paiements</td><td>Reçus écrits à la main, soldes suivis sur un registre</td><td>Il est difficile de savoir qui doit combien. Les impayés se découvrent tard, et un reçu perdu peut créer un litige avec la famille.</td></tr>
+      <tr><td>Absences et discipline</td><td>Appel sur un registre, incidents notés dans un cahier</td><td>Les parents apprennent une absence ou une sanction tard, ou pas du tout. Les retards répétés passent inaperçus.</td></tr>
+      <tr><td>Professeurs</td><td>Emplois du temps sur papier, présence peu suivie</td><td>On ne sait pas vite quelle classe est sans professeur, et les remplacements s’organisent dans l’urgence.</td></tr>
+      <tr><td>Direction</td><td>Chaque section tient ses propres cahiers</td><td>La directrice en chef doit demander l’information à chacun pour avoir une vue d’ensemble, et décide avec des chiffres incomplets ou anciens.</td></tr>
+      <tr><td>Parents</td><td>Informations données au secrétariat ou sur un papier remis à l’enfant</td><td>Pour connaître une note ou un solde, il faut se déplacer ou attendre le bulletin.</td></tr>
+      <tr><td>Archives</td><td>Documents papier rangés à l’école</td><td>Ils peuvent se perdre ou s’abîmer (humidité, inondation, incendie, cyclone), et il n’en existe aucune copie.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><b>Question centrale :</b> comment remplacer ce travail à la main par un seul outil, simple à utiliser au téléphone, qui donne à chacun la bonne information au bon moment, sans demander de gros moyens à l’école ?</div>
+</section>
+
+<section id="objectifs">
+  <h2>Objectifs et périmètre</h2>
+  <h3>Objectifs</h3>
+  <ul>
+    <li>Remplacer les fiches, registres et carnets papier par une seule base de données pour toute l’école, sauvegardée chaque jour.</li>
+    <li>Permettre la préinscription en ligne et réduire les déplacements au secrétariat.</li>
+    <li>Calculer automatiquement les moyennes, les rangs et les bulletins, à partir des notes saisies par les professeurs eux-mêmes.</li>
+    <li>Suivre les paiements et le solde de chaque élève, avec des reçus numérotés.</li>
+    <li>Prévenir les parents des absences, des retards et des sanctions.</li>
+    <li>Savoir à tout moment quelles classes ont cours, lesquelles sont libres et quels professeurs sont présents.</li>
+    <li>Donner à la directrice en chef une vue de toute l’école sans avoir à la demander à chaque section.</li>
+    <li>Donner aux parents un accès direct aux notes, aux bulletins trimestriels et à l’état des paiements.</li>
+    <li>Donner une image claire et moderne de l’école aux familles qui cherchent un établissement.</li>
+  </ul>
+  <h3>Hors périmètre (version 1)</h3>
+  <ul>
+    <li>Paiement en ligne automatisé (MonCash/NatCash par API). Les paiements restent saisis par la caisse.</li>
+    <li>Application mobile native. Le site sera adapté au téléphone.</li>
+    <li>Cahier de textes et messagerie interne.</li>
+  </ul>
+</section>
+
+<section id="existant">
+  <h2>Existant</h2>
+  <p>Le projet <code>gestion_ecole_nenuphars</code> contient déjà une application <code>core</code> fonctionnelle. L’école ne l’utilise pas encore et travaille toujours sur papier. Cette application sera conservée et étendue, pas réécrite.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Élément</th><th>Contenu actuel</th><th>À faire</th></tr></thead>
+    <tbody>
+      <tr><td>Modèles</td><td>Utilisateur, Classe, Eleve, Professeur, Employe, Paiement, Note</td><td>Ajouter parents, préinscriptions, actualités, frais</td></tr>
+      <tr><td>Écrans</td><td>Connexion, tableau de bord, listes et formulaires CRUD pour chaque section</td><td>Déplacer sous <code>/gestion/</code>, ajouter bulletins et reçus</td></tr>
+      <tr><td>Classes</td><td>16 classes, de 1<sup>re</sup> Année Kinder à NSIV, 3 cycles</td><td>Rattacher chaque classe à une section</td></tr>
+      <tr><td>Notes</td><td>Note sur 100, par matière, trimestre et année scolaire</td><td>Calcul des moyennes et du rang</td></tr>
+      <tr><td>Paiements</td><td>Montant en HTG, type, méthode (dont MonCash/NatCash), statut</td><td>Échéancier et solde par élève</td></tr>
+      <tr><td>Professeurs</td><td>Nom, prénom, e-mail, téléphone, matière principale, classes. Pas de compte ni d’horaires</td><td>Inscription par la secrétaire selon la section, compte, cours et horaires, présence et absences</td></tr>
+      <tr><td>Employés</td><td>Personnel non enseignant, 14 postes (directeur, secrétaire, surveillant, comptable…)</td><td>Ajouter Censeur et les trois directions de section, rattacher chaque fiche à une section</td></tr>
+      <tr><td>Accès</td><td>Un seul type de compte (staff)</td><td>Rôles distincts avec groupes Django, limités à leur section pour les directions</td></tr>
+      <tr><td>Connexion</td><td>Page « Connexion Administration » réservée au personnel, qui affiche le compte par défaut</td><td>Une page de connexion pour tous, qui envoie chacun vers son espace, et la création du compte parent</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">Le compte par défaut <code>admin / admin123</code> créé par <code>seed_data</code> doit être supprimé ou changé avant toute mise en ligne.</div>
+</section>
+
+<section id="publics">
+  <h2>Organisation et rôles</h2>
+  <p>Une directrice en chef dirige toute l’école et doit savoir tout ce qui s’y passe. En dessous, l’école est organisée en trois sections. Chaque section a sa propre direction, qui suit les classes, les professeurs et les bulletins de sa section seulement.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Section</th><th>Classes</th><th>Direction</th><th>Professeurs</th></tr></thead>
+    <tbody>
+      <tr><td>Kindergarten</td><td>1<sup>re</sup> à 3<sup>e</sup> Année Kinder</td><td>Directrice du Kindergarten</td><td>Deux maîtresses au plus par classe : une titulaire et une deuxième maîtresse</td></tr>
+      <tr><td>Primaire</td><td>1<sup>re</sup> à 6<sup>e</sup> AF</td><td>Directrice du primaire</td><td>Un seul professeur par classe, qui fait toutes les matières</td></tr>
+      <tr><td>Secondaire</td><td>7<sup>e</sup> AF à NSIV</td><td>Directeur pédagogique du secondaire</td><td>Un professeur par matière, avec plusieurs cours et plusieurs classes</td></tr>
+    </tbody>
+  </table></div>
+  <p>Les sections ne suivent pas le découpage officiel en cycles : la 7<sup>e</sup>, la 8<sup>e</sup> et la 9<sup>e</sup> AF appartiennent à l’école fondamentale, mais relèvent ici de la direction du secondaire. Le site garde les deux informations pour chaque classe.</p>
+
+  <h3>Rôles</h3>
+  <div class="grid2">
+    <div class="card"><h4>Visiteur</h4><p>Famille qui découvre l’école. Consulte les pages publiques et envoie une préinscription.</p></div>
+    <div class="card"><h4>Parent ou tuteur</h4><p>Suit un ou plusieurs enfants : notes, bulletins, paiements, annonces. Utilise surtout un téléphone.</p></div>
+    <div class="card"><h4>Professeur</h4><p>Se connecte avec le compte créé par la secrétaire. Consulte son emploi du temps, signale son arrivée et ses absences, reçoit les alertes de fin de cours au secondaire. Voit ses classes et ses élèves, saisit et corrige les notes de ses matières.</p></div>
+    <div class="card"><h4>Secrétariat</h4><p>Le lien entre les familles et l’école : suit les préinscriptions, inscrit les élèves acceptés, remet les codes d’accès aux parents, inscrit les professeurs, prépare les documents et publie les actualités. Voit notes et paiements sans les modifier.</p></div>
+    <div class="card"><h4>Caisse et comptabilité</h4><p>Enregistre les paiements, imprime les reçus, suit les impayés.</p></div>
+    <div class="card"><h4>Surveillant(e)</h4><p>Fait l’appel du matin sur son téléphone, note les absences et les retards, signale les incidents au censeur. Confirme l’arrivée des professeurs et surveille les classes sans professeur. Voit seulement sa section.</p></div>
+    <div class="card"><h4>Censeur</h4><p>Responsable de la discipline de sa section : justifie les absences, décide des sanctions, convoque les parents et donne l’appréciation de conduite du bulletin.</p></div>
+    <div class="card"><h4>Direction de section</h4><p>Directrice du Kindergarten, directrice du primaire, directeur pédagogique du secondaire. Chacun valide les cours des professeurs et organise les remplacements, suit les notes, valide les bulletins et voit les élèves et professeurs de sa section.</p></div>
+    <div class="card"><h4>Directrice en chef</h4><p>Dirige toute l’école et doit savoir tout ce qui s’y passe : elle voit toutes les sections, les classes en direct, le journal d’activité et les points à suivre, et gère le personnel, les frais et l’année scolaire.</p></div>
+    <div class="card"><h4>Autre personnel</h4><p>Entretien et autres postes sans rôle sur le site : enregistrés dans Employés, sans compte.</p></div>
+  </div>
+</section>
+
+<section id="fonctions">
+  <h2>Fonctionnalités</h2>
+  <p>Priorités : <span class="pill must">Indispensable</span> pour la mise en ligne, <span class="pill should">Important</span> juste après, <span class="pill could">Souhaitable</span> si le temps le permet, <span class="pill exist">Existe</span> déjà dans le code.</p>
+
+  <h3>A. Site public</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Page</th><th>Contenu</th><th>Priorité</th></tr></thead>
+    <tbody>
+      <tr><td>Accueil <code>/</code></td><td>Présentation courte, chiffres clés, niveaux, dernières actualités, bouton de préinscription</td><td><span class="pill must">Indispensable</span></td></tr>
+      <tr><td>L’école <code>/ecole/</code></td><td>Histoire, mot de la directrice en chef, valeurs, équipe, photos</td><td><span class="pill must">Indispensable</span></td></tr>
+      <tr><td>Niveaux <code>/niveaux/</code></td><td>Préscolaire, Fondamentale (1<sup>re</sup> à 9<sup>e</sup> AF), Nouveau Secondaire (NSI à NSIV), matières</td><td><span class="pill must">Indispensable</span></td></tr>
+      <tr><td>Admissions <code>/admissions/</code></td><td>Conditions, pièces à fournir, frais, calendrier, formulaire de préinscription</td><td><span class="pill must">Indispensable</span></td></tr>
+      <tr><td>Actualités <code>/actualites/</code></td><td>Annonces, rentrée, examens, fêtes, avec photo</td><td><span class="pill should">Important</span></td></tr>
+      <tr><td>Calendrier <code>/calendrier/</code></td><td>Rentrée, congés, examens trimestriels, réunions de parents</td><td><span class="pill should">Important</span></td></tr>
+      <tr><td>Contact <code>/contact/</code></td><td>Adresse, téléphones, WhatsApp, horaires, formulaire de message</td><td><span class="pill must">Indispensable</span></td></tr>
+      <tr><td>Galerie <code>/galerie/</code></td><td>Albums photo des activités</td><td><span class="pill could">Souhaitable</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>B. Préinscription et inscription</h3>
+  <ul>
+    <li>Formulaire : élève (nom, prénom, date de naissance, genre, classe demandée, école précédente), parent (nom, téléphone, e-mail, adresse), pièces jointes facultatives (acte de naissance, dernier bulletin). <span class="pill must">Indispensable</span></li>
+    <li>Accusé de réception à l’écran avec un numéro de dossier. <span class="pill must">Indispensable</span></li>
+    <li>Suivi de chaque demande par étape (reçue, chez la direction, acceptée, refusée, inscrite), et inscription d’une demande acceptée en un clic. <span class="pill must">Indispensable</span></li>
+    <li>Notification par e-mail ou SMS au parent quand l’étape change. <span class="pill could">Souhaitable</span></li>
+  </ul>
+  <p>Parcours d’un nouvel élève :</p>
+  <ol>
+    <li>La famille remplit la préinscription en ligne, ou au secrétariat qui la saisit pour elle.</li>
+    <li>Le secrétariat vérifie le dossier et fixe un rendez-vous avec la famille.</li>
+    <li>La direction de la section accepte ou refuse la demande.</li>
+    <li>Le secrétariat finalise l’inscription : fiche élève, classe et code d’accès pour le compte parent. La famille règle les frais d’inscription à la caisse.</li>
+    <li>Le parent crée son compte sur le site avec ce code.</li>
+  </ol>
+
+  <h3>C. Connexion et comptes <code>/connexion/</code> <code>/inscription/</code></h3>
+  <ul>
+    <li>Une seule page de connexion pour tout le monde, avec le téléphone ou l’e-mail et un mot de passe. Après connexion, chacun arrive sur son espace selon son rôle. <span class="pill must">Indispensable</span></li>
+    <li>Création du compte parent avec le code d’accès remis par le secrétariat et le téléphone donné à l’inscription. Le compte est relié tout seul aux enfants de la famille. <span class="pill must">Indispensable</span></li>
+    <li>Pas d’inscription libre : sans code, personne ne peut créer de compte ni voir les données d’un élève. <span class="pill must">Indispensable</span></li>
+    <li>Le professeur n’a pas de compte à créer : la secrétaire l’inscrit (voir F) et le site crée son compte, avec son téléphone comme identifiant et un mot de passe provisoire imprimé, à changer à la première connexion. Comptes du personnel (directions, surveillants, censeur, caisse, secrétariat) créés par la directrice en chef. <span class="pill must">Indispensable</span></li>
+    <li>Mot de passe oublié : code envoyé par SMS ou e-mail, ou réinitialisation par le secrétariat. <span class="pill should">Important</span></li>
+  </ul>
+
+  <h3>D. Espace parents <code>/parents/</code></h3>
+  <ul>
+    <li>Accès avec le compte parent créé grâce au code d’accès (voir C). <span class="pill must">Indispensable</span></li>
+    <li>Choix de l’enfant quand la famille en a plusieurs. <span class="pill must">Indispensable</span></li>
+    <li>Notes par matière et par trimestre, moyenne générale. <span class="pill must">Indispensable</span></li>
+    <li>Bulletin trimestriel en PDF, visible une fois validé par la direction de la section. <span class="pill should">Important</span></li>
+    <li>Paiements effectués, montant dû, solde en HTG, reçus téléchargeables. <span class="pill must">Indispensable</span></li>
+    <li>Absences, retards et sanctions de l’enfant, avec les convocations éventuelles. <span class="pill must">Indispensable</span></li>
+    <li>Annonces réservées aux parents. <span class="pill should">Important</span></li>
+  </ul>
+
+  <h3>E. Espace professeurs <code>/professeurs/</code></h3>
+  <ul>
+    <li>Page d’accueil « Ma journée » : cours du jour, qui prend la suite, présence et alertes (voir F). <span class="pill must">Indispensable</span></li>
+    <li>Liste de ses classes et de ses élèves, tirée de ses cours validés. <span class="pill must">Indispensable</span></li>
+    <li>Saisie des notes en grille : une ligne par élève, pour une matière et un trimestre choisis. <span class="pill must">Indispensable</span></li>
+    <li>Modification possible jusqu’à la clôture du trimestre par la direction de la section. <span class="pill should">Important</span></li>
+    <li>Export de la liste de classe en PDF ou Excel. <span class="pill could">Souhaitable</span></li>
+  </ul>
+
+  <h3>F. Emploi du temps et présence des professeurs <code>/professeurs/</code> <code>/vie-scolaire/classes/</code></h3>
+  <ul>
+    <li>Inscription du professeur par la secrétaire. Informations communes : nom, prénom, date de naissance, téléphone (qui sert d’identifiant), e-mail, adresse, diplôme, date d’arrivée. La secrétaire choisit d’abord la section, et la suite du formulaire change : <span class="pill must">Indispensable</span>
+      <ul>
+        <li><b>Kindergarten</b> : une classe et un rôle, titulaire ou deuxième maîtresse. Deux maîtresses au plus par classe, dont une seule titulaire.</li>
+        <li><b>Primaire</b> : une seule classe, pour toute la journée et toutes les matières. Un seul professeur par classe : si la classe en a déjà un, la secrétaire doit confirmer le remplacement.</li>
+        <li><b>Secondaire (7ème AF à NSIV)</b> : une ligne par cours (matière, classe, jour, heure). Le nombre de cours, de classes et d’heures par semaine se calcule tout seul.</li>
+      </ul>
+    </li>
+    <li>Contrôle à la saisie au secondaire : un créneau déjà pris dans une classe, ou deux cours du même professeur à la même heure, sont refusés avec un message clair. <span class="pill must">Indispensable</span></li>
+    <li>Horaires de chaque section (heures de cours, récréation) réglés par la direction de la section. <span class="pill must">Indispensable</span></li>
+    <li>Validation des cours par la direction de la section, puis publication de l’emploi du temps du professeur (jour et semaine) et de chaque classe. Un professeur qui enseigne dans deux sections est validé par chacune pour ses cours. <span class="pill must">Indispensable</span></li>
+    <li>Arrivée : le professeur la signale sur son téléphone et le surveillant la confirme à l’entrée. Variante possible : un code QR affiché à l’entrée. <span class="pill must">Indispensable</span></li>
+    <li>Absence déclarée à l’avance par le professeur, avec le motif et les cours concernés. La direction de la section prévoit un remplaçant ou une étude surveillée. Au Kindergarten, si une des deux maîtresses est absente, l’autre garde la classe. <span class="pill must">Indispensable</span></li>
+    <li>Alerte « pas encore arrivé » 10 minutes après le début de son cours (au Kindergarten et au primaire, après l’heure d’entrée), envoyée au surveillant et à la direction de la section. <span class="pill must">Indispensable</span></li>
+    <li>Au secondaire, alerte de fin de cours 5 minutes avant la fin : le professeur voit qui prend la suite, le professeur suivant est prévenu, et si personne ne suit, le surveillant sait que la classe sera libre. Au Kindergarten et au primaire, la classe garde son professeur toute la journée, donc pas d’alerte de fin de cours. <span class="pill must">Indispensable</span></li>
+    <li>Page « Classes en direct » : pour chaque classe, le cours et le professeur du moment, le cours suivant, et les classes libres ou sans professeur. Mise à jour chaque minute. La directrice en chef voit toute l’école, les directions, le censeur et les surveillants leur section. <span class="pill must">Indispensable</span></li>
+    <li>Alertes dans le site (liste de notifications). <span class="pill must">Indispensable</span> Copie par SMS ou WhatsApp. <span class="pill could">Souhaitable</span></li>
+    <li>Emploi du temps de la classe visible dans l’espace parents. <span class="pill could">Souhaitable</span></li>
+    <li>Récapitulatif mensuel des présences et absences de chaque professeur. <span class="pill could">Souhaitable</span></li>
+  </ul>
+
+  <h3>G. Vie scolaire <code>/vie-scolaire/</code></h3>
+  <ul>
+    <li>Appel du matin par classe, sur téléphone : présent, en retard ou absent. Fait par le surveillant de la section. <span class="pill must">Indispensable</span></li>
+    <li>Signalement d’un incident par un surveillant ou un professeur, transmis au censeur. <span class="pill must">Indispensable</span></li>
+    <li>Le censeur justifie les absences, décide des sanctions et suit chaque incident jusqu’à sa clôture. <span class="pill must">Indispensable</span></li>
+    <li>Convocation des parents, imprimée ou envoyée par SMS ou WhatsApp. <span class="pill should">Important</span></li>
+    <li>Appréciation de conduite, nombre d’absences et de retards sur le bulletin trimestriel. <span class="pill should">Important</span></li>
+    <li>Statistiques d’assiduité par classe et par mois. <span class="pill could">Souhaitable</span></li>
+  </ul>
+
+  <h3>H. Gestion interne <code>/gestion/</code></h3>
+  <ul>
+    <li>Élèves, classes, professeurs, employés, paiements, notes (CRUD actuel). <span class="pill exist">Existe</span></li>
+    <li>Employés regroupe tout le personnel non enseignant : directions de section, censeurs, surveillants, secrétariat, caisse, entretien. Chaque fiche est rattachée à une section ou à toute l’école. <span class="pill exist">Existe</span> Les nouveaux postes et la section sont à ajouter. <span class="pill must">Indispensable</span></li>
+    <li>Écran du secrétariat : préinscriptions à traiter, inscriptions à finaliser, codes parents pas encore utilisés, demandes de documents et messages du site. <span class="pill must">Indispensable</span></li>
+    <li>Certificats de scolarité et autres documents imprimables. <span class="pill should">Important</span></li>
+    <li>Tableau de bord de chaque direction de section : ses classes, l’avancement de la saisie des notes, les bulletins à valider. <span class="pill must">Indispensable</span></li>
+    <li>Tableau de bord de la directrice en chef : effectifs et revenus <span class="pill exist">Existe</span>, plus les présences du jour, les professeurs absents, les points à suivre (impayés, notes manquantes, incidents, préinscriptions en attente) et le journal d’activité de toute l’école. <span class="pill must">Indispensable</span></li>
+    <li>Gestion des comptes parents et lien parent ↔ enfants. <span class="pill must">Indispensable</span></li>
+    <li>Grille des frais par classe et par année, échéancier mensuel, solde par élève. <span class="pill must">Indispensable</span></li>
+    <li>Reçu de paiement imprimable avec numéro unique. <span class="pill must">Indispensable</span></li>
+    <li>Calcul des moyennes, du rang et génération des bulletins PDF par classe, après validation par la direction de la section. <span class="pill should">Important</span></li>
+    <li>Publication des actualités et des événements du calendrier. <span class="pill should">Important</span></li>
+    <li>Export Excel des élèves, paiements et notes. <span class="pill could">Souhaitable</span></li>
+  </ul>
+
+  <h3>I. Administration Django <code>/admin/</code></h3>
+  <ul>
+    <li>Réservée à la directrice en chef et au technicien informatique, pour les corrections exceptionnelles et la gestion des utilisateurs et groupes. <span class="pill exist">Existe</span></li>
+    <li>Adresse de l’admin à changer en production et journal des modifications consulté en cas de litige. <span class="pill should">Important</span></li>
+  </ul>
+</section>
+
+<section id="droits">
+  <h2>Droits d’accès</h2>
+  <p>Les rôles sont des groupes Django. Chaque vue vérifie le groupe et filtre les données : un parent ne voit que ses enfants, un professeur que ses classes, un surveillant, un censeur ou une direction de section que sa section.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Rôle</th><th>Élèves, classes, préinscriptions</th><th>Notes</th><th>Bulletins</th><th>Absences et discipline</th><th>Emploi du temps et présence</th><th>Paiements</th><th>Employés</th><th>Actualités</th></tr></thead>
+    <tbody>
+      <tr><td><b>Parent</b></td><td>Ses enfants</td><td>Ses enfants</td><td>Ses enfants</td><td>Ses enfants</td><td>Emploi du temps de la classe</td><td>Ses enfants</td><td class="no">Non</td><td>Lecture</td></tr>
+      <tr><td><b>Professeur</b></td><td>Ses classes</td><td>Saisie, ses matières</td><td>Ses classes</td><td>Signaler, ses classes</td><td>Lecture de sa fiche, son arrivée, ses absences</td><td class="no">Non</td><td class="no">Non</td><td>Lecture</td></tr>
+      <tr><td><b>Surveillant(e)</b></td><td>Liste, sa section</td><td class="no">Non</td><td class="no">Non</td><td>Appel, retards, incidents</td><td>Confirme les arrivées, sa section</td><td class="no">Non</td><td class="no">Non</td><td>Lecture</td></tr>
+      <tr><td><b>Censeur</b></td><td>Sa section</td><td class="no">Non</td><td>Conduite, sa section</td><td class="yes">Tout, sa section</td><td>Lecture, sa section</td><td class="no">Non</td><td class="no">Non</td><td>Lecture</td></tr>
+      <tr><td><b>Secrétariat</b></td><td class="yes">Tout</td><td>Lecture</td><td>Lecture, impression</td><td>Lecture</td><td>Inscription des professeurs, lecture</td><td>Lecture</td><td class="no">Non</td><td class="yes">Tout</td></tr>
+      <tr><td><b>Caisse</b></td><td>Lecture</td><td class="no">Non</td><td class="no">Non</td><td class="no">Non</td><td class="no">Non</td><td class="yes">Tout</td><td>Lecture</td><td>Lecture</td></tr>
+      <tr><td><b>Direction de section</b></td><td>Sa section</td><td>Correction, sa section</td><td>Validation, sa section</td><td>Sa section</td><td>Validation, remplacements, sa section</td><td>Lecture, sa section</td><td>Sa section, sans salaires</td><td>Lecture</td></tr>
+      <tr><td><b>Directrice en chef</b></td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td></tr>
+    </tbody>
+  </table></div>
+  <p>« Tout » veut dire voir et modifier. Tout le monde voit les pages publiques et peut envoyer une préinscription. Les parents créent leur compte avec un code du secrétariat, les professeurs sont inscrits par la secrétaire, et les comptes du personnel sont créés par la directrice en chef. La directrice en chef voit en plus le journal d’activité de toute l’école. Le personnel d’entretien n’a pas de compte.</p>
+</section>
+
+<section id="donnees">
+  <h2>Modèle de données</h2>
+  <p>Les sept modèles existants restent en place. Les nouveaux modèles s’y rattachent :</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Nouveau modèle</th><th>Champs principaux</th><th>Relations</th></tr></thead>
+    <tbody>
+      <tr><td><code>Section</code></td><td>nom (Kindergarten, Primaire, Secondaire)</td><td>Direction (un Employe avec compte) ; chaque Classe et chaque Employe se rattache à une section</td></tr>
+      <tr><td><code>Parent</code></td><td>nom, prénom, téléphone, e-mail, adresse, code d’accès à usage unique</td><td>1-1 avec Utilisateur ; plusieurs-à-plusieurs avec Eleve</td></tr>
+      <tr><td><code>Preinscription</code></td><td>infos élève et parent, classe demandée, pièces jointes, étape (reçue, chez la direction, acceptée, refusée, inscrite), numéro de dossier</td><td>Peut créer un Eleve</td></tr>
+      <tr><td><code>AnneeScolaire</code></td><td>libellé (2026-2027), dates, active</td><td>Remplace le texte libre <code>annee_scolaire</code></td></tr>
+      <tr><td><code>Frais</code></td><td>type, montant HTG, nombre d’échéances</td><td>Classe, AnneeScolaire</td></tr>
+      <tr><td><code>Actualite</code> / <code>Evenement</code></td><td>titre, texte, image, date, public ou parents seulement</td><td>Auteur (Utilisateur)</td></tr>
+      <tr><td><code>Bulletin</code></td><td>trimestre, moyenne, rang, appréciation, conduite, absences et retards, validé, PDF</td><td>Eleve, AnneeScolaire</td></tr>
+      <tr><td><code>Absence</code></td><td>date, type (absence ou retard), minutes de retard, justifiée, motif</td><td>Eleve ; signalée par un surveillant ou un professeur</td></tr>
+      <tr><td><code>Incident</code></td><td>date, description, sanction, statut, parents convoqués</td><td>Eleve ; signalé par un Utilisateur, traité par le censeur</td></tr>
+      <tr><td><code>Creneau</code></td><td>numéro, heure de début, heure de fin, type (cours ou récréation)</td><td>Section</td></tr>
+      <tr><td><code>Affectation</code></td><td>rôle (titulaire, deuxième maîtresse), date de début, date de fin</td><td>Professeur, Classe ; au Kindergarten deux au plus par classe dont une titulaire, au primaire une seule par classe</td></tr>
+      <tr><td><code>Cours</code></td><td>matière, jour, statut (proposé, validé)</td><td>Professeur, Classe, Creneau, AnneeScolaire ; unique par classe, jour et créneau, et par professeur, jour et créneau</td></tr>
+      <tr><td><code>PresenceProfesseur</code></td><td>date, heure d’arrivée signalée, heure de confirmation, moyen (surveillant ou code QR)</td><td>Professeur ; confirmée par un surveillant</td></tr>
+      <tr><td><code>AbsenceProfesseur</code></td><td>date, motif, statut, solution prévue (remplaçant ou étude surveillée)</td><td>Professeur, cours concernés, remplaçant éventuel</td></tr>
+      <tr><td><code>Notification</code></td><td>type (fin de cours, pas arrivé, absence…), message, lien, lue, canal (site, SMS, WhatsApp)</td><td>Destinataire (Utilisateur)</td></tr>
+      <tr><td><code>Activite</code></td><td>date et heure, action, objet concerné</td><td>Auteur (Utilisateur) ; alimente le journal de la directrice en chef</td></tr>
+    </tbody>
+  </table></div>
+  <p>Des liens 1-1 vers Utilisateur sont ajoutés sur Professeur et sur Employe, pour que les professeurs, la directrice en chef, les directions de section, les surveillants, le censeur, le secrétariat et la caisse puissent se connecter. Le champ <code>Classe.cycle</code> reste pour le classement officiel, et le nouveau champ <code>Classe.section</code> suit l’organisation de l’école.</p>
+  <p>La liste des postes dans <code>choices.py</code> reçoit Censeur, Directeur(trice) du Kindergarten, Directeur(trice) du primaire et Directeur(trice) pédagogique du secondaire, et « Directeur(trice) » devient « Directeur(trice) en chef ». Le champ <code>Paiement.numero_recu</code> est ajouté pour les reçus.</p>
+  <p><code>Professeur</code> reçoit l’adresse, la date de naissance, le diplôme et sa section. Au Kindergarten et au primaire, le lien avec la classe passe par <code>Affectation</code> ; au secondaire, il est tiré des cours validés. La relation Professeur ↔ Classe existante est remplie à partir des deux.</p>
+</section>
+
+<section id="technique">
+  <h2>Contraintes techniques</h2>
+  <ul>
+    <li><b>Langage et framework</b> : Python 3.12 ou plus, Django 6.1 (version déjà fixée dans <code>requirements.txt</code>).</li>
+    <li><b>Organisation</b> : trois applications Django, <code>core</code> (existante, gestion), <code>site_public</code> et <code>portail</code> (parents et professeurs).</li>
+    <li><b>Interface</b> : gabarits Django rendus côté serveur, CSS existant réutilisé et étendu, un peu de JavaScript seulement là où c’est utile (grille de notes, inscription des professeurs, classes en direct). Pas de framework front lourd.</li>
+    <li><b>Base de données</b> : SQLite en développement, PostgreSQL en production.</li>
+    <li><b>Tâches planifiées</b> : une tâche lancée chaque minute (cron ou Celery Beat) envoie les alertes de fin de cours et de retard des professeurs. L’hébergeur doit le permettre, ce qui est le cas d’un VPS et reste à vérifier pour les offres gratuites.</li>
+    <li><b>Temps réel simple</b> : la page Classes en direct se recharge toute seule chaque minute (HTMX ou quelques lignes de JavaScript), sans serveur temps réel. Le fuseau <code>America/Port-au-Prince</code> est déjà réglé dans <code>settings.py</code>.</li>
+    <li><b>PDF</b> : bulletins et reçus générés avec WeasyPrint ou ReportLab.</li>
+    <li><b>Fichiers</b> : photos et pièces jointes dans <code>MEDIA_ROOT</code>, taille limitée à 5 Mo par fichier.</li>
+    <li><b>Hébergement</b> : PythonAnywhere, Render ou un VPS, avec nom de domaine et HTTPS.</li>
+    <li><b>Configuration</b> : <code>SECRET_KEY</code>, <code>DEBUG=False</code> et identifiants de base de données dans des variables d’environnement, jamais dans le code.</li>
+    <li><b>Langue</b> : interface en français. Le texte passe par le système de traduction de Django pour ajouter le créole plus tard.</li>
+  </ul>
+</section>
+
+<section id="qualite">
+  <h2>Exigences de qualité</h2>
+  <div class="grid2">
+    <div class="card"><h4>Téléphone d’abord</h4><p>Les pages publiques, l’espace parents, l’appel des surveillants et la présence des professeurs s’utilisent sur un écran de 360 px de large.</p></div>
+    <div class="card"><h4>Connexion lente</h4><p>Une page publique pèse moins de 1 Mo, images compressées. Chargement en moins de 3 s en 3G.</p></div>
+    <div class="card"><h4>Sécurité</h4><p>Mots de passe hachés par Django, protection CSRF, blocage après 5 échecs de connexion, sessions expirées après 30 min d’inactivité.</p></div>
+    <div class="card"><h4>Confidentialité</h4><p>Notes, paiements et coordonnées des mineurs ne sont jamais visibles sans connexion.</p></div>
+    <div class="card"><h4>Sauvegardes</h4><p>Sauvegarde automatique quotidienne de la base et des fichiers, conservée 30 jours.</p></div>
+    <div class="card"><h4>Tests</h4><p>Tests automatiques sur les droits d’accès, le calcul des moyennes, le solde des paiements, les règles par section (deux maîtresses, un professeur par classe, conflits d’horaire) et les alertes.</p></div>
+  </div>
+</section>
+
+<section id="planning">
+  <h2>Planning</h2>
+  <p>Estimation pour un développeur, en semaines, à partir de la validation de ce document.</p>
+  <div class="tbl" style="padding:8px 0">
+    <div class="gantt" role="img" aria-label="Planning sur 17 semaines, un lot par ligne">
+      <div class="hd"></div><div class="hd">S1</div><div class="hd">S2</div><div class="hd">S3</div><div class="hd">S4</div><div class="hd">S5</div><div class="hd">S6</div><div class="hd">S7</div><div class="hd">S8</div><div class="hd">S9</div><div class="hd">S10</div><div class="hd">S11</div><div class="hd">S12</div><div class="hd">S13</div><div class="hd">S14</div><div class="hd">S15</div><div class="hd">S16</div><div class="hd">S17</div>
+      <div class="lbl">0. Cadrage, maquette</div><div class="bar b1" style="grid-column:2 / span 1"></div>
+      <div class="lbl" style="grid-column:1">1. Site public</div><div class="bar b2" style="grid-column:3 / span 2"></div>
+      <div class="lbl" style="grid-column:1">2. Inscription, connexion, rôles, sections</div><div class="bar b2" style="grid-column:5 / span 2"></div>
+      <div class="lbl" style="grid-column:1">3. Espace professeurs</div><div class="bar b3" style="grid-column:7 / span 1"></div>
+      <div class="lbl" style="grid-column:1">4. Emploi du temps, présence, alertes</div><div class="bar b3" style="grid-column:8 / span 3"></div>
+      <div class="lbl" style="grid-column:1">5. Frais, reçus, espace parents</div><div class="bar b3" style="grid-column:11 / span 2"></div>
+      <div class="lbl" style="grid-column:1">6. Vie scolaire : appel, discipline</div><div class="bar b4" style="grid-column:13 / span 2"></div>
+      <div class="lbl" style="grid-column:1">7. Bulletins PDF, tableau de la directrice en chef</div><div class="bar b4" style="grid-column:15 / span 2"></div>
+      <div class="lbl" style="grid-column:1">8. Recette, mise en ligne, formation</div><div class="bar b5" style="grid-column:17 / span 2"></div>
+    </div>
+  </div>
+  <p>Environ 17 semaines au total, dont 3 pour l’emploi du temps et la présence des professeurs et 2 pour la vie scolaire. Une mise en ligne partielle (site public et préinscription) est possible dès la semaine 6.</p>
+</section>
+
+<section id="recette">
+  <h2>Livrables et recette</h2>
+  <h3>Livrables</h3>
+  <ul>
+    <li>Code source dans un dépôt Git, avec README d’installation et de déploiement.</li>
+    <li>Site en ligne sur le domaine de l’école, en HTTPS.</li>
+    <li>Reprise des données papier au démarrage : élèves, classes, parents, professeurs et soldes de l’année en cours, saisis à l’écran ou importés depuis un modèle Excel fourni.</li>
+    <li>Guide court pour chaque rôle (secrétariat, caisse, professeurs, parents).</li>
+    <li>Une séance de formation pour le personnel.</li>
+  </ul>
+  <h3>Critères de recette</h3>
+  <ul>
+    <li>Une famille envoie une préinscription depuis un téléphone et reçoit un numéro de dossier.</li>
+    <li>La direction de la section accepte la demande, le secrétariat inscrit l’élève, et l’élève apparaît dans sa classe.</li>
+    <li>Le parent crée son compte avec le code remis par le secrétariat et arrive dans l’espace parents. Sans code, aucun compte ne peut être créé.</li>
+    <li>Les élèves, les classes et les soldes tirés des registres papier sont dans le site avant l’ouverture aux parents.</li>
+    <li>Chaque utilisateur arrive sur son propre espace après la connexion.</li>
+    <li>Un professeur saisit les notes d’une classe entière en une seule page.</li>
+    <li>La secrétaire inscrit un professeur dans chaque section : une troisième maîtresse est refusée au Kindergarten, un deuxième professeur dans une classe du primaire demande de confirmer le remplacement, et un créneau déjà pris est refusé au secondaire. Le professeur se connecte avec son téléphone et son mot de passe provisoire, puis voit son emploi du temps une fois validé.</li>
+    <li>Au secondaire, cinq minutes avant la fin d’un cours, le professeur est prévenu et voit qui prend la suite. Un professeur qui n’a pas signalé son arrivée 10 minutes après le début de son cours déclenche une alerte, et la page Classes en direct montre la classe sans professeur.</li>
+    <li>Un parent voit les notes et le solde de son enfant, et ne peut pas voir ceux d’un autre élève.</li>
+    <li>La caisse enregistre un paiement et imprime un reçu numéroté.</li>
+    <li>La directrice du primaire ne voit que les classes de 1<sup>re</sup> à 6<sup>e</sup> AF, valide leurs bulletins, et les parents les voient ensuite.</li>
+    <li>Un surveillant fait l’appel d’une classe sur son téléphone, le censeur voit l’absence et la justifie, et le parent la voit dans son espace.</li>
+    <li>La directrice en chef retrouve dans son journal les notes saisies, les paiements et les incidents de la journée.</li>
+    <li>Les bulletins validés d’une classe se génèrent en PDF en un clic.</li>
+  </ul>
+</section>
+
+<section id="questions">
+  <h2>Questions ouvertes</h2>
+  <ul>
+    <li>Nom de domaine souhaité (par exemple <code>lesnenuphars.edu.ht</code>) et budget d’hébergement.</li>
+    <li>Logo, couleurs officielles et photos de l’école disponibles.</li>
+    <li>Grille des frais 2026-2027 par classe et nombre de versements.</li>
+    <li>Règles de calcul du bulletin : coefficients par matière, note de passage, rang affiché ou non.</li>
+    <li>Envoi de SMS ou WhatsApp souhaité, aux parents et aux professeurs (alertes de fin de cours), et quel fournisseur.</li>
+    <li>Qui fait l’appel du matin : le surveillant, ou le professeur de la première heure ?</li>
+    <li>Combien de surveillants et de censeurs par section, et quelles sanctions l’école applique-t-elle ?</li>
+    <li>Qui publie les actualités ?</li>
+    <li>Qui saisit les données papier au démarrage, et faut-il reprendre les notes et les paiements des années passées ?</li>
+    <li>Comment confirmer l’arrivée d’un professeur : par le surveillant à l’entrée (proposé), par un code QR affiché à l’entrée, ou sur simple déclaration du professeur ?</li>
+    <li>Horaires exacts de chaque section : début des cours, durée d’un cours, récréation. Le Kindergarten a-t-il un emploi du temps par matière ?</li>
+    <li>Les professeurs ont-ils tous un téléphone avec Internet à l’école (données mobiles ou Wi-Fi) ?</li>
+    <li>Tous les parents ont-ils un téléphone pour recevoir un SMS, ou faut-il prévoir la réinitialisation du mot de passe au secrétariat seulement ?</li>
+  </ul>
+</section>
+</main>
+</div>

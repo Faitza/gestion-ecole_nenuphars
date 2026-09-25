@@ -1,0 +1,1227 @@
+<title>Maquette Les Nénuphars</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --navy:#1e3a8a; --navy-2:#2b4fb3; --navy-soft:#e3e9f7; --lily:#c2416d; --lily-soft:#fbe7ee;
+  --leaf:#2f7d5b; --leaf-soft:#e2f2ea; --amber:#b45309; --amber-soft:#fdf0dc; --red:#b42318; --red-soft:#fde8e6;
+  --bg:#eef0f6; --surface:#ffffff; --surface-2:#f6f7fb; --ink:#1b2333; --muted:#566079; --line:#dfe3ec;
+  --chrome:#d9dde8; --on-navy:#ffffff; --bezel:#1b2333;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --navy:#8fa9ee; --navy-2:#aec0f3; --navy-soft:#1c2744; --lily:#f08bab; --lily-soft:#3a1f2a;
+    --leaf:#7fd0a8; --leaf-soft:#18342a; --amber:#f2b563; --amber-soft:#3a2a14; --red:#f59a8f; --red-soft:#3b1d1a;
+    --bg:#0e1118; --surface:#181c26; --surface-2:#1f2431; --ink:#e7eaf2; --muted:#a2aac0; --line:#2c3243;
+    --chrome:#262b38; --on-navy:#0e1118; --bezel:#05070b;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --navy:#8fa9ee; --navy-2:#aec0f3; --navy-soft:#1c2744; --lily:#f08bab; --lily-soft:#3a1f2a;
+  --leaf:#7fd0a8; --leaf-soft:#18342a; --amber:#f2b563; --amber-soft:#3a2a14; --red:#f59a8f; --red-soft:#3b1d1a;
+  --bg:#0e1118; --surface:#181c26; --surface-2:#1f2431; --ink:#e7eaf2; --muted:#a2aac0; --line:#2c3243;
+  --chrome:#262b38; --on-navy:#0e1118; --bezel:#05070b;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:28px 56px}
+.shell{max-width:1120px;margin:0 auto}
+.top{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px;margin-bottom:18px}
+.top h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,4vw,36px);margin:0;line-height:1.1;color:var(--navy)}
+.top p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.tabs{display:flex;flex-wrap:wrap;gap:10px 22px;margin-bottom:14px}
+.tgroup{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tlabel{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.tabs button{font:600 14px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:8px 14px;border-radius:99px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
+.tabs button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--lily);outline-offset:2px}
+.frame{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:0 10px 30px -18px rgba(20,30,60,.35)}
+.bar{display:flex;align-items:center;gap:10px;background:var(--chrome);padding:9px 14px}
+.dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:var(--line);display:block}
+.url{flex:1;background:var(--surface);border-radius:6px;padding:4px 10px;font-size:13px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tpl{font-size:12px;color:var(--muted);white-space:nowrap}
+.screen{min-height:520px}
+.caption{margin:10px 2px 0;color:var(--muted);font-size:14px}
+.caption b{color:var(--ink)}
+
+/* ---- public site ---- */
+.pnav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 20px;padding:14px 28px;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;color:var(--navy);font-size:18px;line-height:1}
+.logo small{display:block;font-family:var(--body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.pnav nav{display:flex;flex-wrap:wrap;gap:4px 18px;font-weight:600;font-size:14px}
+.pnav nav a{color:var(--ink);text-decoration:none}
+.pnav nav a.on{color:var(--lily)}
+.btn{display:inline-block;font:700 14px var(--body);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;text-decoration:none}
+.btn-lily{background:var(--lily);color:#fff}
+.btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+.btn-navy{background:var(--navy);color:var(--on-navy)}
+.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:32px;padding:44px 28px 36px;align-items:center}
+.hero .kick{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lily)}
+.hero h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,4.4vw,48px);line-height:1.04;margin:10px 0 14px;text-wrap:balance}
+.hero h2 em{font-style:normal;color:var(--navy)}
+.hero p{color:var(--muted);font-size:17px;max-width:46ch;margin:0 0 20px}
+.hero .cta{display:flex;flex-wrap:wrap;gap:10px}
+.pond{position:relative;aspect-ratio:5/4;max-width:100%;border-radius:18px;background:
+  radial-gradient(circle at 30% 35%,var(--leaf-soft) 0 18%,transparent 19%),
+  radial-gradient(circle at 70% 62%,var(--leaf-soft) 0 22%,transparent 23%),
+  radial-gradient(circle at 78% 22%,var(--leaf-soft) 0 11%,transparent 12%),
+  var(--navy-soft);overflow:hidden}
+.pond canvas{position:absolute;inset:0;width:100%;height:100%}
+.pond .tag{position:absolute;left:16px;bottom:16px;background:var(--surface);border-radius:10px;padding:10px 14px;font-size:13px;box-shadow:0 6px 20px -10px rgba(0,0,0,.3)}
+.pond .tag b{display:block;font-family:var(--display);font-size:20px;color:var(--navy)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);border-block:1px solid var(--line);background:var(--surface-2)}
+.facts div{padding:16px 28px}
+.facts b{display:block;font-family:var(--display);font-size:26px;color:var(--navy);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--muted)}
+.cycles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:28px}
+.cycle{border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.cycle .lv{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.cycle h3{font-family:var(--display);font-size:20px;margin:4px 0 6px}
+.cycle p{margin:0;color:var(--muted);font-size:14px}
+.c1 .lv{color:var(--lily)}.c2 .lv{color:var(--navy)}.c3 .lv{color:var(--leaf)}
+.news{padding:0 28px 30px}
+.news h3{font-family:var(--display);font-size:20px;margin:0 0 10px}
+.newsrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.newsrow article{font-size:14px}
+.newsrow time{font-size:12px;color:var(--lily);font-weight:700}
+.newsrow h4{margin:2px 0 4px;font-size:15px}
+.newsrow p{margin:0;color:var(--muted)}
+
+/* ---- form ---- */
+.split{display:grid;grid-template-columns:280px 1fr;gap:0}
+.aside{background:var(--navy-soft);padding:26px 24px}
+.aside h3{font-family:var(--display);font-size:22px;margin:0 0 8px;color:var(--navy)}
+.aside ol{padding-left:1.1em;margin:0 0 18px;color:var(--ink);font-size:14px}
+.aside li{margin-bottom:6px}
+.aside .fees{font-size:13px;background:var(--surface);border-radius:8px;padding:10px 12px}
+.aside .fees div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-variant-numeric:tabular-nums}
+.formz{padding:26px 28px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;font-size:13px;font-weight:700}
+.steps span{padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.steps span.on{background:var(--lily-soft);color:var(--lily)}
+fieldset{border:0;padding:0;margin:0 0 18px}
+legend{font-family:var(--display);font-weight:600;font-size:17px;margin-bottom:10px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+label{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+input,select{font:15px var(--body);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
+.drop{grid-column:1/-1;border:1.5px dashed var(--line);border-radius:8px;padding:14px;text-align:center;color:var(--muted);font-size:14px}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
+.actions small{color:var(--muted)}
+
+/* ---- app layout (parents / profs / gestion) ---- */
+.app{display:grid;grid-template-columns:220px 1fr;min-height:520px}
+.side{background:var(--navy);color:var(--on-navy);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.side .who{padding:0 8px 16px;border-bottom:1px solid rgba(255,255,255,.18);margin-bottom:10px}
+.side .who b{display:block;font-family:var(--display);font-size:16px}
+.side .who span{font-size:12px;opacity:.75}
+.side a{color:inherit;text-decoration:none;padding:8px 10px;border-radius:6px;font-size:14px;font-weight:600;opacity:.82}
+.side a.on{background:rgba(255,255,255,.14);opacity:1}
+.content{padding:22px 26px;min-width:0}
+.content h2{font-family:var(--display);font-size:24px;margin:0 0 2px}
+.sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+.kids{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.kid{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:99px;padding:5px 12px 5px 5px;font-size:14px;font-weight:600;background:var(--surface)}
+.kid.on{border-color:var(--lily);background:var(--lily-soft)}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--navy-soft);color:var(--navy)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface)}
+.tile span{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tile b{display:block;font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile small{color:var(--muted)}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}
+.ok{background:var(--leaf-soft);color:var(--leaf)} .warn{background:var(--amber-soft);color:var(--amber)} .bad{background:var(--red-soft);color:var(--red)} .info{background:var(--navy-soft);color:var(--navy)} .mute{background:var(--surface-2);color:var(--muted)}
+.btn-sm{padding:4px 10px;font-size:13px;border-radius:6px}
+.head{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.seg button{font:600 13px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:5px 12px;border-radius:99px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy-soft);border-color:var(--navy-soft);color:var(--navy)}
+.seg button:focus-visible,.btn:focus-visible{outline:2px solid var(--lily);outline-offset:2px}
+.btn[disabled]{opacity:.6;cursor:default}
+td.w{white-space:normal;min-width:130px}
+.vs{display:grid;grid-template-columns:310px 1fr;min-height:520px}
+.vs-side{background:var(--surface-2);padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;border-right:1px solid var(--line)}
+.vs-side .lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.phone{width:100%;max-width:270px;border:8px solid var(--bezel);border-radius:30px;background:var(--surface);overflow:hidden;box-shadow:0 12px 30px -16px rgba(0,0,0,.45)}
+.ph-top{background:var(--navy);color:var(--on-navy);padding:14px 14px 10px}
+.ph-top b{display:block;font-family:var(--display);font-size:16px}
+.ph-top span{display:block;font-size:12px;opacity:.85}
+.roll{list-style:none;margin:0;padding:0}
+.roll li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+.pra{display:flex;gap:4px;flex:none}
+.pra button{width:28px;height:28px;padding:0;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:700 12px var(--body);cursor:pointer}
+.pra button[aria-pressed="true"][data-v="P"]{background:var(--leaf-soft);color:var(--leaf);border-color:var(--leaf)}
+.pra button[aria-pressed="true"][data-v="R"]{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.pra button[aria-pressed="true"][data-v="A"]{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.pra button:focus-visible{outline:2px solid var(--lily);outline-offset:1px}
+.ph-foot{padding:10px 12px 14px;display:grid;gap:8px}
+.ph-foot small{color:var(--muted);font-size:12px;text-align:center;font-variant-numeric:tabular-nums}
+.ph-foot .btn{width:100%;text-align:center}
+.feed,.alerts{list-style:none;margin:0;padding:0}
+.feed li{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:start;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.feed time{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px;padding-top:1px}
+.feed p{margin:0}
+.alerts li{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.alerts .chip{min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+.feed li:last-child,.alerts li:last-child{border-bottom:0}
+.stack{display:grid;gap:16px;align-content:start}
+.auth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);min-height:470px}
+.auth-side{background:var(--navy);color:var(--on-navy);padding:32px 30px;display:flex;flex-direction:column;gap:16px}
+.auth-side h2{font-family:var(--display);font-weight:800;font-size:26px;line-height:1.12;margin:0;text-wrap:balance}
+.auth-side p{margin:0;max-width:44ch;opacity:.92}
+.auth-side ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.auth-side li{font-size:14px;opacity:.9}
+.auth-side li b{display:block;font-size:15px}
+.auth-side .logo,.auth-side .logo small{color:var(--on-navy)}
+.auth-side .logo small{opacity:.75}
+.auth-side.soft{background:var(--navy-soft);color:var(--ink)}
+.auth-side.soft h2{color:var(--navy)}
+.code-sample{background:var(--surface);border:1.5px dashed var(--navy);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--muted)}
+.code-sample b{display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:22px;letter-spacing:.08em;color:var(--navy);margin:2px 0}
+.auth-form{padding:32px 34px;display:grid;gap:12px;align-content:start;max-width:470px}
+.auth-form h2{font-family:var(--display);font-size:24px;margin:0}
+.auth-form .sub{margin:0}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+label.check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+label.check input{width:auto}
+.linkbtn{background:none;border:0;padding:0;font:600 14px var(--body);color:var(--navy);cursor:pointer;text-decoration:underline}
+.linkbtn:focus-visible{outline:2px solid var(--lily);outline-offset:2px}
+.full{width:100%;text-align:center}
+.demo{border:1.5px dashed var(--line);border-radius:8px;padding:10px 12px;background:var(--surface-2)}
+.alt-link{margin:0;font-size:14px;color:var(--muted)}
+.alt-link a{color:var(--lily);font-weight:700}
+.note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:0}
+.match{font-size:14px;background:var(--leaf-soft);border-radius:8px;padding:10px 12px;margin:0}
+.match .chip{background:var(--surface);margin-right:6px}
+.codebox{margin:0 14px 14px;padding:10px 12px;border-radius:8px;background:var(--leaf-soft);font-size:14px}
+.codebox b{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;color:var(--leaf)}
+.alerts .grow{flex:1;min-width:0}
+.no{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.aside-note{font-size:12px;color:var(--muted);margin:8px 0 0}
+.ctable th{padding:8px}
+.ctable td{white-space:normal;vertical-align:top;padding:6px 8px}
+.ctable select{min-width:104px;padding:6px 8px;font-size:14px}
+.conf{display:block;color:var(--red);font-size:12px;margin-top:4px;max-width:220px}
+tr.bad-row td{background:var(--red-soft)}
+.xbtn{width:28px;height:28px;padding:0;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:700 16px/1 var(--body);cursor:pointer}
+.xbtn:focus-visible{outline:2px solid var(--lily);outline-offset:1px}
+.alertbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--amber-soft);border-radius:8px;padding:10px 14px;margin:0 0 16px;font-size:14px}
+.alertbar .chip{background:var(--surface)}
+.day{list-style:none;margin:0;padding:0}
+.day li{display:grid;grid-template-columns:118px 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.day li:last-child{border-bottom:0}
+.day time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.day small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.day li.done,.day li.pause{color:var(--muted)}
+.day li.now{background:var(--leaf-soft)}
+.day li.now .chip{background:var(--surface)}
+.pres{padding:12px 14px;display:grid;gap:10px;font-size:14px}
+.pres p{margin:0}
+.absform{display:grid;gap:8px}
+.kv{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv b{font-variant-numeric:tabular-nums}
+.classes{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
+.cls{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface);display:grid;gap:3px;font-size:13px;align-content:start}
+.cls-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 6px}
+.cls-h b{font-size:14px}
+.cls .nx{color:var(--muted);font-size:12px}
+.cls.abs{background:var(--red-soft);border-color:var(--red-soft)}
+.cls.late{background:var(--amber-soft);border-color:var(--amber-soft)}
+.cls.free{background:var(--surface-2)}
+.cls.abs .chip,.cls.late .chip,.cls.free .chip{background:var(--surface)}
+.week th,.week td{text-align:center;padding:6px 8px}
+.week th:first-child,.week td:first-child{text-align:left;color:var(--muted);font-variant-numeric:tabular-nums}
+.week th.today,.week td.today{background:var(--surface-2);color:var(--ink)}
+.week b{display:block;background:var(--navy-soft);color:var(--navy);border-radius:6px;padding:4px 6px;font-size:13px}
+.week b.now{background:var(--leaf-soft);color:var(--leaf)}
+.msgline{border-radius:8px;padding:10px 12px;font-size:14px;margin:10px 0 0}
+.m-ok{background:var(--leaf-soft)} .m-bad{background:var(--red-soft);color:var(--red)} .m-warn{background:var(--amber-soft)}
+.fs-one{max-width:340px}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.box{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.box h3{font-size:14px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface-2)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.meter{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;width:80px;display:inline-block;vertical-align:middle;margin-left:8px}
+.meter i{display:block;height:100%;background:var(--navy)}
+.gradein{width:70px;text-align:right;padding:5px 8px;font-variant-numeric:tabular-nums}
+.gradein.low{border-color:var(--red);background:var(--red-soft)}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.filters label{min-width:150px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{border-radius:10px;padding:14px 16px;border:1px solid var(--line);background:var(--surface)}
+.stat span{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.stat b{display:block;font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.stat small{font-size:12px}
+.bars{padding:12px 14px;display:grid;gap:8px;font-size:13px}
+.bars div{display:grid;grid-template-columns:90px 1fr 40px;gap:8px;align-items:center}
+.bars i{display:block;height:10px;border-radius:3px;background:var(--navy)}
+.bars em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+@media (max-width:820px){
+  .hero,.split,.two{grid-template-columns:1fr}
+  .facts,.stats{grid-template-columns:1fr 1fr}
+  .cycles,.newsrow{grid-template-columns:1fr}
+  .vs,.auth{grid-template-columns:1fr}
+  .day li{grid-template-columns:1fr auto}
+  .day time{grid-column:1/-1}
+  .auth-side,.auth-form{padding:22px 16px}
+  .auth-form{max-width:none}
+  .vs-side{border-right:0;border-bottom:1px solid var(--line)}
+  .feed li{grid-template-columns:48px 1fr}
+  .feed li .chip{grid-column:2;justify-self:start}
+  .app{grid-template-columns:1fr}
+  .side{flex-direction:row;flex-wrap:wrap;padding:12px}
+  .side .who{width:100%;padding-bottom:10px}
+  .fgrid{grid-template-columns:1fr}
+  .tpl{display:none}
+  .pnav,.hero,.cycles,.news,.formz,.content{padding-inline:16px}
+  .facts div{padding:14px 16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell">
+  <div class="top">
+    <div>
+      <h1>Maquette du site Les Nénuphars</h1>
+      <p>Quatorze écrans, regroupés par public. Les noms, notes et montants sont des exemples.</p>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Écrans">
+    <div class="tgroup"><span class="tlabel" aria-hidden="true">Public</span>
+      <button role="tab" id="t-accueil" aria-selected="true" data-s="accueil">Accueil</button>
+      <button role="tab" id="t-admissions" aria-selected="false" data-s="admissions">Préinscription</button>
+      <button role="tab" id="t-connexion" aria-selected="false" data-s="connexion">Connexion</button>
+    </div>
+    <div class="tgroup"><span class="tlabel" aria-hidden="true">Familles</span>
+      <button role="tab" id="t-parents" aria-selected="false" data-s="parents">Espace parents</button>
+    </div>
+    <div class="tgroup"><span class="tlabel" aria-hidden="true">Professeurs</span>
+      <button role="tab" id="t-journee" aria-selected="false" data-s="journee">Ma journée</button>
+      <button role="tab" id="t-profs" aria-selected="false" data-s="profs">Saisie des notes</button>
+    </div>
+    <div class="tgroup"><span class="tlabel" aria-hidden="true">Vie scolaire</span>
+      <button role="tab" id="t-vie" aria-selected="false" data-s="vie">Appel et discipline</button>
+      <button role="tab" id="t-direct" aria-selected="false" data-s="direct">Classes en direct</button>
+    </div>
+    <div class="tgroup"><span class="tlabel" aria-hidden="true">Administration</span>
+      <button role="tab" id="t-secretariat" aria-selected="false" data-s="secretariat">Secrétariat</button>
+      <button role="tab" id="t-profinscription" aria-selected="false" data-s="profinscription">Inscrire un professeur</button>
+      <button role="tab" id="t-direction" aria-selected="false" data-s="direction">Direction de section</button>
+      <button role="tab" id="t-chef" aria-selected="false" data-s="chef">Directrice en chef</button>
+      <button role="tab" id="t-employes" aria-selected="false" data-s="employes">Employés</button>
+    </div>
+  </div>
+
+  <!-- ============ ACCUEIL ============ -->
+  <div class="panel" id="accueil">
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/</div><div class="tpl">site_public/accueil.html</div></div>
+      <div class="screen">
+        <div class="pnav">
+          <div class="logo"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="var(--leaf-soft)"/><path d="M17 8c3 4 3 9 0 13-3-4-3-9 0-13z" fill="var(--lily)"/><path d="M9 14c4 1 7 4 8 7-4 0-7-3-8-7zM25 14c-4 1-7 4-8 7 4 0 7-3 8-7z" fill="var(--lily)" opacity=".7"/><path d="M7 23c6 3 14 3 20 0" stroke="var(--leaf)" stroke-width="2" fill="none" stroke-linecap="round"/></svg><div>Les Nénuphars<small>Institution · Les Cayes</small></div></div>
+          <nav><a class="on" href="#accueil">Accueil</a><a href="#accueil">L’école</a><a href="#accueil">Niveaux</a><a href="#admissions">Admissions</a><a href="#accueil">Actualités</a><a href="#accueil">Contact</a></nav>
+          <a class="btn btn-ghost" href="#connexion">Se connecter</a>
+        </div>
+        <div class="hero">
+          <div>
+            <div class="kick">Inscriptions 2026-2027 ouvertes</div>
+            <h2>Chaque enfant grandit à son rythme, <em>du Kindergarten à la NS4.</em></h2>
+            <p>Une école familiale aux Cayes, avec des classes à effectif réduit, un suivi trimestriel des notes et des parents informés en ligne.</p>
+            <div class="cta"><a class="btn btn-lily" href="#admissions">Préinscrire mon enfant</a><a class="btn btn-ghost" href="#accueil">Visiter l’école</a></div>
+          </div>
+          <div class="pond"><canvas id="pond" aria-hidden="true"></canvas><div class="tag"><b>Rentrée le 6 octobre</b>Réunion des parents le 11 octobre</div></div>
+        </div>
+        <div class="facts">
+          <div><b>16</b><span>classes, Kinder à NSIV</span></div>
+          <div><b>3</b><span>sections : Kindergarten, primaire, secondaire</span></div>
+          <div><b>17</b><span>matières enseignées</span></div>
+          <div><b>3</b><span>bulletins par an</span></div>
+        </div>
+        <div class="cycles">
+          <div class="cycle c1"><div class="lv">Kindergarten</div><h3>1<sup>re</sup> à 3<sup>e</sup> année</h3><p>Éveil, langage, jeux et premières lettres, avec une directrice dédiée aux tout-petits.</p></div>
+          <div class="cycle c2"><div class="lv">Primaire</div><h3>1<sup>re</sup> à 6<sup>e</sup> AF</h3><p>Lecture, écriture et calcul en français et en créole, sciences et éducation civique.</p></div>
+          <div class="cycle c3"><div class="lv">Secondaire</div><h3>7<sup>e</sup> AF à NSIV</h3><p>Du 3<sup>e</sup> cycle fondamental au Nouveau Secondaire, jusqu’aux examens officiels de 9<sup>e</sup> AF et au bac.</p></div>
+        </div>
+        <div class="news">
+          <h3>Actualités</h3>
+          <div class="newsrow">
+            <article><time>18 sept. 2026</time><h4>Liste des fournitures 2026-2027</h4><p>Disponible par classe au secrétariat et en ligne.</p></article>
+            <article><time>9 sept. 2026</time><h4>Nouvelle salle informatique</h4><p>Vingt postes pour les élèves de la 7<sup>e</sup> AF à la NSIV.</p></article>
+            <article><time>28 août 2026</time><h4>Résultats aux examens officiels</h4><p>Félicitations à nos élèves de 9<sup>e</sup> AF et de NSIV.</p></article>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Page d’accueil.</b> Un seul appel à l’action principal, la préinscription. Les chiffres viennent de la base (nombre de classes, matières).</p>
+  </div>
+
+  <!-- ============ ADMISSIONS ============ -->
+  <div class="panel" id="admissions" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/admissions/preinscription/</div><div class="tpl">site_public/preinscription.html</div></div>
+      <div class="screen split">
+        <div class="aside">
+          <h3>Comment ça marche</h3>
+          <ol>
+            <li>Remplissez ce formulaire en 5 minutes.</li>
+            <li>Vous recevez un numéro de dossier.</li>
+            <li>Le secrétariat vous appelle pour un rendez-vous.</li>
+            <li>Apportez les originaux et réglez l’inscription.</li>
+          </ol>
+          <div class="fees">
+            <div><span>Frais d’inscription</span><b>2 500 HTG</b></div>
+            <div><span>Mensualité Fondamentale</span><b>3 000 HTG</b></div>
+            <div><span>Mensualité Secondaire</span><b>4 000 HTG</b></div>
+          </div>
+        </div>
+        <form class="formz" id="preform">
+          <div class="steps"><span class="on">1. Élève</span><span class="on">2. Parent</span><span>3. Documents</span></div>
+          <fieldset>
+            <legend>L’élève</legend>
+            <div class="fgrid">
+              <label for="e-nom">Nom<input id="e-nom" value="Joseph"></label>
+              <label for="e-prenom">Prénom<input id="e-prenom" value="Naïka"></label>
+              <label for="e-naiss">Date de naissance<input id="e-naiss" type="date" value="2015-03-14"></label>
+              <label for="e-genre">Genre<select id="e-genre"><option>Féminin</option><option>Masculin</option></select></label>
+              <label for="e-classe">Classe demandée<select id="e-classe"><option>1ère Année Kinder</option><option>6ème AF</option><option selected>7ème AF</option><option>NSI</option></select></label>
+              <label for="e-ecole">École précédente<input id="e-ecole" value="École nationale de Torbeck"></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Le parent ou tuteur</legend>
+            <div class="fgrid">
+              <label for="p-nom">Nom complet<input id="p-nom" value="Marie-Claude Joseph"></label>
+              <label for="p-tel">Téléphone (WhatsApp)<input id="p-tel" value="+509 3712 4455"></label>
+              <label for="p-mail">E-mail (facultatif)<input id="p-mail" type="email" value=""></label>
+              <label for="p-adr">Adresse<input id="p-adr" value="Rue Geffrard, Les Cayes"></label>
+              <div class="drop">Acte de naissance et dernier bulletin (facultatif) · PDF ou photo, 5 Mo max</div>
+            </div>
+          </fieldset>
+          <div class="actions"><small>Vos données restent à l’école et ne sont jamais partagées.</small><button class="btn btn-lily" type="submit">Envoyer la demande</button></div>
+          <p id="okmsg" class="chip ok" hidden style="margin-top:12px;font-size:14px;padding:8px 12px">Demande reçue. Numéro de dossier : PRE-2026-0147</p>
+        </form>
+      </div>
+    </div>
+    <p class="caption"><b>Préinscription.</b> Formulaire court, utilisable au téléphone. À l’envoi, une <code>Preinscription</code> est créée avec le statut « reçue » et apparaît chez le secrétariat.</p>
+  </div>
+
+  <!-- ============ CONNEXION ============ -->
+  <div class="panel" id="connexion" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/connexion/</div><div class="tpl">comptes/connexion.html</div></div>
+      <div class="screen auth">
+        <div class="auth-side">
+          <div class="logo"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="var(--leaf-soft)"/><path d="M17 8c3 4 3 9 0 13-3-4-3-9 0-13z" fill="var(--lily)"/><path d="M9 14c4 1 7 4 8 7-4 0-7-3-8-7zM25 14c-4 1-7 4-8 7 4 0 7-3 8-7z" fill="var(--lily)" opacity=".7"/><path d="M7 23c6 3 14 3 20 0" stroke="var(--leaf)" stroke-width="2" fill="none" stroke-linecap="round"/></svg><div>Les Nénuphars<small>Institution · Les Cayes</small></div></div>
+          <h2>Un seul accès pour toute l’école</h2>
+          <ul>
+            <li><b>Parents</b>Notes, bulletins, paiements et absences de leurs enfants</li>
+            <li><b>Professeurs</b>Emploi du temps, présence, alertes de fin de cours et saisie des notes</li>
+            <li><b>Vie scolaire</b>Appel, retards et discipline</li>
+            <li><b>Personnel</b>Secrétariat, caisse, directions</li>
+          </ul>
+        </div>
+        <form class="auth-form" id="loginform">
+          <h2>Connexion</h2>
+          <p class="sub">Entrez le téléphone ou l’e-mail de votre compte et votre mot de passe.</p>
+          <label for="l-id">Téléphone ou e-mail<input id="l-id" value="+509 3712 4455" autocomplete="username"></label>
+          <label for="l-pw">Mot de passe<input id="l-pw" type="password" value="motdepasse" autocomplete="current-password"></label>
+          <div class="row-between"><label class="check" for="l-rem"><input id="l-rem" type="checkbox" checked>Rester connecté</label><button class="linkbtn" type="button" id="forgot">Mot de passe oublié ?</button></div>
+          <p class="note" id="forgotmsg" hidden>Un code vous est envoyé par SMS au numéro du compte. Sans téléphone, le secrétariat peut réinitialiser votre mot de passe.</p>
+          <button class="btn btn-navy full" type="submit">Se connecter</button>
+          <div class="demo"><label for="l-role">Démo de la maquette : arriver dans l’espace de
+            <select id="l-role">
+              <option value="parents">Parent</option>
+              <option value="journee">Professeur</option>
+              <option value="vie">Surveillant ou censeur</option>
+              <option value="secretariat">Secrétariat</option>
+              <option value="direction">Direction de section</option>
+              <option value="chef">Directrice en chef</option>
+            </select></label></div>
+          <p class="alt-link">Nouveau parent ? <a href="#compte">Créer mon compte avec le code de l’école</a></p>
+        </form>
+      </div>
+    </div>
+    <p class="caption"><b>Connexion.</b> Une seule page pour tout le monde. Après connexion, chacun arrive sur son espace selon son rôle : parent, professeur, vie scolaire, secrétariat, caisse ou direction. Elle remplace l’actuelle page « Connexion Administration » et son compte par défaut affiché.</p>
+
+    <div class="frame" id="compte" style="margin-top:28px">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/inscription/</div><div class="tpl">comptes/inscription_parent.html</div></div>
+      <div class="screen auth">
+        <div class="auth-side soft">
+          <h2>Pourquoi un code ?</h2>
+          <p>Seuls les parents d’un élève doivent voir ses notes, ses absences et ses paiements. Le secrétariat remet un code d’accès à chaque famille avec le reçu d’inscription.</p>
+          <div class="code-sample">Code d’accès<b>NEN-4K7P-29</b>Un code par famille, utilisable une seule fois.</div>
+          <p>Code perdu ? Le secrétariat en crée un nouveau.</p>
+        </div>
+        <form class="auth-form" id="signupform">
+          <div class="steps"><span class="on">1. Code</span><span class="on">2. Vérification</span><span>3. Mot de passe</span></div>
+          <h2>Créer mon compte parent</h2>
+          <label for="s-code">Code d’accès remis par l’école<input id="s-code" value="NEN-4K7P-29"></label>
+          <label for="s-tel">Téléphone donné à l’inscription<input id="s-tel" value="+509 3712 4455"></label>
+          <p class="match"><span class="chip ok">Code valide</span>Ce code correspond à <b>Joseph Naïka</b> (7ème AF) et <b>Joseph Wilson</b> (3ème AF).</p>
+          <div class="fgrid">
+            <label for="s-pw">Mot de passe<input id="s-pw" type="password" value="motdepasse"></label>
+            <label for="s-pw2">Confirmation<input id="s-pw2" type="password" value="motdepasse"></label>
+          </div>
+          <button class="btn btn-lily full" type="submit">Créer mon compte</button>
+          <p class="match" id="signupok" hidden>Compte créé. Naïka et Wilson apparaissent maintenant dans votre espace parents.</p>
+          <p class="alt-link">Déjà un compte ? <a href="#connexion">Se connecter</a></p>
+        </form>
+      </div>
+    </div>
+    <p class="caption"><b>Créer mon compte (inscription).</b> Le parent crée son compte avec le code remis par le secrétariat et le téléphone donné à l’inscription. Le compte est relié tout seul à ses enfants. Il n’y a pas d’inscription libre : sans code, personne ne peut voir les données d’un élève. Les professeurs n’ont pas de compte à créer : la secrétaire les inscrit et leur remet un identifiant et un mot de passe provisoire. Les comptes du reste du personnel sont créés par la directrice en chef.</p>
+  </div>
+
+  <!-- ============ PARENTS ============ -->
+  <div class="panel" id="parents" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/parents/</div><div class="tpl">portail/parent_accueil.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Marie-Claude Joseph</b><span>Parent · 2 enfants</span></div>
+          <a class="on" href="#parents">Résumé</a><a href="#parents">Notes</a><a href="#parents">Bulletins</a><a href="#parents">Paiements</a><a href="#parents">Absences et retards</a><a href="#parents">Annonces</a><a href="#connexion">Déconnexion</a>
+        </aside>
+        <div class="content">
+          <h2>Bonjour Marie-Claude</h2>
+          <p class="sub">Année scolaire 2026-2027 · 1<sup>er</sup> trimestre</p>
+          <div class="kids">
+            <div class="kid on"><span class="av">NJ</span>Naïka · 7ème AF</div>
+            <div class="kid"><span class="av">WJ</span>Wilson · 3ème AF</div>
+          </div>
+          <div class="tiles">
+            <div class="tile"><span>Moyenne générale</span><b>74,6 / 100</b><small>Rang 6 sur 31</small></div>
+            <div class="tile"><span>Solde à payer</span><b>3 000 HTG</b><small><span class="chip warn">Échéance le 5 nov.</span></small></div>
+            <div class="tile"><span>Assiduité</span><b>2 retards</b><small>Aucune absence ce trimestre</small></div>
+            <div class="tile"><span>Bulletin</span><b>En attente</b><small>Publié après validation du directeur du secondaire</small></div>
+          </div>
+          <div class="two">
+            <div class="box"><h3><span>Notes du 1er trimestre</span> <span class="chip info">sur 100</span></h3>
+              <div class="tw"><table>
+                <thead><tr><th>Matière</th><th class="n">Note</th><th>Professeur</th></tr></thead>
+                <tbody>
+                  <tr><td>Mathématiques</td><td class="n">82<span class="meter"><i style="width:82%"></i></span></td><td>M. Pierre</td></tr>
+                  <tr><td>Français</td><td class="n">76<span class="meter"><i style="width:76%"></i></span></td><td>Mme Célestin</td></tr>
+                  <tr><td>Créole</td><td class="n">88<span class="meter"><i style="width:88%"></i></span></td><td>Mme Célestin</td></tr>
+                  <tr><td>Sciences Expérimentales</td><td class="n">69<span class="meter"><i style="width:69%"></i></span></td><td>M. Dorsainvil</td></tr>
+                  <tr><td>Anglais</td><td class="n">58<span class="meter"><i style="width:58%;background:var(--amber)"></i></span></td><td>M. Louis</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+            <div class="box"><h3>Paiements</h3>
+              <div class="tw"><table>
+                <thead><tr><th>Date</th><th>Type</th><th class="n">HTG</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>2 oct.</td><td>Inscription</td><td class="n">2 500</td><td><span class="chip ok">Payé</span></td></tr>
+                  <tr><td>2 oct.</td><td>Octobre</td><td class="n">3 000</td><td><span class="chip ok">Payé</span></td></tr>
+                  <tr><td>5 nov.</td><td>Novembre</td><td class="n">3 000</td><td><span class="chip warn">À payer</span></td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Espace parents.</b> Le parent ne voit que ses enfants. Les reçus s’ouvrent en PDF depuis la liste des paiements.</p>
+  </div>
+
+  <!-- ============ INSCRIRE UN PROFESSEUR (secrétariat) ============ -->
+  <div class="panel" id="profinscription" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/gestion/professeurs/nouveau/</div><div class="tpl">core/professeur_form.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Nadège Auguste</b><span>Secrétariat · toute l’école</span></div>
+          <a href="#secretariat">Tableau de bord</a><a href="#secretariat">Préinscriptions</a><a href="#secretariat">Élèves</a><a href="#secretariat">Classes</a><a href="#secretariat">Comptes parents</a><a class="on" href="#profinscription">Professeurs</a><a href="#secretariat">Documents</a><a href="#secretariat">Actualités</a><a href="#secretariat">Messages</a><a href="#connexion">Déconnexion</a>
+        </aside>
+        <form class="content" id="profform" novalidate>
+          <h2>Inscrire un professeur</h2>
+          <p class="sub">Le site crée son compte. Le professeur n’a plus qu’à se connecter.</p>
+          <fieldset>
+            <legend>1. Section</legend>
+            <div class="seg" id="pfsect" role="group" aria-label="Section du professeur">
+              <button type="button" aria-pressed="false" data-g="kg">Kindergarten</button>
+              <button type="button" aria-pressed="false" data-g="pri">Primaire</button>
+              <button type="button" aria-pressed="true" data-g="sec">Secondaire, 7ème AF à NSIV</button>
+            </div>
+            <p class="note" id="pfrule">Secondaire : plusieurs cours et plusieurs classes, avec le jour et l’heure de chaque cours.</p>
+          </fieldset>
+          <fieldset>
+            <legend>2. Informations personnelles</legend>
+            <div class="fgrid">
+              <label for="pr-nom">Nom<input id="pr-nom" value="Blaise"></label>
+              <label for="pr-prenom">Prénom<input id="pr-prenom" value="Wilfrid"></label>
+              <label for="pr-naiss">Date de naissance<input id="pr-naiss" type="date" value="1992-01-27"></label>
+              <label for="pr-tel">Téléphone (sert d’identifiant)<input id="pr-tel" value="+509 3198 7702"></label>
+              <label for="pr-mail">E-mail (facultatif)<input id="pr-mail" type="email" value=""></label>
+              <label for="pr-adr">Adresse<input id="pr-adr" value="Camp-Perrin"></label>
+              <label for="pr-dipl">Diplôme<input id="pr-dipl" value="Licence en sciences informatiques"></label>
+              <label for="pr-dep">Début à l’école<input id="pr-dep" type="date" value="2026-11-16"></label>
+            </div>
+          </fieldset>
+          <fieldset data-for="kg" hidden>
+            <legend>3. Classe et rôle</legend>
+            <div class="fgrid">
+              <label for="kg-classe">Classe<select id="kg-classe"><option value="k1">1ère Année Kinder · complète</option><option value="k2" selected>2ème Année Kinder · 1 place</option><option value="k3">3ème Année Kinder · 1 place</option></select></label>
+              <label for="kg-role">Rôle<select id="kg-role"><option>Deuxième maîtresse</option><option>Titulaire</option></select></label>
+            </div>
+            <p class="msgline m-ok" id="kg-msg" aria-live="polite">Elle travaillera avec Mme Gédéon, titulaire. La classe aura ses deux maîtresses.</p>
+            <p class="aside-note">Horaire : toute la matinée avec sa classe. Pas d’emploi du temps par matière.</p>
+          </fieldset>
+          <fieldset data-for="pri" hidden>
+            <legend>3. Classe</legend>
+            <div class="fs-one"><label for="pri-classe">Classe<select id="pri-classe"><option>1ère AF · Mme Toussaint</option><option>2ème AF · Mme Jean-Baptiste</option><option>3ème AF · Mme Alexis</option><option>4ème AF · M. Belizaire</option><option>5ème AF · Mme Fleurant</option><option selected>6ème AF · M. Lamour</option></select></label></div>
+            <p class="msgline m-warn" id="pri-msg" aria-live="polite">La 6ème AF a déjà un professeur, M. Lamour. Au primaire, une classe n’a qu’un professeur : le nouveau le remplace.</p>
+            <label class="check" for="pri-ok" style="margin-top:10px"><input id="pri-ok" type="checkbox"><span id="pri-oklbl">Remplacer M. Lamour dans la 6ème AF</span></label>
+            <p class="aside-note">Le professeur fait toutes les matières de sa classe, toute la journée.</p>
+          </fieldset>
+          <fieldset data-for="sec">
+            <legend>3. Cours de la semaine</legend>
+            <div class="box"><div class="tw"><table class="ctable" id="courses">
+              <thead><tr><th>Matière</th><th>Classe</th><th>Jour</th><th>Heure</th><th><span class="sr">Retirer</span></th></tr></thead>
+              <tbody></tbody>
+            </table></div></div>
+            <div class="row-between" style="margin-top:10px"><button class="btn btn-ghost btn-sm" type="button" id="addcourse">Ajouter un cours</button><small class="no" id="pf-sum" aria-live="polite">5 cours par semaine · 5 classes · 4 h 35</small></div>
+          </fieldset>
+          <div class="actions"><span id="pfmsg" class="chip bad" role="status">1 conflit à corriger</span><button class="btn btn-navy" type="submit">Inscrire et créer le compte</button></div>
+          <div class="match" id="pfok" hidden style="margin-top:12px;display:grid;gap:8px"><span id="pfok-txt"></span><button class="btn btn-ghost btn-sm" type="button" style="justify-self:start">Imprimer la fiche d’accès</button></div>
+        </form>
+      </div>
+    </div>
+    <p class="caption"><b>Inscrire un professeur.</b> C’est la secrétaire qui inscrit le professeur. Elle choisit d’abord la section, et le formulaire change : au Kindergarten, une classe et deux maîtresses au plus ; au primaire, une seule classe et un seul professeur par classe ; au secondaire, une ligne par cours avec le contrôle des conflits. Le site crée le compte (identifiant : le téléphone, mot de passe provisoire à changer à la première connexion) et envoie la fiche à la direction de la section pour validation. Essayez les trois sections.</p>
+  </div>
+
+  <!-- ============ MA JOURNEE ============ -->
+  <div class="panel" id="journee" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/professeurs/</div><div class="tpl">portail/prof_journee.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Jean-Robert Pierre</b><span>Professeur · Mathématiques</span></div>
+          <a class="on" href="#journee">Ma journée</a><a href="#journee">Mon emploi du temps</a><a href="#profs">Saisie des notes</a><a href="#profs">Listes d’élèves</a><a href="#connexion">Déconnexion</a>
+        </aside>
+        <div class="content">
+          <h2>Ma journée</h2>
+          <p class="sub">Jeudi 12 novembre 2026 · il est 10 h 31</p>
+          <p class="alertbar" role="status"><span class="chip warn">Dans 4 min</span><span>Votre cours en <b>8ème AF</b> se termine à 10 h 35. <b>Mme Augustin</b> (Histoire) prend la suite. Votre prochain cours : NSI à 11 h 30.</span></p>
+          <div class="two">
+            <div class="box"><h3><span>Aujourd’hui</span> <span class="chip info">4 cours</span></h3>
+              <ul class="day">
+                <li class="done"><time>7 h 30 – 8 h 25</time><div>7ème AF · Mathématiques<small>M. Dorsainvil a pris la suite</small></div><span class="chip mute">Terminé</span></li>
+                <li class="done"><time>8 h 25 – 9 h 20</time><div>9ème AF · Mathématiques<small>Pas de cours ensuite : Jean Wilner prévenu</small></div><span class="chip mute">Terminé</span></li>
+                <li class="pause"><time>9 h 20 – 9 h 40</time><div>Récréation</div></li>
+                <li class="now"><time>9 h 40 – 10 h 35</time><div><b>8ème AF · Mathématiques</b><small>Ensuite : Mme Augustin, Histoire</small></div><span class="chip ok">En cours</span></li>
+                <li><time>10 h 35 – 11 h 30</time><div>Pas de cours</div><span class="chip mute">Libre</span></li>
+                <li><time>11 h 30 – 12 h 25</time><div>NSI · Mathématiques<small>Après Mme Célestin, Français</small></div><span class="chip info">À venir</span></li>
+              </ul>
+            </div>
+            <div class="stack">
+              <div class="box"><h3><span>Ma présence</span> <span class="chip ok">Arrivé à 7 h 22</span></h3>
+                <ul class="feed">
+                  <li><time>7 h 22</time><p>Vous avez signalé votre arrivée.</p></li>
+                  <li><time>7 h 23</time><p>Jean Wilner l’a confirmée à l’entrée.</p></li>
+                </ul>
+                <div class="pres">
+                  <button class="btn btn-ghost btn-sm" type="button" id="absbtn" aria-expanded="false" aria-controls="absform">Déclarer une absence</button>
+                  <form class="absform" id="absform" hidden>
+                    <div class="fgrid">
+                      <label for="ab-date">Jour d’absence<input id="ab-date" type="date" value="2026-11-16"></label>
+                      <label for="ab-motif">Motif<select id="ab-motif"><option>Maladie</option><option>Raison familiale</option><option>Formation</option><option>Autre</option></select></label>
+                    </div>
+                    <p class="note" id="ab-cours" aria-live="polite">Lundi 16 novembre : 7ème AF (1re heure), 8ème AF (3e heure)</p>
+                    <button class="btn btn-navy btn-sm" type="submit">Envoyer à la direction</button>
+                  </form>
+                  <p class="match" id="absok" hidden></p>
+                </div>
+              </div>
+              <div class="box"><h3>Ma semaine</h3>
+                <div class="kv"><span>Cours</span><b>8</b></div>
+                <div class="kv"><span>Classes</span><b>7ème, 8ème, 9ème AF, NSI</b></div>
+                <div class="kv"><span>Heures</span><b>7 h 20</b></div>
+                <div class="kv"><span>Absences ce trimestre</span><b>0</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="box" style="margin-top:16px"><h3><span>Mon emploi du temps</span> <span class="chip ok">Validé par M. Dorvil</span></h3>
+            <div class="tw"><table class="week">
+              <thead><tr><th>Heure</th><th>Lundi</th><th>Mardi</th><th>Mercredi</th><th class="today">Jeudi</th><th>Vendredi</th></tr></thead>
+              <tbody>
+                <tr><td>7 h 30</td><td><b>7ème AF</b></td><td><b>9ème AF</b></td><td></td><td class="today"><b>7ème AF</b></td><td></td></tr>
+                <tr><td>8 h 25</td><td></td><td></td><td></td><td class="today"><b>9ème AF</b></td><td></td></tr>
+                <tr><td>9 h 40</td><td><b>8ème AF</b></td><td></td><td><b>NSI</b></td><td class="today"><b class="now">8ème AF</b></td><td></td></tr>
+                <tr><td>10 h 35</td><td></td><td></td><td></td><td class="today"></td><td></td></tr>
+                <tr><td>11 h 30</td><td></td><td></td><td></td><td class="today"><b>NSI</b></td><td></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Ma journée.</b> La page d’accueil du professeur. En arrivant, il signale son arrivée sur son téléphone et le surveillant la confirme à l’entrée. Cinq minutes avant la fin d’un cours, le site le prévient et lui dit qui prend la suite ; s’il n’y a personne, le surveillant de la section est prévenu. Une absence se déclare à l’avance, et la direction prévoit un remplaçant ou une étude surveillée. Au primaire et au Kindergarten, la page montre la classe et l’horaire du jour, sans alerte de fin de cours.</p>
+  </div>
+
+  <!-- ============ PROFS ============ -->
+  <div class="panel" id="profs" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/professeurs/notes/7eme-af/</div><div class="tpl">portail/saisie_notes.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Jean-Robert Pierre</b><span>Professeur · Mathématiques</span></div>
+          <a href="#journee">Ma journée</a><a href="#journee">Mon emploi du temps</a><a class="on" href="#profs">Saisie des notes</a><a href="#profs">Listes d’élèves</a><a href="#connexion">Déconnexion</a>
+        </aside>
+        <div class="content">
+          <h2>Saisie des notes</h2>
+          <p class="sub">Une ligne par élève. Les notes en dessous de 50 sont signalées.</p>
+          <div class="filters">
+            <label for="f-classe">Classe<select id="f-classe"><option>7ème AF</option><option>8ème AF</option><option>9ème AF</option><option>NSI</option></select></label>
+            <label for="f-mat">Matière<select id="f-mat"><option>Mathématiques</option></select></label>
+            <label for="f-per">Trimestre<select id="f-per"><option>1er Trimestre</option><option>2e Trimestre</option><option>3e Trimestre</option></select></label>
+          </div>
+          <div class="box">
+            <h3>7ème AF · 31 élèves <span class="chip warn">3 notes manquantes</span></h3>
+            <div class="tw"><table id="gtable">
+              <thead><tr><th>Élève</th><th class="n">Note / 100</th><th>État</th></tr></thead>
+              <tbody>
+                <tr><td>Augustin Kervens</td><td class="n"><input class="gradein" id="g1" value="71" aria-label="Note Augustin Kervens"></td><td><span class="chip ok">Saisie</span></td></tr>
+                <tr><td>Baptiste Roseline</td><td class="n"><input class="gradein" id="g2" value="64" aria-label="Note Baptiste Roseline"></td><td><span class="chip ok">Saisie</span></td></tr>
+                <tr><td>Charles Mickenson</td><td class="n"><input class="gradein" id="g3" value="45" aria-label="Note Charles Mickenson"></td><td><span class="chip ok">Saisie</span></td></tr>
+                <tr><td>Désir Fabienne</td><td class="n"><input class="gradein" id="g4" value="" aria-label="Note Désir Fabienne"></td><td><span class="chip warn">Manquante</span></td></tr>
+                <tr><td>Joseph Naïka</td><td class="n"><input class="gradein" id="g5" value="82" aria-label="Note Joseph Naïka"></td><td><span class="chip ok">Saisie</span></td></tr>
+                <tr><td>Louis Stevenson</td><td class="n"><input class="gradein" id="g6" value="" aria-label="Note Louis Stevenson"></td><td><span class="chip warn">Manquante</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="actions" style="border:0;margin-top:14px"><small id="avg">Moyenne de la classe : 65,5</small><button class="btn btn-navy" type="button">Enregistrer les notes</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Saisie des notes.</b> Un formset Django enregistre toute la classe en une fois. Le professeur ne voit que les classes liées à son profil.</p>
+  </div>
+
+  <!-- ============ VIE SCOLAIRE ============ -->
+  <div class="panel" id="vie" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/vie-scolaire/</div><div class="tpl">vie_scolaire/tableau.html</div></div>
+      <div class="screen vs">
+        <div class="vs-side">
+          <div class="lbl">Téléphone du surveillant</div>
+          <div class="phone">
+            <div class="ph-top"><b>Appel du matin</b><span>8ème AF · jeudi 12 novembre</span><span>Jean Wilner, surveillant</span></div>
+            <ul class="roll" id="roll">
+              <li><span>Alexis Daphney</span><span class="pra" role="group" aria-label="Alexis Daphney"><button type="button" data-v="P" aria-pressed="true">P</button><button type="button" data-v="R" aria-pressed="false">R</button><button type="button" data-v="A" aria-pressed="false">A</button></span></li>
+              <li><span>Beauséjour Kenley</span><span class="pra" role="group" aria-label="Beauséjour Kenley"><button type="button" data-v="P" aria-pressed="false">P</button><button type="button" data-v="R" aria-pressed="true">R</button><button type="button" data-v="A" aria-pressed="false">A</button></span></li>
+              <li><span>Cadet Mirlande</span><span class="pra" role="group" aria-label="Cadet Mirlande"><button type="button" data-v="P" aria-pressed="true">P</button><button type="button" data-v="R" aria-pressed="false">R</button><button type="button" data-v="A" aria-pressed="false">A</button></span></li>
+              <li><span>Delva Samuel</span><span class="pra" role="group" aria-label="Delva Samuel"><button type="button" data-v="P" aria-pressed="false">P</button><button type="button" data-v="R" aria-pressed="false">R</button><button type="button" data-v="A" aria-pressed="true">A</button></span></li>
+              <li><span>Étienne Roseline</span><span class="pra" role="group" aria-label="Étienne Roseline"><button type="button" data-v="P" aria-pressed="true">P</button><button type="button" data-v="R" aria-pressed="false">R</button><button type="button" data-v="A" aria-pressed="false">A</button></span></li>
+              <li><span>François Wisner</span><span class="pra" role="group" aria-label="François Wisner"><button type="button" data-v="P" aria-pressed="true">P</button><button type="button" data-v="R" aria-pressed="false">R</button><button type="button" data-v="A" aria-pressed="false">A</button></span></li>
+            </ul>
+            <div class="ph-foot"><small id="rollsum">1 absent · 1 retard · 4 présents</small><button class="btn btn-navy" type="button" id="rollsend">Envoyer au censeur</button><button class="btn btn-ghost btn-sm" type="button">Signaler un incident</button></div>
+          </div>
+        </div>
+        <div class="content">
+          <h2>Vie scolaire · Secondaire</h2>
+          <p class="sub">Frantz Mérisier, censeur · jeudi 12 novembre 2026</p>
+          <div class="stats">
+            <div class="stat"><span>Absents</span><b>9</b><small>dont 4 justifiés</small></div>
+            <div class="stat"><span>Retards</span><b>14</b><small>ce matin</small></div>
+            <div class="stat"><span>Incidents</span><b>2</b><small class="chip warn">ouverts, à traiter</small></div>
+            <div class="stat"><span>Convocations</span><b>1</b><small>parents attendus</small></div>
+          </div>
+          <div class="box" style="margin-bottom:16px">
+            <h3><span>Absences et retards du jour</span> <span class="chip info">envoyés par les surveillants</span></h3>
+            <div class="tw"><table>
+              <thead><tr><th>Élève</th><th>Classe</th><th>Type</th><th>Signalé par</th><th>Suite</th></tr></thead>
+              <tbody>
+                <tr><td>Delva Samuel</td><td>8ème AF</td><td>Absence</td><td>J. Wilner, 7 h 40</td><td><button class="btn btn-navy btn-sm justif" type="button">Justifier</button></td></tr>
+                <tr><td>Beauséjour Kenley</td><td>8ème AF</td><td>Retard, 25 min</td><td>J. Wilner, 7 h 55</td><td><span class="chip bad">3e retard du mois</span></td></tr>
+                <tr><td>Joseph Naïka</td><td>7ème AF</td><td>Retard, 10 min</td><td>J. Wilner, 7 h 40</td><td><span class="chip mute">Noté</span></td></tr>
+                <tr><td>Noël Jameson</td><td>NSI</td><td>Absence</td><td>M. Dorsainvil, 1re heure</td><td><span class="chip ok">Justifiée, maladie</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="box">
+            <h3><span>Incidents</span> <span class="chip warn">2 ouverts</span></h3>
+            <div class="tw"><table>
+              <thead><tr><th>Date</th><th>Élève</th><th>Classe</th><th>Motif</th><th>Sanction</th><th>Statut</th></tr></thead>
+              <tbody>
+                <tr><td>12 nov.</td><td>Pierre-Louis Stanley</td><td>9ème AF</td><td class="w">Téléphone en classe</td><td class="w">Téléphone rendu aux parents</td><td><span class="chip warn">En cours</span></td></tr>
+                <tr><td>11 nov.</td><td>Beauséjour Kenley</td><td>8ème AF</td><td class="w">Retards répétés</td><td class="w">Convocation des parents</td><td><span class="chip warn">Convoqués</span></td></tr>
+                <tr><td>9 nov.</td><td>Charles Mickenson</td><td>7ème AF</td><td class="w">Bagarre à la récréation</td><td class="w">Retenue le samedi</td><td><span class="chip ok">Clos</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Vie scolaire.</b> Le surveillant fait l’appel sur son téléphone et l’envoie au censeur. Le censeur justifie les absences, suit les incidents et convoque les parents. Les parents voient absences, retards et sanctions dans leur espace, et la directrice en chef voit tout dans son journal.</p>
+  </div>
+
+  <!-- ============ CLASSES EN DIRECT ============ -->
+  <div class="panel" id="direct" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/vie-scolaire/classes/</div><div class="tpl">vie_scolaire/classes_direct.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Marie-Carmelle Beauvoir</b><span>Directrice en chef · toute l’école</span></div>
+          <a href="#chef">Tableau de bord</a><a href="#chef">Journal</a><a class="on" href="#direct">Classes en direct</a><a href="#direction">Sections</a><a href="#chef">Préinscriptions</a><a href="#chef">Élèves</a><a href="#chef">Paiements</a><a href="#chef">Bulletins</a><a href="#vie">Vie scolaire</a><a href="#chef">Professeurs</a><a href="#employes">Employés</a><a href="#chef">Paramètres</a>
+        </aside>
+        <div class="content">
+          <h2>Classes en direct</h2>
+          <p class="sub">Jeudi 12 novembre 2026 · 10 h 31 · 3e heure, de 9 h 40 à 10 h 35 · mise à jour chaque minute</p>
+          <div class="stats">
+            <div class="stat"><span>En classe</span><b>13</b><small>classes sur 16</small></div>
+            <div class="stat"><span>Libre</span><b>1</b><small>étude surveillée</small></div>
+            <div class="stat"><span>Prof absent</span><b>1</b><small class="chip bad">surveillance prévue</small></div>
+            <div class="stat"><span>Pas arrivé</span><b>1</b><small class="chip warn">alerte envoyée</small></div>
+          </div>
+          <div class="box" style="margin-bottom:16px"><h3><span>À surveiller maintenant</span> <span class="chip warn">3</span></h3>
+            <ul class="alerts">
+              <li><span class="chip warn">NSII</span><span class="grow">M. Casimir n’a pas signalé son arrivée pour l’espagnol (cours commencé à 9 h 40). Alerte envoyée à 9 h 50 à Jean Wilner et à la direction.</span></li>
+              <li><span class="chip bad">3ème AF</span><span class="grow">Mme Alexis est absente (déclarée hier). Rosemène Paul surveille la classe en attendant un remplaçant.</span></li>
+              <li><span class="chip info">10 h 35</span><span class="grow">Fin de la 3e heure dans 4 minutes : 7 classes du secondaire changent de professeur. Chaque professeur concerné est prévenu.</span></li>
+            </ul>
+          </div>
+          <div class="seg" id="sectseg" role="group" aria-label="Filtrer par section">
+            <button type="button" aria-pressed="true" data-g="tous">Toutes · 16</button>
+            <button type="button" aria-pressed="false" data-g="kg">Kindergarten · 3</button>
+            <button type="button" aria-pressed="false" data-g="pri">Primaire · 6</button>
+            <button type="button" aria-pressed="false" data-g="sec">Secondaire · 7</button>
+          </div>
+          <div class="classes" id="classes">
+            <div class="cls" data-g="kg"><div class="cls-h"><b>1ère Année Kinder</b><span class="chip ok">En classe</span></div><span>Activités · Mme Saint-Louis et Mme Jean-Louis</span><span class="nx">Deux maîtresses toute la matinée</span></div>
+            <div class="cls" data-g="kg"><div class="cls-h"><b>2ème Année Kinder</b><span class="chip ok">En classe</span></div><span>Activités · Mme Gédéon</span><span class="nx">Titulaire toute la matinée</span></div>
+            <div class="cls" data-g="kg"><div class="cls-h"><b>3ème Année Kinder</b><span class="chip ok">En classe</span></div><span>Activités · Mme Octave</span><span class="nx">Titulaire toute la matinée</span></div>
+            <div class="cls" data-g="pri"><div class="cls-h"><b>1ère AF</b><span class="chip ok">En classe</span></div><span>Français · Mme Toussaint</span><span class="nx">Même professeur toute la journée</span></div>
+            <div class="cls" data-g="pri"><div class="cls-h"><b>2ème AF</b><span class="chip ok">En classe</span></div><span>Mathématiques · Mme Jean-Baptiste</span><span class="nx">Même professeur toute la journée</span></div>
+            <div class="cls abs" data-g="pri"><div class="cls-h"><b>3ème AF</b><span class="chip bad">Prof absente</span></div><span>Mme Alexis, absente</span><span>Surveillée par Rosemène Paul</span><span class="nx">Remplaçant à choisir par la direction</span></div>
+            <div class="cls" data-g="pri"><div class="cls-h"><b>4ème AF</b><span class="chip ok">En classe</span></div><span>Sciences Expérimentales · M. Belizaire</span><span class="nx">Même professeur toute la journée</span></div>
+            <div class="cls" data-g="pri"><div class="cls-h"><b>5ème AF</b><span class="chip ok">En classe</span></div><span>Créole · Mme Fleurant</span><span class="nx">Même professeur toute la journée</span></div>
+            <div class="cls" data-g="pri"><div class="cls-h"><b>6ème AF</b><span class="chip ok">En classe</span></div><span>Sciences Sociales · M. Lamour</span><span class="nx">Même professeur toute la journée</span></div>
+            <div class="cls" data-g="sec"><div class="cls-h"><b>7ème AF</b><span class="chip ok">En classe</span></div><span>Français · Mme Célestin</span><span class="nx">10 h 35 · Anglais, M. Louis</span></div>
+            <div class="cls" data-g="sec"><div class="cls-h"><b>8ème AF</b><span class="chip ok">En classe</span></div><span>Mathématiques · M. Pierre</span><span class="nx">10 h 35 · Histoire, Mme Augustin</span></div>
+            <div class="cls free" data-g="sec"><div class="cls-h"><b>9ème AF</b><span class="chip mute">Libre</span></div><span>Pas de cours · étude surveillée</span><span>Surveillée par Jean Wilner</span><span class="nx">10 h 35 · Sciences Expérimentales, M. Dorsainvil</span></div>
+            <div class="cls" data-g="sec"><div class="cls-h"><b>NSI</b><span class="chip ok">En classe</span></div><span>Anglais · M. Louis</span><span class="nx">10 h 35 · Français, Mme Célestin</span></div>
+            <div class="cls late" data-g="sec"><div class="cls-h"><b>NSII</b><span class="chip warn">Pas arrivé</span></div><span>Espagnol · M. Casimir</span><span>Alerte envoyée à 9 h 50</span><span class="nx">10 h 35 · Informatique, Mme Lindor</span></div>
+            <div class="cls" data-g="sec"><div class="cls-h"><b>NSIII</b><span class="chip ok">En classe</span></div><span>Sciences Expérimentales · M. Jeune</span><span class="nx">10 h 35 · Histoire, M. Mathurin</span></div>
+            <div class="cls" data-g="sec"><div class="cls-h"><b>NSIV</b><span class="chip ok">En classe</span></div><span>Philosophie · M. Jeanty</span><span class="nx">10 h 35 · Géographie, M. Pierre-Paul</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Classes en direct.</b> Pour chaque classe, à cet instant : le cours et le professeur, puis qui prend la suite. Les classes libres, sans professeur ou dont le professeur n’est pas arrivé ressortent en couleur. Au Kindergarten et au primaire, la classe garde ses maîtresses ou son professeur toute la journée. La page se met à jour toute seule chaque minute. La directrice en chef voit toute l’école ; chaque direction de section, le censeur et les surveillants voient leur section.</p>
+  </div>
+
+  <!-- ============ SECRETARIAT ============ -->
+  <div class="panel" id="secretariat" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/gestion/secretariat/</div><div class="tpl">core/secretariat_tableau.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Nadège Auguste</b><span>Secrétariat · toute l’école</span></div>
+          <a class="on" href="#secretariat">Tableau de bord</a><a href="#secretariat">Préinscriptions</a><a href="#secretariat">Élèves</a><a href="#secretariat">Classes</a><a href="#secretariat">Comptes parents</a><a href="#profinscription">Professeurs</a><a href="#secretariat">Documents</a><a href="#secretariat">Actualités</a><a href="#secretariat">Messages</a><a href="#connexion">Déconnexion</a>
+        </aside>
+        <div class="content">
+          <h2>Secrétariat</h2>
+          <p class="sub">Jeudi 12 novembre 2026 · le lien entre les familles et l’école</p>
+          <div class="stats">
+            <div class="stat"><span>Préinscriptions</span><b>8</b><small>à traiter</small></div>
+            <div class="stat"><span>Inscriptions</span><b id="toins">1</b><small>à finaliser</small></div>
+            <div class="stat"><span>Codes parents</span><b>12</b><small class="chip warn">pas encore utilisés</small></div>
+            <div class="stat"><span>Demandes</span><b>4</b><small>documents, messages, comptes</small></div>
+          </div>
+          <div class="stack">
+            <div class="box"><h3><span>Préinscriptions en cours</span> <span class="chip info">de la demande à l’inscription</span></h3>
+              <div class="tw"><table>
+                <thead><tr><th>Dossier</th><th>Élève</th><th>Classe demandée</th><th>Étape</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td>PRE-0151</td><td>Pierre Josué</td><td>NSI</td><td><span class="chip info">Reçue</span></td><td><button class="btn btn-ghost btn-sm" type="button">Vérifier le dossier</button></td></tr>
+                  <tr><td>PRE-0150</td><td>Étienne Ruth</td><td>1ère Année Kinder</td><td><span class="chip warn">Chez la direction</span></td><td class="no">En attente</td></tr>
+                  <tr><td>PRE-0149</td><td>Désir Kerline</td><td>4ème AF</td><td><span class="chip ok" id="kerline">Acceptée</span></td><td><button class="btn btn-navy btn-sm" type="button" id="inscrire">Inscrire</button></td></tr>
+                  <tr><td>PRE-0148</td><td>Noël Ricardo</td><td>9ème AF</td><td><span class="chip mute">Inscrit</span></td><td class="no">Code remis</td></tr>
+                </tbody>
+              </table></div>
+              <p class="codebox" id="codebox" hidden>Désir Kerline est inscrite en 4ème AF. Code d’accès à remettre à la famille : <b>NEN-8QX3-51</b>. La famille règle les frais d’inscription à la caisse.</p>
+            </div>
+            <div class="box"><h3>Demandes du jour</h3>
+              <ul class="alerts">
+                <li><span class="grow">Certificat de scolarité · Cadet Mirlande, 8ème AF</span><button class="btn btn-ghost btn-sm" type="button">Imprimer</button></li>
+                <li><span class="grow">Nouveau professeur · M. Blaise, informatique · à inscrire</span><a class="btn btn-ghost btn-sm" href="#profinscription">Inscrire</a></li>
+                <li><span class="grow">Mot de passe oublié · Mme Delva, parent sans e-mail</span><button class="btn btn-ghost btn-sm" type="button">Réinitialiser</button></li>
+                <li><span class="grow">Message du site · « Quelle est la date de la réunion des parents ? »</span><button class="btn btn-ghost btn-sm" type="button">Répondre</button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Secrétariat.</b> Le secrétariat suit chaque préinscription jusqu’à l’inscription. Quand la direction de la section a accepté l’élève, le bouton Inscrire crée la fiche élève, l’affecte à sa classe et génère le code d’accès du compte parent. Le secrétariat inscrit aussi les nouveaux professeurs, prépare les documents, réinitialise les mots de passe et répond aux messages. Il voit les notes et les paiements sans pouvoir les modifier.</p>
+  </div>
+
+  <!-- ============ DIRECTION DE SECTION ============ -->
+  <div class="panel" id="direction" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/gestion/sections/primaire/</div><div class="tpl">core/section_tableau.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Guerline Fleurimond</b><span>Directrice du primaire</span></div>
+          <a class="on" href="#direction">Tableau de bord</a><a href="#direction">Classes</a><a href="#direction">Élèves</a><a href="#direction">Professeurs</a><a href="#direction">Bulletins</a><a href="#direction">Préinscriptions</a><a href="#vie">Vie scolaire</a><a href="#direct">Classes en direct</a><a href="#connexion">Déconnexion</a>
+        </aside>
+        <div class="content">
+          <h2>Section primaire</h2>
+          <p class="sub">1ère à 6ème AF · 1er trimestre 2026-2027 · seules les classes de la section sont visibles</p>
+          <div class="stats">
+            <div class="stat"><span>Élèves</span><b>168</b><small>6 classes</small></div>
+            <div class="stat"><span>Professeurs</span><b>6</b><small>un par classe</small></div>
+            <div class="stat"><span>Notes saisies</span><b>95 %</b><small class="chip warn">2 classes incomplètes</small></div>
+            <div class="stat"><span>Bulletins à valider</span><b id="toval">2</b><small>classes prêtes</small></div>
+          </div>
+          <div class="box">
+            <h3><span>Avancement du 1er trimestre</span> <span class="chip info">1ère à 6ème AF</span></h3>
+            <div class="tw"><table>
+              <thead><tr><th>Classe</th><th>Titulaire</th><th class="n">Élèves</th><th class="n">Notes saisies</th><th>Bulletins</th></tr></thead>
+              <tbody>
+                <tr><td>1ère AF</td><td>Mme Toussaint</td><td class="n">31</td><td class="n">100 %<span class="meter"><i style="width:100%"></i></span></td><td><span class="chip ok">Validés</span></td></tr>
+                <tr><td>2ème AF</td><td>Mme Jean-Baptiste</td><td class="n">30</td><td class="n">100 %<span class="meter"><i style="width:100%"></i></span></td><td><span class="chip ok">Validés</span></td></tr>
+                <tr><td>3ème AF</td><td>Mme Alexis</td><td class="n">28</td><td class="n">92 %<span class="meter"><i style="width:92%;background:var(--amber)"></i></span></td><td><span class="chip warn">Notes manquantes</span></td></tr>
+                <tr><td>4ème AF</td><td>M. Belizaire</td><td class="n">27</td><td class="n">100 %<span class="meter"><i style="width:100%"></i></span></td><td><button class="btn btn-navy btn-sm valider" type="button">Valider</button></td></tr>
+                <tr><td>5ème AF</td><td>Mme Fleurant</td><td class="n">26</td><td class="n">75 %<span class="meter"><i style="width:75%;background:var(--amber)"></i></span></td><td><span class="chip warn">Notes manquantes</span></td></tr>
+                <tr><td>6ème AF</td><td>M. Lamour</td><td class="n">26</td><td class="n">100 %<span class="meter"><i style="width:100%"></i></span></td><td><button class="btn btn-navy btn-sm valider" type="button">Valider</button></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="box" style="margin-top:16px"><h3><span>Professeurs aujourd’hui</span> <span class="chip ok">5 présents sur 6</span></h3>
+            <ul class="alerts">
+              <li><span class="chip bad">Absente</span><span class="grow">Mme Alexis, 3ème AF · maladie, déclarée hier · Rosemène Paul surveille la classe</span><button class="btn btn-navy btn-sm" type="button">Choisir un remplaçant</button></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Direction de section.</b> La directrice du primaire ne voit que la 1ère à la 6ème AF. Elle valide les bulletins d’une classe quand toutes les notes sont saisies, et les parents les voient ensuite. Elle valide aussi les cours des professeurs de sa section et organise le remplacement d’un professeur absent. La directrice du Kindergarten et le directeur pédagogique du secondaire ont le même écran pour leur section.</p>
+  </div>
+
+  <!-- ============ DIRECTRICE EN CHEF ============ -->
+  <div class="panel" id="chef" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/gestion/</div><div class="tpl">core/dashboard.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Marie-Carmelle Beauvoir</b><span>Directrice en chef · toute l’école</span></div>
+          <a class="on" href="#chef">Tableau de bord</a><a href="#chef">Journal</a><a href="#direct">Classes en direct</a><a href="#direction">Sections</a><a href="#chef">Préinscriptions</a><a href="#chef">Élèves</a><a href="#chef">Paiements</a><a href="#chef">Bulletins</a><a href="#vie">Vie scolaire</a><a href="#chef">Professeurs</a><a href="#employes">Employés</a><a href="#chef">Paramètres</a>
+        </aside>
+        <div class="content">
+          <h2>Toute l’école</h2>
+          <p class="sub">Jeudi 12 novembre 2026 · les trois sections</p>
+          <div class="stats">
+            <div class="stat"><span>Élèves</span><b>412</b><small class="chip ok">+38 cette année</small></div>
+            <div class="stat"><span>Présents</span><b>96 %</b><small>17 absents, 31 retards</small></div>
+            <div class="stat"><span>Encaissé</span><b>1,24 M</b><small>HTG ce mois-ci</small></div>
+            <div class="stat"><span>Impayés</span><b>57</b><small class="chip bad">élèves en retard</small></div>
+          </div>
+          <div class="two">
+            <div class="box"><h3><span>Journal de l’école · aujourd’hui</span> <span class="chip info">7 dernières actions</span></h3>
+              <ul class="feed">
+                <li><time>13 h 10</time><p><b>Secrétariat</b> a reçu la préinscription PRE-0151 pour la NSI.</p><span class="chip info">Admissions</span></li>
+                <li><time>11 h 40</time><p><b>Directrice du primaire</b> a validé les bulletins de 2ème AF.</p><span class="chip ok">Bulletins</span></li>
+                <li><time>11 h 05</time><p><b>M. Pierre</b> a saisi les notes de mathématiques de la 7ème AF.</p><span class="chip info">Notes</span></li>
+                <li><time>10 h 05</time><p><b>Censeur</b> a ouvert un incident en 9ème AF : téléphone en classe.</p><span class="chip warn">Discipline</span></li>
+                                <li><time>9 h 50</time><p><b>Alerte</b> : M. Casimir n’a pas signalé son arrivée pour l’espagnol en NSII.</p><span class="chip warn">Présence</span></li>
+                <li><time>8 h 30</time><p><b>Caisse</b> a encaissé 3 000 HTG pour Joseph Naïka, reçu R-0412.</p><span class="chip ok">Paiement</span></li>
+                <li><time>7 h 52</time><p><b>Surveillant de 8ème AF</b> a envoyé l’appel : 1 absent, 1 retard.</p><span class="chip mute">Appel</span></li>
+              </ul>
+            </div>
+            <div class="stack">
+              <div class="box"><h3>À suivre</h3>
+                <ul class="alerts">
+                  <li><span class="chip bad">57</span>élèves avec un impayé</li>
+                  <li><span class="chip bad">1</span>professeure absente en 3ème AF, surveillance prévue</li>
+                  <li><span class="chip warn">2</span>classes du primaire avec des notes manquantes</li>
+                  <li><span class="chip warn">1</span>convocation de parents en 8ème AF</li>
+                  <li><span class="chip info">8</span>préinscriptions à traiter</li>
+                </ul>
+              </div>
+              <div class="box"><h3>Élèves par section</h3>
+                <div class="bars">
+                  <div><span>Kindergarten</span><i style="width:44%"></i><em>74</em></div>
+                  <div><span>Primaire</span><i style="width:99%"></i><em>168</em></div>
+                  <div><span>Secondaire</span><i style="width:100%"></i><em>170</em></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Directrice en chef.</b> Elle voit toute l’école sur un seul écran. Chaque action importante (appel, présence des professeurs, paiement, note, incident, bulletin, préinscription) s’inscrit dans le journal, et les points à suivre sont regroupés à droite. Chaque ligne ouvre le détail.</p>
+  </div>
+
+  <!-- ============ EMPLOYES ============ -->
+  <div class="panel" id="employes" hidden>
+    <div class="frame">
+      <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lesnenuphars.edu.ht/gestion/employes/</div><div class="tpl">core/employe_liste.html</div></div>
+      <div class="screen app">
+        <aside class="side">
+          <div class="who"><b>Marie-Carmelle Beauvoir</b><span>Directrice en chef · toute l’école</span></div>
+          <a href="#chef">Tableau de bord</a><a href="#chef">Journal</a><a href="#direct">Classes en direct</a><a href="#direction">Sections</a><a href="#employes">Préinscriptions</a><a href="#employes">Élèves</a><a href="#employes">Paiements</a><a href="#employes">Bulletins</a><a href="#vie">Vie scolaire</a><a href="#employes">Professeurs</a><a class="on" href="#employes">Employés</a><a href="#employes">Paramètres</a>
+        </aside>
+        <div class="content">
+          <div class="head">
+            <div><h2>Employés</h2><p class="sub">Personnel non enseignant de toute l’école · 10 personnes</p></div>
+            <button class="btn btn-navy" type="button">Ajouter un employé</button>
+          </div>
+          <div class="seg" id="empseg" role="group" aria-label="Filtrer les employés">
+            <button type="button" aria-pressed="true" data-g="tous">Tous · 10</button>
+            <button type="button" aria-pressed="false" data-g="dir">Directions · 4</button>
+            <button type="button" aria-pressed="false" data-g="surv">Censeurs et surveillants · 3</button>
+            <button type="button" aria-pressed="false" data-g="adm">Administration · 2</button>
+            <button type="button" aria-pressed="false" data-g="ent">Entretien · 1</button>
+          </div>
+          <div class="box"><div class="tw"><table id="emptable">
+            <thead><tr><th>Nom</th><th>Poste</th><th>Section</th><th class="n">Depuis</th><th>Compte sur le site</th></tr></thead>
+            <tbody>
+              <tr data-g="dir"><td>Beauvoir Marie-Carmelle</td><td>Directrice en chef</td><td>Toute l’école</td><td class="n">2009</td><td><span class="chip info">Directrice en chef</span></td></tr>
+              <tr data-g="dir"><td>Dorvil Jean-Claude</td><td>Directeur pédagogique du secondaire</td><td>Secondaire</td><td class="n">2016</td><td><span class="chip info">Direction de section</span></td></tr>
+              <tr data-g="dir"><td>Fleurimond Guerline</td><td>Directrice du primaire</td><td>Primaire</td><td class="n">2012</td><td><span class="chip info">Direction de section</span></td></tr>
+              <tr data-g="dir"><td>Saint-Fleur Micheline</td><td>Directrice du Kindergarten</td><td>Kindergarten</td><td class="n">2018</td><td><span class="chip info">Direction de section</span></td></tr>
+              <tr data-g="surv"><td>Mérisier Frantz</td><td>Censeur</td><td>Secondaire</td><td class="n">2019</td><td><span class="chip info">Censeur</span></td></tr>
+              <tr data-g="surv"><td>Jean Wilner</td><td>Surveillant</td><td>Secondaire</td><td class="n">2021</td><td><span class="chip info">Surveillant</span></td></tr>
+              <tr data-g="surv"><td>Paul Rosemène</td><td>Surveillante</td><td>Primaire</td><td class="n">2020</td><td><span class="chip info">Surveillant</span></td></tr>
+              <tr data-g="adm"><td>Auguste Nadège</td><td>Secrétaire</td><td>Toute l’école</td><td class="n">2015</td><td><span class="chip info">Secrétariat</span></td></tr>
+              <tr data-g="adm"><td>Noël Carline</td><td>Comptable</td><td>Toute l’école</td><td class="n">2017</td><td><span class="chip info">Caisse</span></td></tr>
+              <tr data-g="ent"><td>Estimé Jonas</td><td>Agent d’entretien</td><td>Toute l’école</td><td class="n">2014</td><td><span class="chip mute">Pas de compte</span></td></tr>
+            </tbody>
+          </table></div></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>Employés.</b> Tout le personnel non enseignant : directrice en chef, directions de section, censeur, surveillants, administration et entretien, chacun rattaché à une section ou à toute l’école. Chaque compte reçoit le rôle de son poste ; seul l’entretien n’a pas de compte.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const tabs=[...document.querySelectorAll('[role=tab]')];
+  function show(id){
+    const el=document.getElementById(id);
+    if(!el||!el.classList.contains('panel')) id='accueil';
+    tabs.forEach(t=>t.setAttribute('aria-selected',String(t.dataset.s===id)));
+    document.querySelectorAll('.panel').forEach(p=>p.hidden=p.id!==id);
+    if(id==='accueil') drawPond();
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>{show(t.dataset.s);try{history.replaceState(null,'','#'+t.dataset.s)}catch(e){}}));
+  document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const id=a.getAttribute('href').slice(1);if(document.getElementById(id)&&document.getElementById(id).classList.contains('panel')){e.preventDefault();show(id);window.scrollTo({top:0})}}));
+  document.getElementById('preform').addEventListener('submit',e=>{e.preventDefault();document.getElementById('okmsg').hidden=false});
+
+  const ins=[...document.querySelectorAll('.gradein')];
+  function recalc(){
+    const v=ins.map(i=>parseFloat(i.value.replace(',','.'))).filter(n=>!isNaN(n));
+    ins.forEach(i=>{const n=parseFloat(i.value);i.classList.toggle('low',!isNaN(n)&&n<50)});
+    const m=v.length?v.reduce((a,b)=>a+b,0)/v.length:0;
+    document.getElementById('avg').textContent='Moyenne de la classe : '+m.toFixed(1).replace('.',',');
+  }
+  ins.forEach(i=>i.addEventListener('input',recalc));recalc();
+
+  document.querySelectorAll('.valider').forEach(b=>b.addEventListener('click',()=>{
+    const s=document.createElement('span');s.className='chip ok';s.textContent='Validés';b.replaceWith(s);
+    const t=document.getElementById('toval');t.textContent=String(Math.max(0,parseInt(t.textContent,10)-1));
+  }));
+
+  const segs=[...document.querySelectorAll('#empseg button')];
+  segs.forEach(b=>b.addEventListener('click',()=>{
+    segs.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    document.querySelectorAll('#emptable tbody tr').forEach(r=>{r.hidden=!(b.dataset.g==='tous'||r.dataset.g===b.dataset.g)});
+  }));
+
+  function rollSum(){
+    const c={P:0,R:0,A:0};
+    document.querySelectorAll('#roll .pra').forEach(g=>{const on=g.querySelector('[aria-pressed="true"]');if(on)c[on.dataset.v]++});
+    const w=(n,s,p)=>n+' '+(n>1?p:s);
+    document.getElementById('rollsum').textContent=w(c.A,'absent','absents')+' · '+w(c.R,'retard','retards')+' · '+w(c.P,'présent','présents');
+  }
+  document.querySelectorAll('#roll .pra button').forEach(b=>b.addEventListener('click',()=>{
+    b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    rollSum();
+  }));
+  rollSum();
+  document.getElementById('rollsend').addEventListener('click',e=>{const b=e.currentTarget;b.textContent='Appel envoyé';b.disabled=true});
+  document.getElementById('loginform').addEventListener('submit',e=>{
+    e.preventDefault();const r=document.getElementById('l-role').value;show(r);
+    try{history.replaceState(null,'','#'+r)}catch(_){}
+    window.scrollTo({top:0});
+  });
+  document.getElementById('forgot').addEventListener('click',()=>{document.getElementById('forgotmsg').hidden=false});
+  document.getElementById('signupform').addEventListener('submit',e=>{e.preventDefault();document.getElementById('signupok').hidden=false});
+  const btnIns=document.getElementById('inscrire');
+  btnIns.addEventListener('click',()=>{
+    const chip=document.getElementById('kerline');chip.className='chip mute';chip.textContent='Inscrite';
+    const cell=btnIns.parentElement;btnIns.remove();cell.textContent='Code remis';cell.className='no';
+    document.getElementById('codebox').hidden=false;
+    const t=document.getElementById('toins');t.textContent=String(Math.max(0,parseInt(t.textContent,10)-1));
+  });
+  document.querySelectorAll('.justif').forEach(b=>b.addEventListener('click',()=>{
+    const s=document.createElement('span');s.className='chip ok';s.textContent='Justifiée';b.replaceWith(s);
+  }));
+
+  // ---- inscrire un professeur : formulaire selon la section ----
+  const SLOTS=['1re heure · 7 h 30','2e heure · 8 h 25','3e heure · 9 h 40','4e heure · 10 h 35','5e heure · 11 h 30'];
+  const JOURS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+  const CLASSES=['7ème AF','8ème AF','9ème AF','NSI','NSII','NSIII','NSIV'];
+  const MATS=['Informatique','Mathématiques'];
+  const PRIS={'NSI|Mercredi|2':'Anglais avec M. Louis'};
+  const ctb=document.querySelector('#courses tbody');
+  const pfmsg=document.getElementById('pfmsg'),pfok=document.getElementById('pfok');
+  const opts=(list,sel,vals)=>list.map((t,i)=>{const v=vals?vals[i]:t;return '<option value="'+v+'"'+(String(v)===String(sel)?' selected':'')+'>'+t+'</option>'}).join('');
+  function addCourse(c){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td><select aria-label="Matière">'+opts(MATS,c[0])+'</select></td>'+
+      '<td><select aria-label="Classe">'+opts(CLASSES,c[1])+'</select></td>'+
+      '<td><select aria-label="Jour">'+opts(JOURS,c[2])+'</select></td>'+
+      '<td><select aria-label="Heure">'+opts(SLOTS,c[3],[1,2,3,4,5])+'</select><span class="conf" hidden></span></td>'+
+      '<td><button class="xbtn" type="button" aria-label="Retirer ce cours">×</button></td>';
+    ctb.appendChild(tr);
+  }
+  [['Informatique','7ème AF','Lundi',4],['Informatique','8ème AF','Mardi',2],['Informatique','9ème AF','Mardi',3],
+   ['Informatique','NSI','Mercredi',2],['Informatique','NSIII','Vendredi',3]].forEach(addCourse);
+  function checkCourses(){
+    const seen={},cls=new Set();let bad=0,first=null;
+    [...ctb.rows].forEach(r=>{
+      const sel=r.querySelectorAll('select'),c=sel[1].value,k=sel[2].value+'|'+sel[3].value;
+      let msg='';
+      if(PRIS[c+'|'+k]) msg='Créneau déjà pris en '+c+' : '+PRIS[c+'|'+k]+'.';
+      else if(seen[k]) msg='Déjà en '+seen[k]+' à cette heure.';
+      else seen[k]=c;
+      cls.add(c);
+      const out=r.querySelector('.conf');out.textContent=msg;out.hidden=!msg;
+      r.classList.toggle('bad-row',!!msg);
+      sel[3].setAttribute('aria-invalid',String(!!msg));
+      if(msg){bad++;if(!first)first=sel[3]}
+    });
+    const n=ctb.rows.length,min=n*55,hh=Math.floor(min/60),mm=min%60;
+    document.getElementById('pf-sum').textContent=n+' cours par semaine · '+cls.size+' classe'+(cls.size>1?'s':'')+' · '+(mm?hh+' h '+String(mm).padStart(2,'0'):hh+' h');
+    return {bad:bad,first:first};
+  }
+  const KG={k1:{n:'1ère Année Kinder',t:'Mme Saint-Louis',d:'Mme Jean-Louis'},k2:{n:'2ème Année Kinder',t:'Mme Gédéon'},k3:{n:'3ème Année Kinder',t:'Mme Octave'}};
+  const kgClasse=document.getElementById('kg-classe'),kgRole=document.getElementById('kg-role'),kgMsg=document.getElementById('kg-msg');
+  function checkKg(){
+    const c=KG[kgClasse.value];let err='',msg;
+    if(c.d){msg='La '+c.n+' a déjà deux maîtresses, '+c.t+' et '+c.d+'. Choisissez une autre classe.';err='Classe complète'}
+    else if(kgRole.value==='Titulaire'){msg='La '+c.n+' a déjà une titulaire, '+c.t+'. Choisissez « Deuxième maîtresse ».';err='Titulaire déjà nommée'}
+    else msg='Elle travaillera avec '+c.t+', titulaire. La classe aura ses deux maîtresses.';
+    kgMsg.textContent=msg;kgMsg.className='msgline '+(err?'m-bad':'m-ok');
+    return err;
+  }
+  const priClasse=document.getElementById('pri-classe'),priOk=document.getElementById('pri-ok');
+  function priNote(){
+    const [c,t]=priClasse.value.split(' · ');
+    document.getElementById('pri-msg').textContent='La '+c+' a déjà un professeur, '+t+'. Au primaire, une classe n’a qu’un professeur : le nouveau le remplace.';
+    document.getElementById('pri-oklbl').textContent='Remplacer '+t+' dans la '+c;
+    priOk.checked=false;
+  }
+  const SAMPLE={
+    kg:['Métellus','Jocelyne','1996-04-18','+509 4410 2837','Bourdet, Les Cayes','Certificat d’éducatrice préscolaire'],
+    pri:['Lafontant','Nadia','1990-09-03','+509 3822 6190','Rue Nicolas, Les Cayes','Diplôme d’école normale d’instituteurs'],
+    sec:['Blaise','Wilfrid','1992-01-27','+509 3198 7702','Camp-Perrin','Licence en sciences informatiques']};
+  const RULE={kg:'Kindergarten : une classe, avec deux maîtresses au plus (une titulaire et une deuxième maîtresse).',
+    pri:'Primaire : une seule classe, et un seul professeur par classe, qui fait toutes les matières.',
+    sec:'Secondaire : plusieurs cours et plusieurs classes, avec le jour et l’heure de chaque cours.'};
+  const DIR={kg:'Mme Saint-Fleur, directrice du Kindergarten',pri:'Mme Fleurimond, directrice du primaire',sec:'M. Dorvil, directeur pédagogique'};
+  let sect='sec';
+  function validate(){
+    let err='',first=null;
+    if(sect==='sec'){const r=checkCourses();if(r.bad){err=r.bad>1?r.bad+' conflits à corriger':'1 conflit à corriger';first=r.first}}
+    else if(sect==='kg'){err=checkKg();if(err)first=kgClasse}
+    else if(!priOk.checked){err='Confirmez le remplacement';first=priOk}
+    pfmsg.className='chip '+(err?'bad':'ok');pfmsg.textContent=err||'Prêt à inscrire';
+    return first;
+  }
+  const psegs=[...document.querySelectorAll('#pfsect button')];
+  psegs.forEach(b=>b.addEventListener('click',()=>{
+    sect=b.dataset.g;
+    psegs.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    document.querySelectorAll('#profform fieldset[data-for]').forEach(f=>{f.hidden=f.dataset.for!==sect});
+    document.getElementById('pfrule').textContent=RULE[sect];
+    ['pr-nom','pr-prenom','pr-naiss','pr-tel','pr-adr','pr-dipl'].forEach((id,i)=>{document.getElementById(id).value=SAMPLE[sect][i]});
+    pfok.hidden=true;validate();
+  }));
+  const profform=document.getElementById('profform');
+  profform.addEventListener('change',e=>{if(e.target===priClasse)priNote();pfok.hidden=true;validate()});
+  ctb.addEventListener('click',e=>{const b=e.target.closest('.xbtn');if(b){b.closest('tr').remove();pfok.hidden=true;validate()}});
+  document.getElementById('addcourse').addEventListener('click',()=>{
+    addCourse(['Informatique','7ème AF','Vendredi',1]);validate();
+    ctb.rows[ctb.rows.length-1].querySelector('select').focus();
+  });
+  profform.addEventListener('submit',e=>{
+    e.preventDefault();
+    const first=validate();
+    if(first){pfok.hidden=true;first.focus();return}
+    const v=id=>document.getElementById(id).value;
+    document.getElementById('pfok-txt').textContent='Compte créé pour '+v('pr-prenom')+' '+v('pr-nom')+'. Identifiant : '+v('pr-tel')+' · mot de passe provisoire : K7M-4QX, à changer à la première connexion. Fiche envoyée à '+DIR[sect]+' pour validation.';
+    pfok.hidden=false;
+  });
+  validate();
+
+  // ---- ma journée : déclarer une absence ----
+  const SEM=[['7ème AF','Lundi',1],['8ème AF','Lundi',3],['9ème AF','Mardi',1],['NSI','Mercredi',3],['7ème AF','Jeudi',1],['9ème AF','Jeudi',2],['8ème AF','Jeudi',3],['NSI','Jeudi',5]];
+  const HEURES=['1re heure','2e heure','3e heure','4e heure','5e heure'];
+  const JSEM=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const abDate=document.getElementById('ab-date'),abCours=document.getElementById('ab-cours');
+  const absbtn=document.getElementById('absbtn'),absform=document.getElementById('absform'),absok=document.getElementById('absok');
+  function absJour(){
+    const d=new Date(abDate.value+'T12:00:00');
+    if(isNaN(d)) return null;
+    const j=JSEM[d.getDay()];
+    return {j:j,date:j+' '+(d.getDate()===1?'1er':d.getDate())+' '+MOIS[d.getMonth()],cours:SEM.filter(c=>c[1]===j).map(c=>c[0]+' ('+HEURES[c[2]-1]+')')};
+  }
+  function absNote(){
+    const a=absJour();
+    abCours.textContent=!a?'Choisissez un jour.':a.date+' : '+(a.cours.length?a.cours.join(', '):'aucun cours ce jour-là');
+  }
+  ['input','change'].forEach(ev=>abDate.addEventListener(ev,absNote));absNote();
+  absbtn.addEventListener('click',()=>{
+    const open=absform.hidden;absform.hidden=!open;absbtn.setAttribute('aria-expanded',String(open));
+    if(open){absok.hidden=true;abDate.focus()}
+  });
+  absform.addEventListener('submit',e=>{
+    e.preventDefault();const a=absJour();if(!a){abDate.focus();return}
+    const n=a.cours.length;
+    absok.textContent='Absence du '+a.date.toLowerCase()+' envoyée à M. Dorvil. '+(n?(n>1?n+' cours concernés':'1 cours concerné')+' : la direction prévoit un remplaçant ou une étude surveillée.':'Aucun cours ce jour-là.');
+    absform.hidden=true;absbtn.setAttribute('aria-expanded','false');absok.hidden=false;
+  });
+
+  // ---- classes en direct : filtre par section ----
+  const ssegs=[...document.querySelectorAll('#sectseg button')];
+  ssegs.forEach(b=>b.addEventListener('click',()=>{
+    ssegs.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    document.querySelectorAll('#classes .cls').forEach(c=>{c.hidden=!(b.dataset.g==='tous'||c.dataset.g===b.dataset.g)});
+  }));
+
+  function drawPond(){
+    const c=document.getElementById('pond');if(!c)return;
+    const r=c.getBoundingClientRect();if(!r.width)return;
+    const d=window.devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;
+    const x=c.getContext('2d');x.scale(d,d);
+    const cs=getComputedStyle(document.documentElement);
+    const lily=cs.getPropertyValue('--lily').trim(),leaf=cs.getPropertyValue('--leaf').trim();
+    const pads=[[.30,.35,.18],[.70,.62,.22],[.78,.22,.11]];
+    pads.forEach(([px,py,pr])=>{
+      const cx=px*r.width,cy=py*r.height,rad=pr*Math.min(r.width,r.height)*1.25;
+      x.fillStyle=leaf;x.globalAlpha=.35;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,rad,.25,Math.PI*2-.05);x.closePath();x.fill();
+      x.globalAlpha=1;x.fillStyle=lily;
+      for(let k=0;k<8;k++){const a=k/8*Math.PI*2;x.save();x.translate(cx,cy);x.rotate(a);x.beginPath();x.ellipse(0,-rad*.28,rad*.09,rad*.26,0,0,Math.PI*2);x.globalAlpha=.55+.4*(k%2);x.fill();x.restore()}
+      x.globalAlpha=1;x.fillStyle=cs.getPropertyValue('--amber').trim();x.beginPath();x.arc(cx,cy,rad*.08,0,Math.PI*2);x.fill();
+    });
+  }
+  const h=(location.hash||'').slice(1);show(h||'accueil');
+  window.addEventListener('resize',()=>{if(!document.getElementById('accueil').hidden)drawPond()});
+})();
+</script>

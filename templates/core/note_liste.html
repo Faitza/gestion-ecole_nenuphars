@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Notes{% endblock %}
+{% block header_color %}#8b5cf6{% endblock %}
+{% block header_title %}📝 GESTION DES NOTES{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <a href="{% url 'core:note_creer' %}" class="btn btn-add">➕ Ajouter une Note</a>
+    <form method="get">
+        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="🔍 Rechercher par élève ou matière...">
+    </form>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Élève</th><th>Professeur</th><th>Matière</th><th>Note</th><th>Période</th><th>Année</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for n in notes %}
+        <tr>
+            <td>{{ n.eleve }}</td><td>{{ n.professeur|default:"—" }}</td><td>{{ n.matiere }}</td>
+            <td>{{ n.note }}/100</td><td>{{ n.periode }}</td><td>{{ n.annee_scolaire|default:"—" }}</td>
+            <td>
+                <a href="{% url 'core:note_modifier' n.pk %}" class="btn-sm btn-edit">Modifier</a>
+                <a href="{% url 'core:note_supprimer' n.pk %}" class="btn-sm btn-delete">Supprimer</a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="7">Aucune note trouvée.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

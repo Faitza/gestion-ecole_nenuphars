@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block title %}Paiements{% endblock %}
+{% block header_color %}#10b981{% endblock %}
+{% block header_title %}💰 GESTION DES PAIEMENTS{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <a href="{% url 'core:paiement_creer' %}" class="btn btn-add">➕ Nouveau Paiement</a>
+    <div class="stat-card" style="background:#10b981; padding:14px 24px;">
+        <span style="font-size:13px;">Total reçu : </span>
+        <span style="font-size:20px; font-weight:bold;">{{ total|floatformat:0 }} HTG</span>
+    </div>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Élève</th><th>Montant</th><th>Type</th><th>Méthode</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for p in paiements %}
+        <tr>
+            <td>{{ p.eleve }}</td><td>{{ p.montant }} HTG</td><td>{{ p.type_paiement }}</td>
+            <td>{{ p.methode_paiement }}</td><td>{{ p.date_paiement|date:"d/m/Y H:i" }}</td>
+            <td>{{ p.statut }}</td>
+            <td><a href="{% url 'core:paiement_supprimer' p.pk %}" class="btn-sm btn-delete">Supprimer</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="7">Aucun paiement enregistré.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

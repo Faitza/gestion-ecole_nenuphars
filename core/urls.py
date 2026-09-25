@@ -1,0 +1,46 @@
+# core/urls.py
+from django.urls import path
+from . import views
+
+app_name = "core"
+
+urlpatterns = [
+    path("login/", views.LoginView.as_view(), name="login"),
+    path("logout/", views.LogoutView.as_view(), name="logout"),
+    path("", views.dashboard, name="dashboard"),
+
+    # Élèves
+    path("eleves/", views.eleve_liste, name="eleve_liste"),
+    path("eleves/nouveau/", views.eleve_creer, name="eleve_creer"),
+    path("eleves/<int:pk>/modifier/", views.eleve_modifier, name="eleve_modifier"),
+    path("eleves/<int:pk>/supprimer/", views.eleve_supprimer, name="eleve_supprimer"),
+
+    # Classes
+    path("classes/", views.classe_liste, name="classe_liste"),
+    path("classes/nouveau/", views.classe_creer, name="classe_creer"),
+    path("classes/<int:pk>/modifier/", views.classe_modifier, name="classe_modifier"),
+    path("classes/<int:pk>/supprimer/", views.classe_supprimer, name="classe_supprimer"),
+
+    # Professeurs
+    path("professeurs/", views.professeur_liste, name="professeur_liste"),
+    path("professeurs/nouveau/", views.professeur_creer, name="professeur_creer"),
+    path("professeurs/<int:pk>/modifier/", views.professeur_modifier, name="professeur_modifier"),
+    path("professeurs/<int:pk>/supprimer/", views.professeur_supprimer, name="professeur_supprimer"),
+
+    # Employés
+    path("employes/", views.employe_liste, name="employe_liste"),
+    path("employes/nouveau/", views.employe_creer, name="employe_creer"),
+    path("employes/<int:pk>/modifier/", views.employe_modifier, name="employe_modifier"),
+    path("employes/<int:pk>/supprimer/", views.employe_supprimer, name="employe_supprimer"),
+
+    # Paiements
+    path("paiements/", views.paiement_liste, name="paiement_liste"),
+    path("paiements/nouveau/", views.paiement_creer, name="paiement_creer"),
+    path("paiements/<int:pk>/supprimer/", views.paiement_supprimer, name="paiement_supprimer"),
+
+    # Notes
+    path("notes/", views.note_liste, name="note_liste"),
+    path("notes/nouveau/", views.note_creer, name="note_creer"),
+    path("notes/<int:pk>/modifier/", views.note_modifier, name="note_modifier"),
+    path("notes/<int:pk>/supprimer/", views.note_supprimer, name="note_supprimer"),
+]

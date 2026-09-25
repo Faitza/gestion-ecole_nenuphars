@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+{% block header_title %}📊 TABLEAU DE BORD{% endblock %}
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card" style="background:#3b82f6;">
+        <div class="emoji">🧒</div>
+        <div class="label">Élèves</div>
+        <div class="value">{{ nb_eleves }}</div>
+    </div>
+    <div class="stat-card" style="background:#ef4444;">
+        <div class="emoji">👨‍🏫</div>
+        <div class="label">Professeurs</div>
+        <div class="value">{{ nb_professeurs }}</div>
+    </div>
+    <div class="stat-card" style="background:#f59e0b;">
+        <div class="emoji">👔</div>
+        <div class="label">Employés</div>
+        <div class="value">{{ nb_employes }}</div>
+    </div>
+    <div class="stat-card" style="background:#10b981;">
+        <div class="emoji">💰</div>
+        <div class="label">Revenus Total</div>
+        <div class="value">{{ revenus|floatformat:0 }} HTG</div>
+    </div>
+</div>
+{% endblock %}

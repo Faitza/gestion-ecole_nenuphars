@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+{% block title %}{{ titre }}{% endblock %}
+{% block header_title %}{{ titre }}{% endblock %}
+{% block content %}
+<div class="form-card">
+    <p class="required-note">* Champs obligatoires</p>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p style="font-size:11px;color:var(--texte-clair);">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}<p style="color:#dc2626; font-size:12px;">{{ field.errors|striptags }}</p>{% endif %}
+        {% endfor %}
+        <button type="submit" class="btn-primary">💾 Enregistrer</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Institution Les Nénuphars{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="emoji">🏫</div>
+            <h2>LES NÉNUPHARS</h2>
+            <span>Les Cayes</span>
+        </div>
+        <nav>
+            <a href="{% url 'core:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Tableau de Bord</a>
+            <a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in request.resolver_match.url_name %}active{% endif %}">🧒 Élèves</a>
+            <a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in request.resolver_match.url_name %}active{% endif %}">🏷️ Classes</a>
+            <a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in request.resolver_match.url_name %}active{% endif %}">💰 Paiements</a>
+            <a href="{% url 'core:note_liste' %}" style="--accent:#8b5cf6" class="{% if 'note' in request.resolver_match.url_name %}active{% endif %}">📝 Notes</a>
+            <a href="{% url 'core:professeur_liste' %}" style="--accent:#ef4444" class="{% if 'professeur' in request.resolver_match.url_name %}active{% endif %}">👨‍🏫 Professeurs</a>
+            <a href="{% url 'core:employe_liste' %}" style="--accent:#f59e0b" class="{% if 'employe' in request.resolver_match.url_name %}active{% endif %}">👔 Employés</a>
+            <form method="post" action="{% url 'core:logout' %}">
+                {% csrf_token %}
+                <a href="#" class="logout" onclick="this.closest('form').submit(); return false;">🚪 Déconnexion</a>
+            </form>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header" style="background:{% block header_color %}var(--primaire){% endblock %};">
+            <h1>{% block header_title %}{% endblock %}</h1>
+        </div>
+        <div class="page-body">
+            {% if messages %}
+                <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+</body>
+</html>

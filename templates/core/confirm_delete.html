@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Confirmer la suppression{% endblock %}
+{% block header_color %}#dc2626{% endblock %}
+{% block header_title %}🗑️ Confirmer la suppression{% endblock %}
+{% block content %}
+<div class="form-card">
+    <p>Voulez-vous vraiment supprimer <strong>{{ objet }}</strong> ?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn-primary" style="background:#dc2626;">Oui, supprimer</button>
+    </form>
+    <br>
+    <a href="{% url retour %}">← Annuler</a>
+</div>
+{% endblock %}

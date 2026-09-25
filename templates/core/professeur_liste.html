@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Professeurs{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}👨‍🏫 GESTION DES PROFESSEURS{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <a href="{% url 'core:professeur_creer' %}" class="btn btn-add">➕ Nouveau Professeur</a>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Nom</th><th>Prénom</th><th>Matière</th><th>Classes</th><th>Téléphone</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for p in professeurs %}
+        <tr>
+            <td>{{ p.nom }}</td><td>{{ p.prenom }}</td><td>{{ p.matiere_principale|default:"—" }}</td>
+            <td>{% for c in p.classes.all %}{{ c.nom }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+            <td>{{ p.telephone|default:"—" }}</td>
+            <td>
+                <a href="{% url 'core:professeur_modifier' p.pk %}" class="btn-sm btn-edit">Modifier</a>
+                <a href="{% url 'core:professeur_supprimer' p.pk %}" class="btn-sm btn-delete">Supprimer</a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="6">Aucun professeur trouvé.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}
