@@ -4,22 +4,22 @@
 {% block header_title %}🏷️ GESTION DES CLASSES{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    <a href="{% url 'core:classe_creer' %}" class="btn btn-add">➕ Nouvelle Classe</a>
+    {% if acces.classes.ecrire %}<a href="{% url 'core:classe_creer' %}" class="btn btn-add">➕ Nouvelle Classe</a>{% endif %}
 </div>
 <div class="table-wrapper">
 <table>
-    <thead><tr><th>Nom</th><th>Cycle</th><th>Année scolaire</th><th>Nb élèves</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Nom</th><th>Section</th><th>Cycle</th><th>Année scolaire</th><th>Nb élèves</th>{% if acces.classes.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
     <tbody>
         {% for c in classes %}
         <tr>
-            <td>{{ c.nom }}</td><td>{{ c.cycle|default:"—" }}</td><td>{{ c.annee_scolaire|default:"—" }}</td>
+            <td>{{ c.nom }}</td><td>{{ c.section|default:"—" }}</td><td>{{ c.cycle|default:"—" }}</td><td>{{ c.annee_scolaire|default:"—" }}</td>
             <td>{{ c.eleves.count }}</td>
-            <td>
+            {% if acces.classes.ecrire %}<td>
                 <a href="{% url 'core:classe_modifier' c.pk %}" class="btn-sm btn-edit">Modifier</a>
                 <a href="{% url 'core:classe_supprimer' c.pk %}" class="btn-sm btn-delete">Supprimer</a>
-            </td>
+            </td>{% endif %}
         </tr>
-        {% empty %}<tr><td colspan="5">Aucune classe créée.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="6">Aucune classe créée.</td></tr>{% endfor %}
     </tbody>
 </table>
 </div>

@@ -1,12 +1,17 @@
 # core/urls.py
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = "core"
 
 urlpatterns = [
-    path("login/", views.LoginView.as_view(), name="login"),
+    # Une seule page de connexion pour tout le monde
+    path("connexion/", views.LoginView.as_view(), name="login"),
+    path("login/", RedirectView.as_view(pattern_name="core:login", query_string=True)),
     path("logout/", views.LogoutView.as_view(), name="logout"),
+    path("mot-de-passe/", views.MotDePasseView.as_view(), name="mot_de_passe"),
+    path("espace/", views.espace, name="espace"),
     path("", views.dashboard, name="dashboard"),
 
     # Élèves

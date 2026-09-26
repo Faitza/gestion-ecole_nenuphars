@@ -1,7 +1,8 @@
 # core/management/commands/seed_data.py
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
-from core.models import Classe, Eleve, Professeur, Employe, Paiement, Note
+from core.models import Section, Classe, Eleve, Professeur, Employe, Paiement, Note
 from core import choices
 
 Utilisateur = get_user_model()
@@ -11,6 +12,10 @@ class Command(BaseCommand):
     help = "Crée le compte admin par défaut et quelques données d'exemple pour tester l'application"
 
     def handle(self, *args, **options):
+        # Le compte admin/admin123 est pour les essais seulement, jamais en production
+        if not settings.DEBUG:
+            raise CommandError("seed_data sert aux essais : lancez-le seulement avec DJANGO_DEBUG=1.")
+
         # 1) Compte admin par défaut
         if not Utilisateur.objects.filter(username="admin").exists():
             Utilisateur.objects.create_superuser("admin", "admin@nenuphars.ht", "admin123")
@@ -19,9 +24,13 @@ class Command(BaseCommand):
             self.stdout.write("• Compte admin existe déjà")
 
         # 2) Toutes les classes, de la 1ère année Kindergarten à la NS4
+        sections = {s.nom: s for s in Section.objects.all()}
         classes = {}
         for nom, cycle in choices.CLASSES_PAR_DEFAUT:
-            c, _ = Classe.objects.get_or_create(nom=nom, defaults=dict(cycle=cycle, annee_scolaire="2026-2027"))
+            section = sections.get(choices.SECTION_PAR_CLASSE.get(nom))
+            c, _ = Classe.objects.get_or_create(
+                nom=nom, defaults=dict(cycle=cycle, section=section, annee_scolaire="2026-2027"),
+            )
             classes[nom] = c
         self.stdout.write(self.style.SUCCESS(f"✓ {len(choices.CLASSES_PAR_DEFAUT)} classes créées (Kinder 1 → NS4)"))
 
@@ -31,7 +40,10 @@ class Command(BaseCommand):
             ("Toyo", "Daana Neissa", "ETAP", ["NSI", "NSII", "NSIII"]),
         ]
         for nom, prenom, matiere, classes_noms in professeurs_data:
-            p, _ = Professeur.objects.get_or_create(nom=nom, prenom=prenom, defaults=dict(matiere_principale=matiere))
+            p, _ = Professeur.objects.get_or_create(
+                nom=nom, prenom=prenom,
+                defaults=dict(matiere_principale=matiere, section=sections.get(choices.SECTION_SECONDAIRE)),
+            )
             p.classes.set([classes[c] for c in classes_noms])
         self.stdout.write(self.style.SUCCESS(f"✓ {len(professeurs_data)} professeurs créés"))
 

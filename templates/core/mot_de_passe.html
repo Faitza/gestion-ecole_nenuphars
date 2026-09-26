@@ -1,0 +1,20 @@
+{% extends "core/base.html" %}
+{% block title %}Mot de passe{% endblock %}
+{% block header_title %}🔑 CHANGER MON MOT DE PASSE{% endblock %}
+{% block content %}
+<div class="form-card">
+    {% if user.doit_changer_mot_de_passe %}
+        <p class="required-note">Votre compte a été créé avec un mot de passe provisoire. Choisissez le vôtre pour continuer.</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<p style="color:#dc2626; font-size:12px;">{{ form.non_field_errors|striptags }}</p>{% endif %}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p style="color:#dc2626; font-size:12px;">{{ field.errors|striptags }}</p>{% endif %}
+        {% endfor %}
+        <button type="submit" class="btn-primary">💾 Enregistrer</button>
+    </form>
+</div>
+{% endblock %}

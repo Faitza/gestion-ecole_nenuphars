@@ -10,22 +10,55 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
+# ─────────────────────────────────────────────────────────────
+# Réglages lus dans l'environnement (jamais de secret dans le code).
+# En développement, copiez .env.example en .env ; en production,
+# définissez les mêmes variables chez l'hébergeur.
+# ─────────────────────────────────────────────────────────────
+def _charger_fichier_env(chemin):
+    """Charge les lignes CLE=valeur d'un fichier .env sans écraser l'environnement."""
+    if not chemin.exists():
+        return
+    for ligne in chemin.read_text(encoding="utf-8").splitlines():
+        ligne = ligne.strip()
+        if not ligne or ligne.startswith("#") or "=" not in ligne:
+            continue
+        cle, valeur = ligne.split("=", 1)
+        os.environ.setdefault(cle.strip(), valeur.strip().strip("\"'"))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o!xt+2aqb!qmz4ag2-m&fx$h61-&k3bu722up_h!fi)*v18l30'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+def _env_bool(nom, defaut=False):
+    return (os.environ.get(nom) or ("1" if defaut else "0")).strip().lower() in ("1", "true", "oui", "yes")
 
-ALLOWED_HOSTS = []
+
+def _env_liste(nom, defaut=""):
+    return [v.strip() for v in (os.environ.get(nom) or defaut).split(",") if v.strip()]
+
+
+_charger_fichier_env(BASE_DIR / ".env")
+
+DEBUG = _env_bool("DJANGO_DEBUG")
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY n'est pas défini. En développement, copiez .env.example en .env ; "
+            "en production, définissez DJANGO_SECRET_KEY chez l'hébergeur."
+        )
+    SECRET_KEY = "dev-seulement-cle-a-ne-jamais-utiliser-en-production"
+
+ALLOWED_HOSTS = _env_liste("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1" if DEBUG else "")
+CSRF_TRUSTED_ORIGINS = _env_liste("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 
 # Application definition
@@ -42,9 +75,18 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'core.Utilisateur'
 
+# Connexion avec le nom d'utilisateur, l'e-mail ou le téléphone
+AUTHENTICATION_BACKENDS = ['core.backends.IdentifiantBackend']
+
 LOGIN_URL = 'core:login'
-LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGIN_REDIRECT_URL = 'core:espace'
 LOGOUT_REDIRECT_URL = 'core:login'
+
+# Session fermée après 30 minutes sans activité
+SESSION_COOKIE_AGE = 30 * 60
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -52,6 +94,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.ChangementMotDePasseMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -68,6 +111,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.acces',
             ],
         },
     },
@@ -78,28 +122,38 @@ WSGI_APPLICATION = 'gestion_ecole.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
-
-# Par défaut : SQLite, pour tester le projet immédiatement sans rien installer.
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# Pour te connecter à ta vraie base MySQL "gestion_ecole" (celle du .sql
-# fourni), remplace le bloc ci-dessus par ceci (et fais `pip install mysqlclient`) :
 #
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'gestion_ecole',
-#         'USER': 'root',
-#         'PASSWORD': '1234',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#     }
-# }
+# DB_ENGINE=sqlite (par défaut, rien à installer) pour le développement,
+# DB_ENGINE=postgresql (conseillé) ou mysql en production, avec DB_NAME,
+# DB_USER, DB_PASSWORD, DB_HOST et DB_PORT.
+
+_MOTEURS = {
+    "sqlite": "django.db.backends.sqlite3",
+    "postgresql": "django.db.backends.postgresql",
+    "mysql": "django.db.backends.mysql",
+}
+_moteur = (os.environ.get("DB_ENGINE") or "sqlite").strip().lower()
+if _moteur not in _MOTEURS:
+    raise ImproperlyConfigured(f"DB_ENGINE doit valoir sqlite, postgresql ou mysql (reçu : {_moteur}).")
+
+if _moteur == "sqlite":
+    DATABASES = {
+        'default': {
+            'ENGINE': _MOTEURS["sqlite"],
+            'NAME': BASE_DIR / (os.environ.get("DB_NAME") or "db.sqlite3"),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': _MOTEURS[_moteur],
+            'NAME': os.environ.get("DB_NAME") or "gestion_ecole",
+            'USER': os.environ.get("DB_USER", ""),
+            'PASSWORD': os.environ.get("DB_PASSWORD", ""),
+            'HOST': os.environ.get("DB_HOST") or "localhost",
+            'PORT': os.environ.get("DB_PORT", ""),
+        }
+    }
 
 
 # Password validation
