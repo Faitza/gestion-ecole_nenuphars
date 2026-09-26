@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}Mon emploi du temps{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}👋 BONJOUR {{ professeur.prenom|upper }}{% endblock %}
+{% block content %}
+{% if professeur.section.est_secondaire %}
+    <div class="bloc">
+        <h2>Mon emploi du temps</h2>
+        {% if grille %}
+            <div class="chiffres">
+                <div><strong>{{ resume.nb_cours }}</strong><span>cours</span></div>
+                <div><strong>{{ resume.classes|length }}</strong><span>classe{{ resume.classes|length|pluralize }}</span></div>
+                <div><strong>{{ resume.heures }}</strong><span>par semaine</span></div>
+            </div>
+            {% include "core/_emploi_du_temps.html" %}
+        {% else %}
+            <p>Votre emploi du temps sera visible ici après sa validation par la direction de votre section.</p>
+        {% endif %}
+        {% if en_attente %}<p class="aide">{{ en_attente }} cours attendent encore la validation.</p>{% endif %}
+    </div>
+{% else %}
+    <div class="bloc">
+        <h2>Ma classe</h2>
+        {% if affectation %}
+            <p><strong>{{ affectation.classe }}</strong>{% if professeur.section.est_kindergarten %} · {{ affectation.role }}{% endif %}</p>
+            <p>Vous êtes avec votre classe toute la journée.</p>
+        {% else %}
+            <p>Le secrétariat ne vous a pas encore attribué de classe.</p>
+        {% endif %}
+    </div>
+{% endif %}
+<p class="aide">Bientôt ici : votre arrivée, vos absences, la saisie des notes et les alertes de fin de cours.</p>
+{% endblock %}

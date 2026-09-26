@@ -1,7 +1,7 @@
 # core/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note
+from .models import Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Affectation, Cours
 
 
 @admin.register(Utilisateur)
@@ -61,3 +61,21 @@ class NoteAdmin(admin.ModelAdmin):
     list_display = ("eleve", "professeur", "matiere", "note", "periode")
     list_filter = ("periode", "matiere")
     search_fields = ("eleve__nom", "eleve__prenom", "matiere")
+
+
+@admin.register(Creneau)
+class CreneauAdmin(admin.ModelAdmin):
+    list_display = ("nom", "section", "heure_debut", "heure_fin", "est_un_cours")
+    list_filter = ("section",)
+
+
+@admin.register(Affectation)
+class AffectationAdmin(admin.ModelAdmin):
+    list_display = ("professeur", "classe", "role", "date_debut", "date_fin")
+    list_filter = ("classe__section", "role")
+
+
+@admin.register(Cours)
+class CoursAdmin(admin.ModelAdmin):
+    list_display = ("professeur", "classe", "matiere", "jour", "creneau", "statut", "annee_scolaire")
+    list_filter = ("statut", "jour", "classe", "annee_scolaire")

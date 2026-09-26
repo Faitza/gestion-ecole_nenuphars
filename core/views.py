@@ -9,7 +9,8 @@ from django.urls import reverse_lazy
 from .models import Eleve, Professeur, Employe, Paiement, Note, Classe
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
-from . import choices
+from . import choices, professeurs
+from .views_professeurs import espace_professeur
 
 
 class LoginView(auth_views.LoginView):
@@ -42,6 +43,9 @@ def espace(request):
     """Après la connexion, chacun est envoyé vers son propre espace."""
     if utilise_la_gestion(request.user):
         return redirect("core:dashboard")
+    professeur = getattr(request.user, "professeur", None)
+    if professeur is not None:
+        return espace_professeur(request, professeur)
     return render(request, "core/espace_a_venir.html", {"roles": sorted(roles_de(request.user))})
 
 
@@ -156,21 +160,8 @@ def classe_supprimer(request, pk):
 # ─────────────────────────── PROFESSEURS ───────────────────────────
 @acces_requis("professeurs")
 def professeur_liste(request):
-    professeurs = filtrer(request.user, "professeurs", Professeur.objects.select_related("section").prefetch_related("classes"))
-    return render(request, "core/professeur_liste.html", {"professeurs": professeurs})
-
-
-@acces_requis("professeurs", ecriture=True)
-def professeur_creer(request):
-    if request.method == "POST":
-        form = ProfesseurForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Professeur ajouté(e) avec succès!")
-            return redirect("core:professeur_liste")
-    else:
-        form = ProfesseurForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouveau Professeur"})
+    liste = filtrer(request.user, "professeurs", Professeur.objects.select_related("section").prefetch_related("classes"))
+    return render(request, "core/professeur_liste.html", {"professeurs": liste})
 
 
 @acces_requis("professeurs", ecriture=True)
@@ -180,10 +171,11 @@ def professeur_modifier(request, pk):
         form = ProfesseurForm(request.POST, instance=professeur)
         if form.is_valid():
             form.save()
+            professeurs.mettre_a_jour_compte(professeur)
             messages.success(request, "Professeur modifié(e) avec succès!")
-            return redirect("core:professeur_liste")
+            return redirect("core:professeur_fiche", pk=professeur.pk)
     else:
-        form = ProfesseurForm(instance=professeur, initial={"classes": professeur.classes.all()})
+        form = ProfesseurForm(instance=professeur)
     return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier le Professeur"})
 
 

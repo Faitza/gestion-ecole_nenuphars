@@ -1,0 +1,108 @@
+{% extends "core/base.html" %}
+{% block title %}{{ professeur }}{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}👨‍🏫 {{ professeur.prenom|upper }} {{ professeur.nom|upper }}{% endblock %}
+{% block content %}
+<div class="colonnes">
+    <div class="bloc">
+        <h2>Informations</h2>
+        <dl class="infos">
+            <dt>Section</dt><dd>{{ professeur.section|default:"—" }}</dd>
+            <dt>Téléphone</dt><dd>{{ professeur.telephone|default:"—" }}</dd>
+            <dt>E-mail</dt><dd>{{ professeur.email|default:"—" }}</dd>
+            <dt>Date de naissance</dt><dd>{{ professeur.date_naissance|date:"d/m/Y"|default:"—" }}</dd>
+            <dt>Adresse</dt><dd>{{ professeur.adresse|default:"—" }}</dd>
+            <dt>Diplôme</dt><dd>{{ professeur.diplome|default:"—" }}</dd>
+            {% if professeur.section.est_secondaire %}<dt>Matière principale</dt><dd>{{ professeur.matiere_principale|default:"—" }}</dd>{% endif %}
+            <dt>Début à l'école</dt><dd>{{ professeur.date_embauche|date:"d/m/Y"|default:"—" }}</dd>
+            <dt>Compte</dt><dd>{% if professeur.utilisateur %}{% if professeur.utilisateur.doit_changer_mot_de_passe %}Créé, pas encore utilisé{% else %}Actif{% endif %}{% else %}Pas de compte{% endif %}</dd>
+        </dl>
+        {% if peut_modifier %}
+        <div class="actions-bar">
+            <a href="{% url 'core:professeur_modifier' professeur.pk %}" class="btn-sm btn-edit">Modifier</a>
+            <form method="post" action="{% url 'core:professeur_nouveau_mot_de_passe' professeur.pk %}" class="en-ligne">
+                {% csrf_token %}
+                <button type="submit" class="btn-sm btn-edit">{% if professeur.utilisateur %}Nouveau mot de passe{% else %}Créer le compte{% endif %}</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="bloc">
+    {% if professeur.section.est_secondaire %}
+        <h2>Semaine {{ annee }}</h2>
+        <div class="chiffres">
+            <div><strong>{{ resume.nb_cours }}</strong><span>cours</span></div>
+            <div><strong>{{ resume.classes|length }}</strong><span>classe{{ resume.classes|length|pluralize }}</span></div>
+            <div><strong>{{ resume.heures }}</strong><span>par semaine</span></div>
+        </div>
+        {% if a_valider %}
+            <p class="avertissement">{{ a_valider|length }} cours attendent la validation de la direction de la section.</p>
+            {% if peut_valider %}
+            <form method="post" action="{% url 'core:professeur_valider_cours' professeur.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-add">✓ Valider les cours</button>
+            </form>
+            {% endif %}
+        {% elif cours %}
+            <p class="ok">Emploi du temps validé.</p>
+        {% endif %}
+    {% else %}
+        <h2>Classe</h2>
+        {% if affectation %}
+            <p><strong>{{ affectation.classe }}</strong>{% if professeur.section.est_kindergarten %} · {{ affectation.role }}{% endif %}<br>
+            <small>depuis le {{ affectation.date_debut|date:"d/m/Y" }}</small></p>
+        {% else %}
+            <p>Pas de classe en ce moment.</p>
+        {% endif %}
+        {% if peut_modifier %}
+        <div class="actions-bar">
+            <a href="{% url 'core:professeur_affecter' professeur.pk %}" class="btn-sm btn-edit">{% if affectation %}Changer de classe{% else %}Choisir une classe{% endif %}</a>
+            {% if affectation %}
+            <form method="post" action="{% url 'core:affectation_terminer' affectation.pk %}" class="en-ligne">
+                {% csrf_token %}
+                <button type="submit" class="btn-sm btn-delete">Retirer de la classe</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if historique %}
+            <p class="aide">Avant : {% for a in historique %}{{ a.classe }} ({{ a.date_debut|date:"d/m/Y" }} – {{ a.date_fin|date:"d/m/Y" }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        {% endif %}
+    {% endif %}
+    </div>
+</div>
+
+{% if professeur.section.est_secondaire %}
+<div class="bloc">
+    <div class="actions-bar">
+        <h2>Emploi du temps</h2>
+        {% if peut_modifier %}<a href="{% url 'core:professeur_cours' professeur.pk %}" class="btn btn-add">➕ Ajouter des cours</a>{% endif %}
+    </div>
+    {% if grille %}
+        {% include "core/_emploi_du_temps.html" %}
+        <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Jour</th><th>Heure</th><th>Classe</th><th>Matière</th><th>État</th>{% if peut_modifier %}<th></th>{% endif %}</tr></thead>
+            <tbody>
+            {% for c in cours %}
+                <tr>
+                    <td>{{ c.get_jour_display }}</td><td>{{ c.creneau.nom }} · {{ c.creneau.horaire }}</td><td>{{ c.classe }}</td><td>{{ c.matiere }}</td>
+                    <td>{{ c.statut }}</td>
+                    {% if peut_modifier %}<td>
+                        <form method="post" action="{% url 'core:cours_supprimer' c.pk %}" class="en-ligne">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-sm btn-delete">Retirer</button>
+                        </form>
+                    </td>{% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% else %}
+        <p>Aucun cours cette année.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

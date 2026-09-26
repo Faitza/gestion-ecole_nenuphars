@@ -2,8 +2,8 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
-from core.models import Section, Classe, Eleve, Professeur, Employe, Paiement, Note
-from core import choices
+from core.models import Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours
+from core import choices, professeurs
 
 Utilisateur = get_user_model()
 
@@ -35,16 +35,24 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"✓ {len(choices.CLASSES_PAR_DEFAUT)} classes créées (Kinder 1 → NS4)"))
 
         # 3) Professeurs
+        # Emploi du temps de départ : un cours par classe, validé (jour, n° de l'heure de cours)
         professeurs_data = [
-            ("Louis-Jean", "Phawens", "Informatique", ["7ème AF", "8ème AF", "9ème AF"]),
-            ("Toyo", "Daana Neissa", "ETAP", ["NSI", "NSII", "NSIII"]),
+            ("Louis-Jean", "Phawens", "Informatique", [("7ème AF", 1, 0), ("8ème AF", 2, 1), ("9ème AF", 4, 3)]),
+            ("Toyo", "Daana Neissa", "ETAP", [("NSI", 1, 1), ("NSII", 3, 0), ("NSIII", 5, 2)]),
         ]
-        for nom, prenom, matiere, classes_noms in professeurs_data:
+        heures = list(Creneau.objects.filter(section=sections.get(choices.SECTION_SECONDAIRE), est_un_cours=True))
+        for nom, prenom, matiere, cours in professeurs_data:
             p, _ = Professeur.objects.get_or_create(
                 nom=nom, prenom=prenom,
                 defaults=dict(matiere_principale=matiere, section=sections.get(choices.SECTION_SECONDAIRE)),
             )
-            p.classes.set([classes[c] for c in classes_noms])
+            for classe_nom, jour, heure in cours if heures else []:
+                Cours.objects.get_or_create(
+                    professeur=p, classe=classes[classe_nom], jour=jour, creneau=heures[heure],
+                    annee_scolaire=choices.annee_scolaire_courante(),
+                    defaults=dict(matiere=matiere, statut=choices.STATUT_COURS_VALIDE),
+                )
+            professeurs.synchroniser_classes(p)
         self.stdout.write(self.style.SUCCESS(f"✓ {len(professeurs_data)} professeurs créés"))
 
         # 4) Employés

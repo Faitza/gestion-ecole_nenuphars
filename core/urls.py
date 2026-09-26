@@ -1,7 +1,7 @@
 # core/urls.py
 from django.urls import path
 from django.views.generic import RedirectView
-from . import views
+from . import views, views_professeurs
 
 app_name = "core"
 
@@ -28,9 +28,18 @@ urlpatterns = [
 
     # Professeurs
     path("professeurs/", views.professeur_liste, name="professeur_liste"),
-    path("professeurs/nouveau/", views.professeur_creer, name="professeur_creer"),
+    path("professeurs/nouveau/", views_professeurs.professeur_inscrire, name="professeur_creer"),
+    path("professeurs/<int:pk>/", views_professeurs.professeur_fiche, name="professeur_fiche"),
     path("professeurs/<int:pk>/modifier/", views.professeur_modifier, name="professeur_modifier"),
     path("professeurs/<int:pk>/supprimer/", views.professeur_supprimer, name="professeur_supprimer"),
+    path("professeurs/<int:pk>/acces/", views_professeurs.professeur_acces, name="professeur_acces"),
+    path("professeurs/<int:pk>/nouveau-mot-de-passe/", views_professeurs.professeur_nouveau_mot_de_passe,
+         name="professeur_nouveau_mot_de_passe"),
+    path("professeurs/<int:pk>/classe/", views_professeurs.professeur_affecter, name="professeur_affecter"),
+    path("professeurs/<int:pk>/cours/", views_professeurs.professeur_cours, name="professeur_cours"),
+    path("professeurs/<int:pk>/valider/", views_professeurs.professeur_valider_cours, name="professeur_valider_cours"),
+    path("affectations/<int:pk>/terminer/", views_professeurs.affectation_terminer, name="affectation_terminer"),
+    path("cours/<int:pk>/supprimer/", views_professeurs.cours_supprimer, name="cours_supprimer"),
 
     # Employés
     path("employes/", views.employe_liste, name="employe_liste"),

@@ -1,0 +1,17 @@
+<div class="table-wrapper">
+<table class="edt">
+    <thead><tr><th>Heure</th>{% for j in jours %}<th><span class="jour-long">{{ j }}</span><span class="jour-court">{{ j|slice:":3" }}</span></th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for ligne in grille %}
+        <tr class="{% if not ligne.creneau.est_un_cours %}recreation{% endif %}">
+            <th>{{ ligne.creneau.nom }}<br><small>{{ ligne.creneau.horaire }}</small></th>
+            {% if ligne.creneau.est_un_cours %}
+                {% for c in ligne.cases %}<td>{% if c %}<strong>{{ c.classe }}</strong><br><small>{{ c.matiere }}{% if c.statut != "Validé" %} · à valider{% endif %}</small>{% endif %}</td>{% endfor %}
+            {% else %}
+                <td colspan="{{ jours|length }}">{{ ligne.creneau.nom }}</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>

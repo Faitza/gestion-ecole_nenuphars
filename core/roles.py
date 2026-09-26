@@ -126,6 +126,13 @@ def filtrer(user, module, queryset, ecriture=False, chemin=None):
     return queryset.none()
 
 
+def peut_valider_cours(user, section):
+    """La direction d'une section valide les cours de sa section ; la directrice en chef, tous."""
+    if a_tout(user):
+        return True
+    return DIRECTION_SECTION in roles_de(user) and section is not None and section_de(user) == section
+
+
 def acces_requis(module, ecriture=False):
     """Décorateur de vue : connexion obligatoire, puis 403 si le rôle n'a pas accès."""
     def decorateur(vue):

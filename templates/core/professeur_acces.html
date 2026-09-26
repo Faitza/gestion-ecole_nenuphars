@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block title %}Fiche d'accès{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}🔑 FICHE D'ACCÈS{% endblock %}
+{% block content %}
+<div class="fiche-acces">
+    <h2>Institution Les Nénuphars</h2>
+    <p><strong>{{ professeur.prenom }} {{ professeur.nom }}</strong>{% if professeur.section %} · {{ professeur.section }}{% endif %}</p>
+    <dl>
+        <dt>Adresse du site</dt><dd>{{ request.scheme }}://{{ request.get_host }}{% url 'core:login' %}</dd>
+        <dt>Identifiant</dt><dd>votre téléphone : {{ professeur.telephone }}</dd>
+        {% if mot_de_passe %}
+        <dt>Mot de passe provisoire</dt><dd class="mot-de-passe">{{ mot_de_passe }}</dd>
+        {% endif %}
+    </dl>
+    {% if mot_de_passe %}
+        <p>À la première connexion, le site vous demandera de choisir votre propre mot de passe.</p>
+    {% else %}
+        <p class="aide pas-imprime">Le mot de passe provisoire ne s'affiche qu'une fois. Pour en donner un nouveau, utilisez « Nouveau mot de passe » sur la fiche du professeur.</p>
+    {% endif %}
+</div>
+<div class="actions-bar pas-imprime">
+    {% if mot_de_passe %}<button type="button" class="btn btn-add" onclick="window.print()">🖨️ Imprimer la fiche d'accès</button>{% endif %}
+    <a href="{% url 'core:professeur_fiche' professeur.pk %}" class="btn btn-secondaire">Voir la fiche du professeur</a>
+</div>
+{% endblock %}

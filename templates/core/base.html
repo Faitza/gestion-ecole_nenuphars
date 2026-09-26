@@ -3,6 +3,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Institution Les Nénuphars{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -15,6 +16,7 @@
             <span>Les Cayes</span>
         </div>
         <nav>
+            {% if not utilise_la_gestion %}<a href="{% url 'core:espace' %}" class="{% if request.resolver_match.url_name == 'espace' %}active{% endif %}">🏠 Mon espace</a>{% endif %}
             {% if utilise_la_gestion %}<a href="{% url 'core:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Tableau de Bord</a>{% endif %}
             {% if acces.eleves.lire %}<a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in request.resolver_match.url_name %}active{% endif %}">🧒 Élèves</a>{% endif %}
             {% if acces.classes.lire %}<a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in request.resolver_match.url_name %}active{% endif %}">🏷️ Classes</a>{% endif %}
@@ -36,7 +38,7 @@
         </div>
         <div class="page-body">
             {% if messages %}
-                <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+                <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
             {% endif %}
             {% block content %}{% endblock %}
         </div>

@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from . import choices, roles
-from .models import Classe, Eleve, Employe, Note, Paiement, Professeur, Section, Utilisateur
+from .models import Affectation, Classe, Creneau, Eleve, Employe, Note, Paiement, Professeur, Section, Utilisateur
 from .telephone import normaliser_telephone
 
 
@@ -195,3 +195,185 @@ class RolesEtAccesTests(TestCase):
         self.assertContains(reponse, "Pierre")
         self.assertContains(self.client.get(reverse("core:employe_liste")), "12345")
         self.assertEqual(self.client.get(reverse("core:employe_creer")).status_code, 200)
+
+
+class InscriptionProfesseursTests(TestCase):
+    """Module professeurs : la secrétaire inscrit, la direction valide, le professeur se connecte."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.kinder = Section.objects.get(nom=choices.SECTION_KINDERGARTEN)
+        cls.primaire = Section.objects.get(nom=choices.SECTION_PRIMAIRE)
+        cls.secondaire = Section.objects.get(nom=choices.SECTION_SECONDAIRE)
+        cls.k2 = Classe.objects.create(nom="2ème Année Kinder", section=cls.kinder)
+        cls.sixieme = Classe.objects.create(nom="6ème AF", section=cls.primaire)
+        cls.septieme = Classe.objects.create(nom="7ème AF", section=cls.secondaire)
+        cls.nsi = Classe.objects.create(nom="NSI", section=cls.secondaire)
+        cls.heures = list(Creneau.objects.filter(section=cls.secondaire, est_un_cours=True))
+
+    def setUp(self):
+        self.secretaire = Utilisateur.objects.create_user("secretaire", password="x")
+        Employe.objects.create(nom="Auguste", prenom="Nadège", poste="Secrétaire", utilisateur=self.secretaire)
+        self.client.force_login(self.secretaire)
+
+    def inscrire(self, section, nom, telephone, **extra):
+        donnees = {"section": section.pk, "nom": nom, "prenom": "Test", "telephone": telephone, **extra}
+        return self.client.post(reverse("core:professeur_creer"), donnees)
+
+    def lignes_de_cours(self, *lignes):
+        donnees = {"cours-TOTAL_FORMS": str(len(lignes)), "cours-INITIAL_FORMS": "0"}
+        for i, (matiere, classe, jour, creneau) in enumerate(lignes):
+            donnees.update({f"cours-{i}-matiere": matiere, f"cours-{i}-classe": classe.pk,
+                            f"cours-{i}-jour": jour, f"cours-{i}-creneau": creneau.pk})
+        return donnees
+
+    def test_horaires_du_secondaire_crees(self):
+        self.assertEqual([c.nom for c in self.heures], ["1re heure", "2e heure", "3e heure", "4e heure", "5e heure"])
+        self.assertEqual(self.heures[0].duree_minutes, 55)
+
+    def test_choix_de_la_section_d_abord(self):
+        reponse = self.client.get(reverse("core:professeur_creer"))
+        self.assertContains(reponse, "?section=")
+        self.assertNotContains(reponse, "Inscrire et créer le compte")
+        reponse = self.client.get(reverse("core:professeur_creer"), {"section": self.secondaire.pk})
+        self.assertContains(reponse, "Cours de la semaine")
+
+    def test_inscription_kindergarten_cree_le_compte(self):
+        reponse = self.inscrire(self.kinder, "Gédéon", "3712 0001", **{"aff-classe": self.k2.pk, "aff-role": choices.ROLE_TITULAIRE})
+        professeur = Professeur.objects.get(nom="Gédéon")
+        self.assertRedirects(reponse, reverse("core:professeur_acces", args=[professeur.pk]), fetch_redirect_response=False)
+        self.assertEqual(professeur.section, self.kinder)
+        self.assertEqual(professeur.affectation_active.classe, self.k2)
+        self.assertEqual(list(professeur.classes.all()), [self.k2])
+        compte = professeur.utilisateur
+        self.assertEqual(compte.telephone, "50937120001")
+        self.assertTrue(compte.doit_changer_mot_de_passe)
+        self.assertEqual(roles.roles_de(compte), {roles.PROFESSEUR})
+
+        # Le mot de passe provisoire s'affiche une seule fois, et il fonctionne
+        page = self.client.get(reverse("core:professeur_acces", args=[professeur.pk]))
+        mot_de_passe = page.context["mot_de_passe"]
+        self.assertRegex(mot_de_passe, r"^[A-Z2-9]{4}-[A-Z2-9]{4}$")
+        self.assertIsNone(self.client.get(reverse("core:professeur_acces", args=[professeur.pk])).context["mot_de_passe"])
+        self.client.logout()
+        reponse = self.client.post(reverse("core:login"), {"username": "3712 0001", "password": mot_de_passe})
+        self.assertRedirects(reponse, reverse("core:espace"), fetch_redirect_response=False)
+        self.assertRedirects(self.client.get(reverse("core:espace")), reverse("core:mot_de_passe"))
+
+    def test_kindergarten_deux_maitresses_au_plus(self):
+        self.inscrire(self.kinder, "Gédéon", "3712 0001", **{"aff-classe": self.k2.pk, "aff-role": choices.ROLE_TITULAIRE})
+        reponse = self.inscrire(self.kinder, "Autre", "3712 0002", **{"aff-classe": self.k2.pk, "aff-role": choices.ROLE_TITULAIRE})
+        self.assertContains(reponse, "a déjà une titulaire")
+        self.inscrire(self.kinder, "Métellus", "3712 0003", **{"aff-classe": self.k2.pk, "aff-role": choices.ROLE_DEUXIEME_MAITRESSE})
+        self.assertEqual(Affectation.objects.filter(classe=self.k2, date_fin__isnull=True).count(), 2)
+        reponse = self.inscrire(self.kinder, "Troisième", "3712 0004", **{"aff-classe": self.k2.pk, "aff-role": choices.ROLE_DEUXIEME_MAITRESSE})
+        self.assertContains(reponse, "a déjà ses deux maîtresses")
+        self.assertFalse(Professeur.objects.filter(nom__in=["Autre", "Troisième"]).exists())
+
+    def test_primaire_un_seul_professeur_remplacement_confirme(self):
+        self.inscrire(self.primaire, "Lamour", "3712 0001", **{"aff-classe": self.sixieme.pk})
+        ancien = Professeur.objects.get(nom="Lamour")
+        reponse = self.inscrire(self.primaire, "Lafontant", "3712 0002", **{"aff-classe": self.sixieme.pk})
+        self.assertContains(reponse, "a déjà un professeur, Lamour Test")
+        self.assertFalse(Professeur.objects.filter(nom="Lafontant").exists())
+
+        self.inscrire(self.primaire, "Lafontant", "3712 0002", **{"aff-classe": self.sixieme.pk, "aff-remplacer": "on"})
+        nouveau = Professeur.objects.get(nom="Lafontant")
+        self.assertEqual(nouveau.affectation_active.classe, self.sixieme)
+        self.assertIsNone(ancien.affectation_active)
+        self.assertEqual(list(ancien.classes.all()), [])
+
+    def test_secondaire_cours_et_conflits(self):
+        h1, h2 = self.heures[0], self.heures[1]
+        reponse = self.inscrire(self.secondaire, "Pierre", "3712 0001", matiere_principale="Mathématiques",
+                                **self.lignes_de_cours(("Mathématiques", self.septieme, 1, h1), ("Mathématiques", self.nsi, 3, h2)))
+        pierre = Professeur.objects.get(nom="Pierre")
+        self.assertRedirects(reponse, reverse("core:professeur_acces", args=[pierre.pk]), fetch_redirect_response=False)
+        self.assertEqual(pierre.cours.count(), 2)
+        self.assertEqual(set(pierre.cours.values_list("statut", flat=True)), {choices.STATUT_COURS_PROPOSE})
+        self.assertEqual(set(pierre.classes.all()), {self.septieme, self.nsi})
+
+        # La 7ème AF est déjà prise le lundi en 1re heure
+        reponse = self.inscrire(self.secondaire, "Blaise", "3712 0002",
+                                **self.lignes_de_cours(("Informatique", self.septieme, 1, h1)))
+        self.assertContains(reponse, "La classe 7ème AF a déjà un cours le lundi en 1re heure : Mathématiques avec Pierre Test.")
+        # Deux cours du même professeur à la même heure
+        reponse = self.inscrire(self.secondaire, "Blaise", "3712 0002",
+                                **self.lignes_de_cours(("Informatique", self.septieme, 2, h1), ("Informatique", self.nsi, 2, h1)))
+        self.assertContains(reponse, "Deux cours du professeur tombent le mardi en 1re heure.")
+        # Aucune ligne remplie
+        reponse = self.inscrire(self.secondaire, "Blaise", "3712 0002", **self.lignes_de_cours())
+        self.assertContains(reponse, "Ajoutez au moins un cours.")
+        self.assertFalse(Professeur.objects.filter(nom="Blaise").exists())
+
+    def test_telephone_deja_utilise(self):
+        reponse = self.inscrire(self.primaire, "Double", "+509 3712-0000", **{"aff-classe": self.sixieme.pk})
+        self.assertRedirects(reponse, reverse("core:professeur_acces", args=[Professeur.objects.get(nom="Double").pk]),
+                             fetch_redirect_response=False)
+        reponse = self.inscrire(self.kinder, "Encore", "37120000", **{"aff-classe": self.k2.pk, "aff-role": choices.ROLE_TITULAIRE})
+        self.assertContains(reponse, "Ce numéro sert déjà d&#x27;identifiant à un autre compte.")
+
+    def test_validation_par_la_direction_de_la_section(self):
+        self.inscrire(self.secondaire, "Pierre", "3712 0001", **self.lignes_de_cours(("Mathématiques", self.nsi, 4, self.heures[2])))
+        pierre = Professeur.objects.get(nom="Pierre")
+        valider = reverse("core:professeur_valider_cours", args=[pierre.pk])
+
+        # Ni la secrétaire ni la direction du primaire ne valident les cours du secondaire
+        self.assertEqual(self.client.post(valider).status_code, 403)
+        dir_pri = Utilisateur.objects.create_user("dirpri", password="x")
+        Employe.objects.create(nom="Dir", prenom="Pri", poste="Directeur(trice) du primaire", section=self.primaire, utilisateur=dir_pri)
+        self.client.force_login(dir_pri)
+        self.assertEqual(self.client.post(valider).status_code, 403)
+
+        # Le professeur ne voit son emploi du temps qu'après la validation
+        pierre.utilisateur.doit_changer_mot_de_passe = False
+        pierre.utilisateur.save()
+        self.client.force_login(pierre.utilisateur)
+        self.assertContains(self.client.get(reverse("core:espace")), "après sa validation")
+
+        dir_sec = Utilisateur.objects.create_user("dirsec", password="x")
+        Employe.objects.create(nom="Dorvil", prenom="Sec", poste="Directeur(trice) pédagogique du secondaire",
+                               section=self.secondaire, utilisateur=dir_sec)
+        self.client.force_login(dir_sec)
+        self.assertContains(self.client.get(reverse("core:professeur_fiche", args=[pierre.pk])), "Valider les cours")
+        self.assertRedirects(self.client.post(valider), reverse("core:professeur_fiche", args=[pierre.pk]))
+        self.assertEqual(pierre.cours.get().statut, choices.STATUT_COURS_VALIDE)
+
+        self.client.force_login(pierre.utilisateur)
+        reponse = self.client.get(reverse("core:espace"))
+        self.assertContains(reponse, "Mon emploi du temps")
+        self.assertContains(reponse, "NSI")
+
+    def test_seule_la_secretaire_inscrit(self):
+        dir_sec = Utilisateur.objects.create_user("dirsec", password="x")
+        Employe.objects.create(nom="Dorvil", prenom="Sec", poste="Directeur(trice) pédagogique du secondaire",
+                               section=self.secondaire, utilisateur=dir_sec)
+        self.client.force_login(dir_sec)
+        self.assertEqual(self.client.get(reverse("core:professeur_creer")).status_code, 403)
+
+    def test_retirer_un_cours_et_nouveau_mot_de_passe(self):
+        self.inscrire(self.secondaire, "Pierre", "3712 0001", **self.lignes_de_cours(("Mathématiques", self.nsi, 4, self.heures[2])))
+        pierre = Professeur.objects.get(nom="Pierre")
+        self.client.post(reverse("core:cours_supprimer", args=[pierre.cours.get().pk]))
+        self.assertEqual(pierre.cours.count(), 0)
+        self.assertEqual(list(pierre.classes.all()), [])
+
+        compte = pierre.utilisateur
+        compte.doit_changer_mot_de_passe = False
+        compte.save()
+        reponse = self.client.post(reverse("core:professeur_nouveau_mot_de_passe", args=[pierre.pk]))
+        self.assertRedirects(reponse, reverse("core:professeur_acces", args=[pierre.pk]), fetch_redirect_response=False)
+        compte.refresh_from_db()
+        self.assertTrue(compte.doit_changer_mot_de_passe)
+        mot_de_passe = self.client.get(reverse("core:professeur_acces", args=[pierre.pk])).context["mot_de_passe"]
+        self.assertTrue(compte.check_password(mot_de_passe))
+
+    def test_changer_de_classe_au_primaire(self):
+        cinquieme = Classe.objects.create(nom="5ème AF", section=self.primaire)
+        self.inscrire(self.primaire, "Lamour", "3712 0001", **{"aff-classe": self.sixieme.pk})
+        lamour = Professeur.objects.get(nom="Lamour")
+        self.client.post(reverse("core:professeur_affecter", args=[lamour.pk]), {"classe": cinquieme.pk})
+        self.assertEqual(lamour.affectation_active.classe, cinquieme)
+        self.assertEqual(lamour.affectations.count(), 2)
+        self.client.post(reverse("core:affectation_terminer", args=[lamour.affectation_active.pk]))
+        self.assertIsNone(lamour.affectation_active)

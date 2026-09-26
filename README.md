@@ -44,6 +44,18 @@ Pa gen okenn sekrè nan kòd la ankò. Tout paramèt yo nan fichye `.env`
 - Yon sèl paj koneksyon pou tout moun: telefòn, imèl oswa non itilizatè.
   Yon kont ki gen « doit changer son mot de passe » dwe chanje modpas li anvan l fè lòt bagay.
 
+## Pwofesè yo
+
+- Se sekretè a ki enskri pwofesè a (`/professeurs/nouveau/`). Li chwazi seksyon an anvan,
+  epi fòm nan chanje:
+  - **Kindergarten**: yon klas, de mètrès pou pi plis (yon sèl titilè).
+  - **Primaire**: yon klas, yon sèl pwofesè pa klas; pou ranplase li, fòk sekretè a konfime.
+  - **Secondaire**: yon liy pou chak kou (matyè, klas, jou, lè). Sit la refize yon lè ki
+    deja pran nan yon klas, oswa de kou pwofesè a nan menm lè.
+- Sit la kreye kont pwofesè a: idantifyan = telefòn li, modpas pwovizwa pou enprime.
+- Direksyon seksyon an valide kou yo; apre sa pwofesè a wè orè li lè l konekte.
+- Orè segondè a (5 lè de 55 minit + rekreyasyon) ka chanje nan `/admin/` (Créneaux).
+
 ## Estrikti pwojè a
 
 ```
@@ -52,6 +64,8 @@ core/
     models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note
     choices.py            → non lekòl la, tout klas yo (Kinder→NS4), seksyon, matyè, pòs, tip peman
     roles.py              → wòl yo ak dwa chak wòl
+    professeurs.py        → règ enskripsyon pwofesè yo (Kinder, primè, segondè)
+    views_professeurs.py  → enskripsyon, fich, orè pwofesè yo
     backends.py           → koneksyon ak telefòn, imèl oswa non itilizatè
     forms.py              → fòm + validasyon
     views.py              → koneksyon, espas chak moun, dashboard, CRUD chak seksyon

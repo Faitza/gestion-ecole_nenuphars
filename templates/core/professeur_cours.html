@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Ajouter des cours{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}📅 COURS DE {{ professeur|upper }}{% endblock %}
+{% block content %}
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="bloc">
+        <h2>Nouveaux cours</h2>
+        {% include "core/_cours_formset.html" %}
+    </div>
+    <button type="submit" class="btn-primary btn-large">Ajouter les cours</button>
+    <a href="{% url 'core:professeur_fiche' professeur.pk %}" class="lien-retour">Retour à la fiche</a>
+</form>
+{% endblock %}

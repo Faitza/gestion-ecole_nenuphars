@@ -1,0 +1,32 @@
+{# Lignes de cours (secondaire). Le bouton « Ajouter un cours » copie la ligne vide. #}
+{{ cours_formset.management_form }}
+{% for e in cours_formset.non_form_errors %}<p class="erreur">{{ e }}</p>{% endfor %}
+<div class="table-wrapper table-cours">
+<table>
+    <thead><tr><th>Matière</th><th>Classe</th><th>Jour</th><th>Heure</th></tr></thead>
+    <tbody id="lignes-cours">
+    {% for f in cours_formset %}
+        <tr class="{% if f.errors %}ligne-erreur{% endif %}">
+            <td>{{ f.matiere }}</td><td>{{ f.classe }}</td><td>{{ f.jour }}</td><td>{{ f.creneau }}</td>
+        </tr>
+        {% if f.errors %}<tr class="ligne-message"><td colspan="4">
+            {% for e in f.non_field_errors %}<p class="erreur">{{ e }}</p>{% endfor %}
+            {% for champ in f %}{% for e in champ.errors %}<p class="erreur">{{ champ.label }} : {{ e }}</p>{% endfor %}{% endfor %}
+        </td></tr>{% endif %}
+    {% endfor %}
+    </tbody>
+</table>
+<template id="ligne-cours-vide">
+    <tr><td>{{ cours_formset.empty_form.matiere }}</td><td>{{ cours_formset.empty_form.classe }}</td><td>{{ cours_formset.empty_form.jour }}</td><td>{{ cours_formset.empty_form.creneau }}</td></tr>
+</template>
+<button type="button" class="btn btn-secondaire" id="ajouter-cours">➕ Ajouter un cours</button>
+<p class="aide">Les lignes laissées vides sont ignorées. Un horaire déjà pris dans une classe, ou deux cours du professeur à la même heure, sont refusés.</p>
+</div>
+<script>
+document.getElementById("ajouter-cours").addEventListener("click", function () {
+    var total = document.getElementById("id_{{ cours_formset.prefix }}-TOTAL_FORMS");
+    var ligne = document.getElementById("ligne-cours-vide").innerHTML.replace(/__prefix__/g, total.value);
+    document.getElementById("lignes-cours").insertAdjacentHTML("beforeend", ligne);
+    total.value = parseInt(total.value, 10) + 1;
+});
+</script>

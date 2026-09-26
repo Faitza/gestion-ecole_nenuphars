@@ -1,6 +1,8 @@
 # core/models.py
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 from . import choices
 from .telephone import normaliser_telephone
 
@@ -43,6 +45,19 @@ class Section(models.Model):
 
     def __str__(self):
         return self.nom
+
+    # Chaque section organise ses professeurs à sa façon (voir core/professeurs.py)
+    @property
+    def est_kindergarten(self):
+        return self.nom == choices.SECTION_KINDERGARTEN
+
+    @property
+    def est_primaire(self):
+        return self.nom == choices.SECTION_PRIMAIRE
+
+    @property
+    def est_secondaire(self):
+        return self.nom == choices.SECTION_SECONDAIRE
 
 
 # ─────────────────────────────────────────────────────────────
@@ -92,14 +107,18 @@ class Professeur(models.Model):
     prenom = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
     telephone = models.CharField(max_length=50, blank=True)
+    date_naissance = models.DateField(null=True, blank=True)
+    adresse = models.TextField(blank=True)
+    diplome = models.CharField("diplôme", max_length=150, blank=True)
     matiere_principale = models.CharField(max_length=100, choices=choices.MATIERES_CHOICES, blank=True)
+    # Rempli automatiquement à partir des affectations et des cours
     classes = models.ManyToManyField(Classe, blank=True, related_name="professeurs")
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name="professeurs")
     utilisateur = models.OneToOneField(
         Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="professeur",
         help_text="Compte de connexion du professeur.",
     )
-    date_embauche = models.DateField(null=True, blank=True)
+    date_embauche = models.DateField("début à l'école", null=True, blank=True)
 
     class Meta:
         ordering = ["nom", "prenom"]
@@ -112,6 +131,10 @@ class Professeur(models.Model):
         ancien = _ancien_utilisateur(self)
         super().save(*args, **kwargs)
         synchroniser_role(self, ancien)
+
+    @property
+    def affectation_active(self):
+        return self.affectations.filter(date_fin__isnull=True).select_related("classe").first()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -192,3 +215,88 @@ class Note(models.Model):
 
     def __str__(self):
         return f"{self.eleve} - {self.matiere} : {self.note}/100"
+
+
+# ─────────────────────────────────────────────────────────────
+# EMPLOI DU TEMPS DES PROFESSEURS
+# Kindergarten et primaire : le professeur est affecté à une classe
+# pour toute la journée (Affectation). Secondaire : une ligne par cours
+# (Cours), placée sur un créneau horaire de la section (Creneau).
+# ─────────────────────────────────────────────────────────────
+class Creneau(models.Model):
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="creneaux")
+    nom = models.CharField(max_length=50, help_text="Ex : 1re heure, Récréation")
+    heure_debut = models.TimeField("début")
+    heure_fin = models.TimeField("fin")
+    est_un_cours = models.BooleanField("heure de cours", default=True, help_text="Décoché pour une récréation.")
+
+    class Meta:
+        ordering = ["section", "heure_debut"]
+        verbose_name = "créneau"
+        constraints = [
+            models.UniqueConstraint(fields=["section", "heure_debut"], name="creneau_unique_par_section"),
+        ]
+
+    def __str__(self):
+        return f"{self.nom} ({self.horaire})"
+
+    @property
+    def horaire(self):
+        return f"{_heure(self.heure_debut)} – {_heure(self.heure_fin)}"
+
+    @property
+    def duree_minutes(self):
+        return (self.heure_fin.hour * 60 + self.heure_fin.minute) - (self.heure_debut.hour * 60 + self.heure_debut.minute)
+
+
+def _heure(t):
+    return f"{t.hour} h {t.minute:02d}"
+
+
+class Affectation(models.Model):
+    professeur = models.ForeignKey(Professeur, on_delete=models.CASCADE, related_name="affectations")
+    classe = models.ForeignKey(Classe, on_delete=models.CASCADE, related_name="affectations")
+    role = models.CharField("rôle", max_length=30, choices=choices.ROLES_AFFECTATION_CHOICES, default=choices.ROLE_TITULAIRE)
+    date_debut = models.DateField("début", default=timezone.localdate)
+    date_fin = models.DateField("fin", null=True, blank=True, help_text="Vide tant que le professeur est dans la classe.")
+
+    class Meta:
+        ordering = ["-date_debut"]
+        constraints = [
+            # Une seule titulaire et une seule deuxième maîtresse par classe à la fois
+            models.UniqueConstraint(
+                fields=["classe", "role"], condition=Q(date_fin__isnull=True), name="affectation_un_role_par_classe",
+            ),
+            # Au Kindergarten et au primaire, un professeur n'a qu'une classe à la fois
+            models.UniqueConstraint(
+                fields=["professeur"], condition=Q(date_fin__isnull=True), name="affectation_une_classe_par_professeur",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.professeur} – {self.classe} ({self.role})"
+
+
+class Cours(models.Model):
+    professeur = models.ForeignKey(Professeur, on_delete=models.CASCADE, related_name="cours")
+    classe = models.ForeignKey(Classe, on_delete=models.CASCADE, related_name="cours")
+    matiere = models.CharField("matière", max_length=100, choices=choices.MATIERES_CHOICES)
+    jour = models.PositiveSmallIntegerField(choices=choices.JOURS_CHOICES)
+    creneau = models.ForeignKey(Creneau, on_delete=models.PROTECT, related_name="cours", verbose_name="heure")
+    statut = models.CharField(max_length=20, choices=choices.STATUTS_COURS_CHOICES, default=choices.STATUT_COURS_PROPOSE)
+    annee_scolaire = models.CharField(max_length=20, default=choices.annee_scolaire_courante)
+
+    class Meta:
+        ordering = ["jour", "creneau__heure_debut"]
+        verbose_name_plural = "cours"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["classe", "jour", "creneau", "annee_scolaire"], name="cours_une_classe_un_creneau",
+            ),
+            models.UniqueConstraint(
+                fields=["professeur", "jour", "creneau", "annee_scolaire"], name="cours_un_professeur_un_creneau",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.classe} · {self.matiere} · {self.get_jour_display()} {self.creneau.nom}"

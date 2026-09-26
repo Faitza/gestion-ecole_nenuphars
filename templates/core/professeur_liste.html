@@ -4,23 +4,25 @@
 {% block header_title %}👨‍🏫 GESTION DES PROFESSEURS{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    {% if acces.professeurs.ecrire %}<a href="{% url 'core:professeur_creer' %}" class="btn btn-add">➕ Nouveau Professeur</a>{% endif %}
+    {% if acces.professeurs.ecrire %}<a href="{% url 'core:professeur_creer' %}" class="btn btn-add">➕ Inscrire un professeur</a>{% endif %}
 </div>
 <div class="table-wrapper">
 <table>
-    <thead><tr><th>Nom</th><th>Prénom</th><th>Matière</th><th>Classes</th><th>Téléphone</th>{% if acces.professeurs.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
+    <thead><tr><th>Nom</th><th>Prénom</th><th>Section</th><th>Classes</th><th>Téléphone</th><th>Compte</th>{% if acces.professeurs.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
     <tbody>
         {% for p in professeurs %}
         <tr>
-            <td>{{ p.nom }}</td><td>{{ p.prenom }}</td><td>{{ p.matiere_principale|default:"—" }}</td>
+            <td><a href="{% url 'core:professeur_fiche' p.pk %}">{{ p.nom }}</a></td><td>{{ p.prenom }}</td>
+            <td>{{ p.section|default:"—" }}</td>
             <td>{% for c in p.classes.all %}{{ c.nom }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
             <td>{{ p.telephone|default:"—" }}</td>
+            <td>{% if p.utilisateur_id %}✓{% else %}—{% endif %}</td>
             {% if acces.professeurs.ecrire %}<td>
-                <a href="{% url 'core:professeur_modifier' p.pk %}" class="btn-sm btn-edit">Modifier</a>
+                <a href="{% url 'core:professeur_fiche' p.pk %}" class="btn-sm btn-edit">Fiche</a>
                 <a href="{% url 'core:professeur_supprimer' p.pk %}" class="btn-sm btn-delete">Supprimer</a>
             </td>{% endif %}
         </tr>
-        {% empty %}<tr><td colspan="6">Aucun professeur trouvé.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="7">Aucun professeur trouvé.</td></tr>{% endfor %}
     </tbody>
 </table>
 </div>
