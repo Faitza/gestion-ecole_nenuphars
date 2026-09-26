@@ -5,7 +5,7 @@
 {% block content %}
 <div class="form-card">
     <p class="required-note">* Champs obligatoires</p>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% for field in form %}
             <label>{{ field.label }}</label>
@@ -15,5 +15,6 @@
         {% endfor %}
         <button type="submit" class="btn-primary">{% icone "enregistrer" %} Enregistrer</button>
     </form>
+    {% if lien_supprimer %}<p><a href="{{ lien_supprimer }}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a></p>{% endif %}
 </div>
 {% endblock %}

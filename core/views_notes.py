@@ -14,6 +14,7 @@ from django.utils.http import urlencode
 from django.utils.text import slugify
 
 from . import choices, professeurs
+from . import notes as outils_notes
 from .models import Note
 from .roles import professeur_de
 from .templatetags.notes import note as format_note
@@ -35,9 +36,9 @@ def _lire_note(texte):
     return valeur, None
 
 
-def ancre(classe, matiere, periode):
-    """Repère d'un groupe (classe, matière, trimestre) dans la page « Mes notes »."""
-    return f"g-{classe.pk if classe else 0}-{slugify(matiere)}-{choices.PERIODES.index(periode) + 1}"
+def ancre(classe, matiere):
+    """Repère d'une matière d'une classe dans la page « Mes notes »."""
+    return f"g-{classe.pk if classe else 0}-{slugify(matiere)}"
 
 
 def _lien_saisie(classe, matiere, periode):
@@ -102,7 +103,7 @@ def saisie_notes(request):
                         nb += 1
             messages.success(request, f"Notes enregistrées ({nb} changement{'s' if nb > 1 else ''}). Les voici dans « Mes notes ».")
             # Le professeur retrouve tout de suite ses notes dans son espace « Mes notes »
-            return redirect(f"{reverse('core:mes_notes')}#{ancre(classe, matiere, periode)}")
+            return redirect(f"{reverse('core:mes_notes')}#{ancre(classe, matiere)}")
         if erreurs:
             messages.error(request, "Rien n'a été enregistré : corrigez les notes en rouge.")
 
@@ -115,35 +116,23 @@ def saisie_notes(request):
 
 @login_required
 def mes_notes(request):
-    """Les notes saisies par le professeur cette année, par classe, matière et trimestre."""
+    """Les notes saisies par le professeur cette année, par classe puis par matière."""
     professeur = professeur_de(request.user)
     if professeur is None:
         raise PermissionDenied
     annee = choices.annee_scolaire_courante()
     possibles = professeurs.matieres_a_noter(professeur)
-    notes = Note.objects.filter(professeur=professeur, annee_scolaire=annee) \
-        .select_related("eleve", "eleve__classe").order_by("eleve__nom", "eleve__prenom")
-
-    groupes = {}
-    for note in notes:
-        classe = note.eleve.classe
-        cle = (note.periode, classe.nom if classe else "", note.matiere)
-        groupe = groupes.setdefault(cle, {
-            "classe": classe, "matiere": note.matiere, "periode": note.periode, "notes": [],
-            "ancre": ancre(classe, note.matiere, note.periode),
-            "lien": _lien_saisie(classe, note.matiere, note.periode)
-            if classe is not None and note.matiere in possibles.get(classe, []) else None,
-        })
-        groupe["notes"].append(note)
-    for groupe in groupes.values():
-        valeurs = [n.note for n in groupe["notes"]]
-        groupe["moyenne"] = sum(valeurs) / len(valeurs)
-        groupe["nb_eleves"] = groupe["classe"].eleves.count() if groupe["classe"] else len(valeurs)
-
-    ordre = {p: i for i, p in enumerate(choices.PERIODES)}
+    notes = list(Note.objects.filter(professeur=professeur, annee_scolaire=annee)
+                 .select_related("eleve", "eleve__classe", "eleve__classe__section", "professeur"))
+    classes_notes = outils_notes.grouper(notes, toute_la_classe=True)
+    for groupe in classes_notes:
+        classe = groupe["classe"]
+        for m in groupe["matieres"]:
+            m["ancre"] = ancre(classe, m["matiere"])
+            # Un crayon par trimestre pour rouvrir la grille, tant que la matière est encore la sienne
+            peut_saisir = classe is not None and m["matiere"] in possibles.get(classe, [])
+            m["saisie"] = [_lien_saisie(classe, m["matiere"], p) if peut_saisir else "" for p in choices.PERIODES]
     return render(request, "core/mes_notes.html", {
-        "annee": annee,
-        "groupes": [groupes[cle] for cle in sorted(groupes, key=lambda c: (ordre.get(c[0], 9), c[1], c[2]))],
-        "nb_notes": len(notes),
-        "a_noter": bool(possibles),
+        "annee": annee, "classes_notes": classes_notes, "periodes": choices.PERIODES,
+        "nb_notes": len(notes), "a_noter": bool(possibles),
     })

@@ -287,3 +287,40 @@ button.btn-sm { border: none; cursor: pointer; font-family: inherit; }
 @media (max-width: 760px) {
   .filtres-liste .form-control { width: 100%; }
 }
+
+/* ── PHOTOS ET FICHES ─────────────────────────────────────── */
+.photo { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; object-fit: cover;
+  background: var(--primaire-tres-clair); color: var(--primaire); font-weight: bold; flex-shrink: 0; vertical-align: middle; }
+.photo.petite { width: 34px; height: 34px; font-size: 12px; }
+.photo.moyenne { width: 72px; height: 72px; font-size: 22px; }
+.photo.grande { width: 150px; height: 150px; font-size: 44px; border-radius: 12px; }
+.cellule-photo { width: 46px; padding-right: 0; }
+.eleve-avec-photo { display: flex; align-items: center; gap: 10px; }
+.photo-actuelle { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.fiche-personne { display: flex; gap: 28px; align-items: flex-start; }
+.fiche-personne > div { flex: 1; min-width: 0; }
+.entete-fiche { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.entete-fiche h2 { margin: 0; }
+.btn-voir { background: var(--primaire-tres-clair); color: var(--primaire); }
+td a { color: var(--primaire); }
+.titre-section { display: flex; align-items: center; gap: 8px; color: var(--primaire); font-size: 18px; margin: 24px 0 12px; }
+
+/* Notes par classe, puis par matière */
+details.classe-notes > summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+details.classe-notes > summary::-webkit-details-marker { display: none; }
+details.classe-notes > summary h2 { margin: 0; display: flex; align-items: center; gap: 8px; }
+details.classe-notes > summary::after { content: "▾"; color: var(--texte-clair); margin-left: auto; }
+details.classe-notes:not([open]) > summary::after { content: "▸"; }
+.matiere-notes { margin-top: 18px; scroll-margin-top: 16px; }
+.matiere-notes h3 { margin: 0; font-size: 15px; color: var(--texte-fonce); }
+.matiere-notes h3 small { color: var(--texte-moyen); font-weight: normal; }
+.matiere-notes:target { outline: 3px solid #8b5cf6; outline-offset: 6px; border-radius: 6px; }
+.table-bulletin th, .table-bulletin td { text-align: center; }
+.table-bulletin th:first-child, .table-bulletin td:first-child { text-align: left; }
+.table-bulletin tfoot th { color: var(--texte-fonce); text-transform: none; font-size: 12px; border-top: 2px solid var(--fond-gris); }
+.table-bulletin .vide { color: var(--texte-clair); }
+.table-bulletin .lien-icone { color: var(--primaire-clair); }
+@media (max-width: 760px) {
+  .fiche-personne { flex-direction: column; align-items: center; }
+  .photo.grande { width: 120px; height: 120px; }
+}

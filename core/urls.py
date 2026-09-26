@@ -1,7 +1,7 @@
 # core/urls.py
 from django.urls import path
 from django.views.generic import RedirectView
-from . import views, views_notes, views_professeurs
+from . import views, views_fiches, views_notes, views_professeurs
 
 app_name = "core"
 
@@ -17,12 +17,14 @@ urlpatterns = [
     # Élèves
     path("eleves/", views.eleve_liste, name="eleve_liste"),
     path("eleves/nouveau/", views.eleve_creer, name="eleve_creer"),
+    path("eleves/<int:pk>/", views_fiches.eleve_fiche, name="eleve_fiche"),
     path("eleves/<int:pk>/modifier/", views.eleve_modifier, name="eleve_modifier"),
     path("eleves/<int:pk>/supprimer/", views.eleve_supprimer, name="eleve_supprimer"),
 
     # Classes
     path("classes/", views.classe_liste, name="classe_liste"),
     path("classes/nouveau/", views.classe_creer, name="classe_creer"),
+    path("classes/<int:pk>/", views_fiches.classe_fiche, name="classe_fiche"),
     path("classes/<int:pk>/modifier/", views.classe_modifier, name="classe_modifier"),
     path("classes/<int:pk>/supprimer/", views.classe_supprimer, name="classe_supprimer"),
 
@@ -44,6 +46,7 @@ urlpatterns = [
     # Employés
     path("employes/", views.employe_liste, name="employe_liste"),
     path("employes/nouveau/", views.employe_creer, name="employe_creer"),
+    path("employes/<int:pk>/", views_fiches.employe_fiche, name="employe_fiche"),
     path("employes/<int:pk>/modifier/", views.employe_modifier, name="employe_modifier"),
     path("employes/<int:pk>/supprimer/", views.employe_supprimer, name="employe_supprimer"),
 
@@ -51,6 +54,9 @@ urlpatterns = [
     path("paiements/", views.paiement_liste, name="paiement_liste"),
     path("paiements/nouveau/", views.paiement_creer, name="paiement_creer"),
     path("paiements/<int:pk>/supprimer/", views.paiement_supprimer, name="paiement_supprimer"),
+
+    # Photos (seulement pour ceux qui ont le droit de voir la personne)
+    path("photos/<str:modele>/<int:pk>/", views_fiches.photo, name="photo"),
 
     # Notes
     path("notes/", views.note_liste, name="note_liste"),

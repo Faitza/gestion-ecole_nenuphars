@@ -1,12 +1,12 @@
 {% extends "core/base.html" %}
-{% load icones %}
+{% load icones photos %}
 {% block title %}{{ professeur }}{% endblock %}
 {% block header_color %}#ef4444{% endblock %}
 {% block header_title %}{% icone "fiche" %} {{ professeur.prenom|upper }} {{ professeur.nom|upper }}{% endblock %}
 {% block content %}
 <div class="colonnes">
     <div class="bloc">
-        <h2>Informations</h2>
+        <div class="entete-fiche">{% photo professeur "moyenne" %}<h2>Informations</h2></div>
         <dl class="infos">
             <dt>Section</dt><dd>{{ professeur.section|default:"—" }}</dd>
             <dt>Téléphone</dt><dd>{{ professeur.telephone|default:"—" }}</dd>

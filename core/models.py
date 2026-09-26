@@ -4,7 +4,23 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from . import choices
+from .photos import chemin_photo
 from .telephone import normaliser_telephone
+
+
+class AvecPhoto(models.Model):
+    """Photo d'identité (élève, professeur, employé), demandée à l'inscription."""
+    photo = models.ImageField(upload_to=chemin_photo, blank=True, help_text="Photo d'identité, 5 Mo au plus.")
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        ancienne = type(self).objects.filter(pk=self.pk).values_list("photo", flat=True).first() if self.pk else None
+        super().save(*args, **kwargs)
+        # Une photo remplacée ou retirée est effacée du disque (voir aussi core/signals.py)
+        if ancienne and ancienne != self.photo.name:
+            self.photo.storage.delete(ancienne)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -80,7 +96,22 @@ class Classe(models.Model):
 # ─────────────────────────────────────────────────────────────
 # ÉLÈVE
 # ─────────────────────────────────────────────────────────────
-class Eleve(models.Model):
+class AgeEtAnciennete:
+    """Âge et années à l'école, pour les fiches du personnel."""
+
+    @property
+    def age(self):
+        from .anniversaires import age
+        return age(self.date_naissance) if self.date_naissance else None
+
+    @property
+    def anciennete(self):
+        """Années complètes passées à l'école."""
+        from .anniversaires import age
+        return age(self.date_embauche) if self.date_embauche else None
+
+
+class Eleve(AvecPhoto):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     date_naissance = models.DateField(null=True, blank=True)
@@ -102,7 +133,7 @@ class Eleve(models.Model):
 # ─────────────────────────────────────────────────────────────
 # PROFESSEUR
 # ─────────────────────────────────────────────────────────────
-class Professeur(models.Model):
+class Professeur(AgeEtAnciennete, AvecPhoto):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
@@ -133,17 +164,6 @@ class Professeur(models.Model):
         synchroniser_role(self, ancien)
 
     @property
-    def age(self):
-        from .anniversaires import age
-        return age(self.date_naissance) if self.date_naissance else None
-
-    @property
-    def anciennete(self):
-        """Années complètes passées à l'école."""
-        from .anniversaires import age
-        return age(self.date_embauche) if self.date_embauche else None
-
-    @property
     def affectation_active(self):
         return self.affectations.filter(date_fin__isnull=True).select_related("classe").first()
 
@@ -151,7 +171,7 @@ class Professeur(models.Model):
 # ─────────────────────────────────────────────────────────────
 # EMPLOYÉ (personnel non-enseignant)
 # ─────────────────────────────────────────────────────────────
-class Employe(models.Model):
+class Employe(AgeEtAnciennete, AvecPhoto):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     poste = models.CharField(max_length=100, choices=choices.POSTES_CHOICES, blank=True)

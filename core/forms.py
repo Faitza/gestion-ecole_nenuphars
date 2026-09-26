@@ -1,9 +1,39 @@
 # core/forms.py
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.urls import reverse
 from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Creneau
-from . import choices, professeurs, roles
+from . import choices, photos, professeurs, roles
 from .telephone import normaliser_telephone
+
+
+class PhotoWidget(forms.ClearableFileInput):
+    """Montre la photo actuelle (par la vue protégée) au lieu d'un lien vers le fichier."""
+    template_name = "core/widgets/photo.html"
+    url_actuelle = None
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["widget"]["url_actuelle"] = self.url_actuelle
+        return context
+
+
+class PhotoMixin:
+    """Réduit la photo envoyée et refuse un fichier trop lourd (voir core/photos.py)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "photo" in self.fields and self.instance.pk and self.instance.photo:
+            self.fields["photo"].widget.url_actuelle = reverse(
+                "core:photo", args=[self.instance._meta.model_name, self.instance.pk])
+
+    def clean_photo(self):
+        return photos.preparer(self.cleaned_data.get("photo"))
+
+
+def _photo_widget():
+    # Sur un téléphone, le bouton propose aussi l'appareil photo
+    return PhotoWidget(attrs={"class": "form-control", "accept": "image/*"})
 
 
 def _ctrl(widget_cls, **kwargs):
@@ -47,14 +77,18 @@ class ClasseForm(forms.ModelForm):
         }
 
 
-class EleveForm(forms.ModelForm):
+class EleveForm(PhotoMixin, forms.ModelForm):
     class Meta:
         model = Eleve
-        fields = ["nom", "prenom", "date_naissance", "genre", "classe", "nom_parent_tuteur", "telephone_parent", "email", "adresse"]
+        fields = ["photo", "nom", "prenom", "date_naissance", "genre", "classe", "nom_parent_tuteur", "telephone_parent", "email",
+                  "adresse"]
+        labels = {"prenom": "Prénom", "date_naissance": "Date de naissance", "nom_parent_tuteur": "Parent ou tuteur",
+                  "telephone_parent": "Téléphone du parent", "email": "E-mail"}
         widgets = {
+            "photo": _photo_widget(),
             "nom": _ctrl(forms.TextInput),
             "prenom": _ctrl(forms.TextInput),
-            "date_naissance": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}),
+            "date_naissance": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
             "genre": _ctrl(forms.Select),
             "classe": _ctrl(forms.Select),
             "nom_parent_tuteur": _ctrl(forms.TextInput),
@@ -64,12 +98,12 @@ class EleveForm(forms.ModelForm):
         }
 
 
-class ProfesseurForm(forms.ModelForm):
+class ProfesseurForm(PhotoMixin, forms.ModelForm):
     """Informations personnelles du professeur (inscription et modification)."""
 
     class Meta:
         model = Professeur
-        fields = ["nom", "prenom", "date_naissance", "telephone", "email", "adresse", "diplome",
+        fields = ["photo", "nom", "prenom", "date_naissance", "telephone", "email", "adresse", "diplome",
                   "matiere_principale", "date_embauche"]
         labels = {
             "prenom": "Prénom",
@@ -79,6 +113,7 @@ class ProfesseurForm(forms.ModelForm):
             "matiere_principale": "Matière principale",
         }
         widgets = {
+            "photo": _photo_widget(),
             "nom": _ctrl(forms.TextInput),
             "prenom": _ctrl(forms.TextInput),
             "date_naissance": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
@@ -201,13 +236,14 @@ class BaseCoursFormSet(forms.BaseFormSet):
 CoursFormSet = forms.formset_factory(CoursForm, formset=BaseCoursFormSet, extra=4)
 
 
-class EmployeForm(forms.ModelForm):
+class EmployeForm(PhotoMixin, forms.ModelForm):
     class Meta:
         model = Employe
-        fields = ["nom", "prenom", "date_naissance", "poste", "section", "email", "telephone", "adresse",
+        fields = ["photo", "nom", "prenom", "date_naissance", "poste", "section", "email", "telephone", "adresse",
                   "salaire", "date_embauche"]
         labels = {"prenom": "Prénom", "telephone": "Téléphone", "email": "E-mail"}
         widgets = {
+            "photo": _photo_widget(),
             "nom": _ctrl(forms.TextInput),
             "prenom": _ctrl(forms.TextInput),
             "date_naissance": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),

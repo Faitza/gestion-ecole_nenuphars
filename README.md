@@ -71,10 +71,9 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   avec les élèves d'une classe, pour une matière et un trimestre. Au secondaire, seulement les
   classes et matières de leurs cours validés ; au Kindergarten et au primaire, toutes les
   matières de leur classe.
-- Après l'enregistrement, le professeur arrive sur « Mes notes » : ses notes de l'année, par
-  classe, matière et trimestre, avec la moyenne.
-- La secrétaire et les directions voient les notes dès qu'elles sont enregistrées : « Dernières
-  notes saisies » sur le tableau de bord, et la page Notes avec des filtres par classe et trimestre.
+- Les notes s'affichent par classe, puis par matière, avec une colonne par trimestre et les
+  moyennes : dans « Mes notes » pour le professeur (il y arrive après l'enregistrement), et dans
+  la page Notes pour la secrétaire et les directions, qui les voient dès qu'elles sont enregistrées.
 - La direction d'une section peut corriger ou retirer une note de sa section.
 - La directrice en chef et le compte admin lisent toutes les notes mais ne peuvent pas en
   saisir, ni dans le site ni dans `/admin/`.
@@ -87,6 +86,17 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   l'école, pour le personnel que chacun a le droit de voir (une direction de section : sa section).
 - À la connexion, une petite fenêtre souhaite la bienvenue et rappelle les anniversaires du jour.
   Le professeur dont c'est l'anniversaire reçoit ses vœux sur son espace.
+
+## Fiches et photos
+
+- En cliquant sur une classe, on voit ses élèves et ses professeurs. En cliquant sur un élève ou
+  un employé, on voit sa fiche avec seulement ses informations (le salaire reste réservé à la
+  directrice en chef et à la caisse).
+- Élèves, professeurs et employés peuvent avoir une photo d'identité (5 Mo au plus). Sur un
+  téléphone, le bouton propose aussi l'appareil photo. La photo est réduite à 800 px et ne
+  s'affiche qu'aux personnes qui ont le droit de voir la fiche : elle n'a pas d'adresse publique.
+- Les photos sont rangées dans le dossier `media/` (ou `DJANGO_MEDIA_ROOT`), qui n'est pas envoyé
+  sur GitHub. Pensez à le sauvegarder avec la base de données.
 
 ## Icônes
 
@@ -105,7 +115,10 @@ core/
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
     views_professeurs.py  → inscription, fiche et emploi du temps des professeurs
-    views_notes.py        → saisie des notes par les professeurs
+    views_notes.py        → saisie des notes par les professeurs, « Mes notes »
+    views_fiches.py       → fiches d'un élève, d'une classe, d'un employé, et photos protégées
+    notes.py              → notes par classe, puis par matière
+    photos.py             → réduction et rangement des photos
     anniversaires.py      → anniversaires et années à l'école du personnel
     templatetags/icones.py → balise {% icone "nom" %}
     backends.py           → connexion avec le téléphone, l'e-mail ou le nom d'utilisateur

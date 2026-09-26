@@ -446,13 +446,14 @@ class SaisieDesNotesTests(TestCase):
             "choix": choix, "periode": "2e Trimestre", f"note_{self.anne.pk}": "72,5", f"note_{self.paul.pk}": "",
         })
         # Après l'enregistrement, le professeur arrive sur « Mes notes », sur le groupe enregistré
-        ancre = f"g-{self.sixieme.pk}-mathematiques-2"
+        ancre = f"g-{self.sixieme.pk}-mathematiques"
         self.assertRedirects(reponse, f"{reverse('core:mes_notes')}#{ancre}", fetch_redirect_response=False)
+        # « Mes notes » : par classe, puis par matière, une colonne par trimestre, toute la classe
         page = self.client.get(reverse("core:mes_notes"))
         self.assertContains(page, f'id="{ancre}"')
-        self.assertContains(page, "6ème AF · Mathématiques · 2e Trimestre")
-        self.assertContains(page, "<strong>72,5</strong>/100", html=False)
-        self.assertContains(page, "<strong>1/2</strong>", html=False)
+        self.assertContains(page, "<h3>Mathématiques", html=False)
+        self.assertContains(page, "<td>72,5</td>", html=False)
+        self.assertContains(page, "Louis Paul")
         note = Note.objects.get()
         self.assertEqual((note.eleve, note.matiere, note.periode, note.professeur), (self.anne, "Mathématiques", "2e Trimestre", prof))
         self.assertEqual(float(note.note), 72.5)
@@ -650,9 +651,12 @@ class NotesVisiblesTests(TestCase):
         liste = self.client.get(reverse("core:note_liste"), {"classe": self.sixieme.pk})
         self.assertContains(liste, "Joseph Anne")
         self.assertNotContains(liste, "Noël Luc")
-        liste = self.client.get(reverse("core:note_liste"), {"periode": "1er Trimestre"})
-        self.assertContains(liste, "Noël Luc")
-        self.assertNotContains(liste, "Joseph Anne")
+        # Par classe, puis par matière
+        liste = self.client.get(reverse("core:note_liste"))
+        self.assertEqual([g["classe"] for g in liste.context["classes_notes"]], [self.cinquieme, self.sixieme])
+        self.assertEqual([m["matiere"] for m in liste.context["classes_notes"][1]["matieres"]], ["Français"])
+        ligne = liste.context["classes_notes"][1]["matieres"][0]["lignes"][0]
+        self.assertEqual([n.note if n else None for n in ligne["cellules"]], [None, 91, None])
         liste = self.client.get(reverse("core:note_liste"), {"q": "Blaise"})
         self.assertContains(liste, "Joseph Anne")
         self.assertNotContains(liste, "Noël Luc")
@@ -667,3 +671,138 @@ class NotesVisiblesTests(TestCase):
         self.assertTrue(secretaire.check_password("secretaire123"))
         self.assertEqual(roles.roles_de(secretaire), {roles.SECRETARIAT})
         self.assertEqual(roles.roles_de(Utilisateur.objects.get(username="prof")), {roles.PROFESSEUR})
+
+
+class PhotosEtFichesTests(TestCase):
+    """Photos (réduites, protégées) et fiches d'un élève, d'une classe et d'un employé."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.primaire = Section.objects.get(nom=choices.SECTION_PRIMAIRE)
+        cls.secondaire = Section.objects.get(nom=choices.SECTION_SECONDAIRE)
+        cls.sixieme = Classe.objects.create(nom="6ème AF", section=cls.primaire)
+        cls.septieme = Classe.objects.create(nom="7ème AF", section=cls.secondaire)
+        cls.anne = Eleve.objects.create(nom="Joseph", prenom="Anne", genre="Féminin", classe=cls.sixieme)
+        cls.marc = Eleve.objects.create(nom="Pierre", prenom="Marc", genre="Masculin", classe=cls.septieme)
+
+    def setUp(self):
+        import tempfile
+        dossier = tempfile.TemporaryDirectory()
+        self.addCleanup(dossier.cleanup)
+        reglage = self.settings(MEDIA_ROOT=dossier.name)
+        reglage.enable()
+        self.addCleanup(reglage.disable)
+        self.secretaire = Utilisateur.objects.create_user("sec", password="x")
+        Employe.objects.create(nom="Jean", prenom="Marie", poste="Secrétaire", utilisateur=self.secretaire)
+
+    def image(self, largeur=2000, hauteur=1500, nom="photo.png"):
+        from io import BytesIO
+        from PIL import Image
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        tampon = BytesIO()
+        Image.new("RGB", (largeur, hauteur), (30, 60, 140)).save(tampon, "PNG")
+        return SimpleUploadedFile(nom, tampon.getvalue(), content_type="image/png")
+
+    def test_photo_reduite_et_protegee(self):
+        from PIL import Image
+        self.client.force_login(self.secretaire)
+        reponse = self.client.post(reverse("core:eleve_modifier", args=[self.anne.pk]), {
+            "photo": self.image(), "nom": "Joseph", "prenom": "Anne", "genre": "Féminin", "classe": self.sixieme.pk,
+        })
+        self.assertRedirects(reponse, reverse("core:eleve_fiche", args=[self.anne.pk]))
+        self.anne.refresh_from_db()
+        self.assertRegex(self.anne.photo.name, r"^photos/eleve/[0-9a-f]{32}\.jpg$")
+        with self.anne.photo.open("rb") as f:
+            self.assertEqual(max(Image.open(f).size), 800)
+        url = reverse("core:photo", args=["eleve", self.anne.pk])
+        self.assertContains(self.client.get(reverse("core:eleve_liste")), url)
+        reponse = self.client.get(url)
+        self.assertEqual((reponse.status_code, reponse["Content-Type"]), (200, "image/jpeg"))
+
+        # Sans droit sur l'élève : rien (un parent, un professeur d'une autre classe)
+        parent = Utilisateur.objects.create_user("parent", password="x")
+        parent.groups.add(Group.objects.get(name=roles.PARENT))
+        self.client.force_login(parent)
+        self.assertEqual(self.client.get(url).status_code, 404)
+        prof = Professeur.objects.create(nom="Blaise", prenom="Rose", section=self.primaire,
+                                         utilisateur=Utilisateur.objects.create_user("rose", password="x"))
+        self.client.force_login(prof.utilisateur)
+        self.assertEqual(self.client.get(url).status_code, 404)
+        # Le professeur de la classe la voit
+        Affectation.objects.create(professeur=prof, classe=self.sixieme)
+        prof.classes.add(self.sixieme)
+        self.assertEqual(self.client.get(url).status_code, 200)
+
+        # Une nouvelle photo remplace l'ancienne sur le disque, et la fiche supprimée l'emporte
+        ancienne = self.anne.photo.name
+        self.client.force_login(self.secretaire)
+        self.client.post(reverse("core:eleve_modifier", args=[self.anne.pk]), {
+            "photo": self.image(300, 400), "nom": "Joseph", "prenom": "Anne", "genre": "Féminin", "classe": self.sixieme.pk,
+        })
+        self.anne.refresh_from_db()
+        stockage = self.anne.photo.storage
+        self.assertFalse(stockage.exists(ancienne))
+        nouvelle = self.anne.photo.name
+        with self.captureOnCommitCallbacks(execute=True):
+            self.anne.delete()
+        self.assertFalse(stockage.exists(nouvelle))
+
+    def test_photo_trop_lourde_ou_illisible(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.force_login(self.secretaire)
+        donnees = {"nom": "Noël", "prenom": "Luc", "genre": "Masculin", "classe": self.sixieme.pk}
+        faux = SimpleUploadedFile("photo.jpg", b"pas une image", content_type="image/jpeg")
+        reponse = self.client.post(reverse("core:eleve_creer"), {**donnees, "photo": faux})
+        self.assertEqual(reponse.status_code, 200)
+        self.assertFalse(Eleve.objects.filter(nom="Noël").exists())
+        from . import photos
+        with self.settings():
+            ancien, photos.TAILLE_MAX = photos.TAILLE_MAX, 100
+            try:
+                reponse = self.client.post(reverse("core:eleve_creer"), {**donnees, "photo": self.image(50, 50)})
+            finally:
+                photos.TAILLE_MAX = ancien
+        self.assertContains(reponse, "La photo est trop lourde")
+
+    def test_fiche_de_la_classe_avec_ses_eleves(self):
+        self.client.force_login(self.secretaire)
+        self.assertContains(self.client.get(reverse("core:classe_liste")), reverse("core:classe_fiche", args=[self.sixieme.pk]))
+        page = self.client.get(reverse("core:classe_fiche", args=[self.sixieme.pk]))
+        self.assertContains(page, "Joseph")
+        self.assertNotContains(page, "Pierre")
+        self.assertContains(page, f"?classe={self.sixieme.pk}")
+        formulaire = self.client.get(reverse("core:eleve_creer"), {"classe": self.sixieme.pk}).context["form"]
+        self.assertEqual(str(formulaire["classe"].value()), str(self.sixieme.pk))
+        # Une direction ne voit que les classes de sa section
+        direction = Utilisateur.objects.create_user("dir", password="x")
+        Employe.objects.create(nom="Dir", prenom="Pri", poste="Directeur(trice) du primaire", section=self.primaire,
+                               utilisateur=direction)
+        self.client.force_login(direction)
+        self.assertEqual(self.client.get(reverse("core:classe_fiche", args=[self.septieme.pk])).status_code, 404)
+
+    def test_fiche_employe_sans_salaire_pour_la_direction(self):
+        from datetime import date
+        surveillant = Employe.objects.create(nom="Surv", prenom="Paul", poste="Surveillant(e)", section=self.primaire,
+                                             salaire=12345, date_naissance=date(1990, 1, 5), adresse="Rue Capitale")
+        direction = Utilisateur.objects.create_user("dir", password="x")
+        Employe.objects.create(nom="Dir", prenom="Pri", poste="Directeur(trice) du primaire", section=self.primaire,
+                               utilisateur=direction)
+        self.client.force_login(direction)
+        self.assertContains(self.client.get(reverse("core:employe_liste")), reverse("core:employe_fiche", args=[surveillant.pk]))
+        page = self.client.get(reverse("core:employe_fiche", args=[surveillant.pk]))
+        self.assertContains(page, "Rue Capitale")
+        self.assertContains(page, "05/01/1990")
+        self.assertNotContains(page, "12345")
+        self.assertNotContains(page, "Jean")  # seulement ses informations à lui
+        chef = Utilisateur.objects.create_user("chef", password="x")
+        Employe.objects.create(nom="Chef", prenom="Dir", poste="Directeur(trice) en chef", utilisateur=chef)
+        self.client.force_login(chef)
+        self.assertContains(self.client.get(reverse("core:employe_fiche", args=[surveillant.pk])), "12345")
+
+    def test_fiche_eleve_avec_ses_notes(self):
+        Note.objects.create(eleve=self.anne, matiere="Français", note=77, periode="1er Trimestre",
+                            annee_scolaire=choices.annee_scolaire_courante())
+        self.client.force_login(self.secretaire)
+        page = self.client.get(reverse("core:eleve_fiche", args=[self.anne.pk]))
+        self.assertContains(page, "<h3>Français", html=False)
+        self.assertContains(page, "<td>77</td>", html=False)

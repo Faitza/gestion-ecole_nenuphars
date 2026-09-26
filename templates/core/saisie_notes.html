@@ -1,5 +1,5 @@
 {% extends "core/base.html" %}
-{% load icones %}
+{% load icones photos %}
 {% block title %}Saisie des notes{% endblock %}
 {% block header_color %}#8b5cf6{% endblock %}
 {% block header_title %}{% icone "saisie" %} SAISIE DES NOTES{% endblock %}
@@ -43,7 +43,7 @@
             <tbody>
             {% for ligne in lignes %}
                 <tr{% if ligne.erreur %} class="ligne-erreur"{% endif %}>
-                    <td><label for="note_{{ ligne.eleve.pk }}">{{ ligne.eleve.nom }} {{ ligne.eleve.prenom }}</label></td>
+                    <td><label for="note_{{ ligne.eleve.pk }}" class="eleve-avec-photo">{% photo ligne.eleve "petite" %} {{ ligne.eleve.nom }} {{ ligne.eleve.prenom }}</label></td>
                     <td>
                         <input type="text" inputmode="decimal" name="note_{{ ligne.eleve.pk }}" id="note_{{ ligne.eleve.pk }}"
                                value="{{ ligne.valeur }}" class="form-control" autocomplete="off" placeholder="—">

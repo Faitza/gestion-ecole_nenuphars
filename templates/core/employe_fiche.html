@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}{{ employe }}{% endblock %}
+{% block header_color %}#f59e0b{% endblock %}
+{% block header_title %}{% icone "fiche" %} {{ employe.prenom|upper }} {{ employe.nom|upper }}{% endblock %}
+{% block content %}
+<div class="bloc fiche-personne">
+    {% photo employe "grande" %}
+    <div>
+        <dl class="infos">
+            <dt>Poste</dt><dd>{{ employe.poste|default:"—" }}</dd>
+            <dt>Section</dt><dd>{{ employe.section|default:"Toute l'école" }}</dd>
+            <dt>Téléphone</dt><dd>{{ employe.telephone|default:"—" }}</dd>
+            <dt>E-mail</dt><dd>{{ employe.email|default:"—" }}</dd>
+            <dt>Date de naissance</dt><dd>{% if employe.date_naissance %}{{ employe.date_naissance|date:"d/m/Y" }} ({{ employe.age }} ans){% else %}—{% endif %}</dd>
+            <dt>Adresse</dt><dd>{{ employe.adresse|default:"—" }}</dd>
+            <dt>Date d'embauche</dt><dd>{% if employe.date_embauche %}{{ employe.date_embauche|date:"d/m/Y" }}{% if employe.anciennete %} ({{ employe.anciennete }} an{{ employe.anciennete|pluralize }} à l'école){% endif %}{% else %}—{% endif %}</dd>
+            {% if voit_salaires %}<dt>Salaire</dt><dd>{% if employe.salaire %}{{ employe.salaire|floatformat:0 }} HTG{% else %}—{% endif %}</dd>{% endif %}
+            <dt>Compte</dt><dd>{% if employe.utilisateur %}Actif ({{ employe.utilisateur.username }}){% else %}Pas de compte{% endif %}</dd>
+        </dl>
+        {% if acces.employes.ecrire %}
+        <div class="boutons">
+            <a href="{% url 'core:employe_modifier' employe.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
+            <a href="{% url 'core:employe_supprimer' employe.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

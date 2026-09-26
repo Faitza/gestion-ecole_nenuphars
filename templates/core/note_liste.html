@@ -1,10 +1,10 @@
 {% extends "core/base.html" %}
-{% load icones notes %}
+{% load icones %}
 {% block title %}Notes{% endblock %}
 {% block header_color %}#8b5cf6{% endblock %}
-{% block header_title %}{% icone "notes" %} NOTES{% endblock %}
+{% block header_title %}{% icone "notes" %} NOTES {{ annee }}{% endblock %}
 {% block content %}
-<p class="aide">{% icone "info" %} Les notes sont saisies par les professeurs et apparaissent ici dès qu'ils les enregistrent.{% if acces.notes.ecrire %} La direction de la section peut les corriger.{% endif %}</p>
+<p class="aide">{% icone "info" %} Les notes sont saisies par les professeurs et apparaissent ici dès qu'ils les enregistrent, par classe puis par matière.{% if acces.notes.ecrire %} Cliquez sur une note pour la corriger.{% endif %}</p>
 <form method="get" class="actions-bar filtres-liste">
     <div class="recherche">
         {% icone "rechercher" %}
@@ -16,27 +16,10 @@
         {% for c in classes %}<option value="{{ c.pk }}"{% if c.pk|stringformat:"s" == classe %} selected{% endif %}>{{ c }}</option>{% endfor %}
     </select>
     {% endif %}
-    <select name="periode" class="form-control" aria-label="Trimestre">
-        <option value="">Tous les trimestres</option>
-        {% for p in periodes %}<option value="{{ p }}"{% if p == periode %} selected{% endif %}>{{ p }}</option>{% endfor %}
+    <select name="annee" class="form-control" aria-label="Année scolaire">
+        {% for a in annees %}<option value="{{ a }}"{% if a == annee %} selected{% endif %}>{{ a }}</option>{% endfor %}
     </select>
     <button type="submit" class="btn btn-secondaire">Filtrer</button>
 </form>
-<div class="table-wrapper">
-<table>
-    <thead><tr><th>Élève</th><th>Classe</th><th>Professeur</th><th>Matière</th><th>Note</th><th>Période</th><th>Saisie le</th>{% if acces.notes.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
-    <tbody>
-        {% for n in notes %}
-        <tr>
-            <td>{{ n.eleve }}</td><td>{{ n.eleve.classe|default:"—" }}</td><td>{{ n.professeur|default:"—" }}</td><td>{{ n.matiere }}</td>
-            <td><strong>{{ n.note|note }}</strong>/100</td><td>{{ n.periode }} {{ n.annee_scolaire }}</td><td>{{ n.date_note|date:"d/m/Y" }}</td>
-            {% if acces.notes.ecrire %}<td>
-                <a href="{% url 'core:note_modifier' n.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Corriger</a>
-                <a href="{% url 'core:note_supprimer' n.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
-            </td>{% endif %}
-        </tr>
-        {% empty %}<tr><td colspan="8">Aucune note trouvée.</td></tr>{% endfor %}
-    </tbody>
-</table>
-</div>
+{% include "core/_notes_par_classe.html" with corriger=acces.notes.ecrire lien_eleves=acces.eleves.lire ouvrir=classe %}
 {% endblock %}

@@ -1,0 +1,58 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}{{ classe }}{% endblock %}
+{% block header_color %}#06b6d4{% endblock %}
+{% block header_title %}{% icone "classes" %} {{ classe.nom|upper }}{% endblock %}
+{% block content %}
+<div class="colonnes">
+    <div class="bloc">
+        <h2>La classe</h2>
+        <div class="chiffres">
+            <div><strong>{{ nb_eleves }}</strong><span>élève{{ nb_eleves|pluralize }}</span></div>
+            <div><strong>{{ nb_filles }}</strong><span>fille{{ nb_filles|pluralize }}</span></div>
+            <div><strong>{{ nb_garcons }}</strong><span>garçon{{ nb_garcons|pluralize }}</span></div>
+        </div>
+        <dl class="infos">
+            <dt>Section</dt><dd>{{ classe.section|default:"—" }}</dd>
+            <dt>Cycle</dt><dd>{{ classe.cycle|default:"—" }}</dd>
+            <dt>Année scolaire</dt><dd>{{ classe.annee_scolaire|default:"—" }}</dd>
+        </dl>
+        {% if acces.classes.ecrire %}<a href="{% url 'core:classe_modifier' classe.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>{% endif %}
+    </div>
+    <div class="bloc">
+        <h2>Professeurs</h2>
+        <ul class="liste-evenements">
+        {% for a in affectations %}
+            <li>{% photo a.professeur "petite" %}<div><strong>{% if acces.professeurs.lire %}<a href="{% url 'core:professeur_fiche' a.professeur.pk %}">{{ a.professeur }}</a>{% else %}{{ a.professeur }}{% endif %}</strong><br><span class="aide">{{ a.role }}, toute la journée</span></div></li>
+        {% endfor %}
+        {% for p in professeurs_cours %}
+            <li>{% photo p "petite" %}<div><strong>{% if acces.professeurs.lire %}<a href="{% url 'core:professeur_fiche' p.pk %}">{{ p }}</a>{% else %}{{ p }}{% endif %}</strong><br><span class="aide">{{ p.matieres_ici|join:", " }}</span></div></li>
+        {% endfor %}
+        {% if not affectations and not professeurs_cours %}<li><span class="aide">Aucun professeur pour le moment.</span></li>{% endif %}
+        </ul>
+    </div>
+</div>
+
+{% if eleves is not None %}
+<div class="bloc">
+    <div class="actions-bar">
+        <h2>Élèves de la classe</h2>
+        {% if acces.eleves.ecrire %}<a href="{% url 'core:eleve_creer' %}?classe={{ classe.pk }}" class="btn btn-add">{% icone "ajouter" %} Nouvel élève</a>{% endif %}
+    </div>
+    <div class="table-wrapper">
+    <table>
+        <thead><tr><th></th><th>Nom</th><th>Prénom</th><th>Genre</th><th>Parent/Tuteur</th><th>Tél. parent</th></tr></thead>
+        <tbody>
+        {% for e in eleves %}
+            <tr>
+                <td class="cellule-photo">{% photo e "petite" %}</td>
+                <td><a href="{% url 'core:eleve_fiche' e.pk %}">{{ e.nom }}</a></td><td>{{ e.prenom }}</td><td>{{ e.genre|default:"—" }}</td>
+                <td>{{ e.nom_parent_tuteur|default:"—" }}</td><td>{{ e.telephone_parent|default:"—" }}</td>
+            </tr>
+        {% empty %}<tr><td colspan="6">Aucun élève dans cette classe.</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -19,7 +19,7 @@
 </div>
 
 {% if section %}
-<form method="post" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     <input type="hidden" name="section" value="{{ section.pk }}">
 

@@ -4,12 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 
 from .models import Eleve, Professeur, Employe, Paiement, Note, Classe
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
 from . import anniversaires, choices, professeurs
+from . import notes as notes_par_classe
 from .views_professeurs import espace_professeur
 
 
@@ -93,13 +94,14 @@ def eleve_liste(request):
 @acces_requis("eleves", ecriture=True)
 def eleve_creer(request):
     if request.method == "POST":
-        form = EleveForm(request.POST)
+        form = EleveForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            eleve = form.save()
             messages.success(request, "Élève ajouté(e) avec succès!")
-            return redirect("core:eleve_liste")
+            return redirect("core:eleve_fiche", pk=eleve.pk)
     else:
-        form = EleveForm()
+        # Depuis la fiche d'une classe, la classe est déjà choisie
+        form = EleveForm(initial={"classe": request.GET.get("classe")})
     return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvel Élève"})
 
 
@@ -107,11 +109,11 @@ def eleve_creer(request):
 def eleve_modifier(request, pk):
     eleve = get_object_or_404(filtrer(request.user, "eleves", Eleve.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
-        form = EleveForm(request.POST, instance=eleve)
+        form = EleveForm(request.POST, request.FILES, instance=eleve)
         if form.is_valid():
             form.save()
             messages.success(request, "Élève modifié(e) avec succès!")
-            return redirect("core:eleve_liste")
+            return redirect("core:eleve_fiche", pk=eleve.pk)
     else:
         form = EleveForm(instance=eleve)
     return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'Élève"})
@@ -155,7 +157,7 @@ def classe_modifier(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, "Classe modifiée avec succès!")
-            return redirect("core:classe_liste")
+            return redirect("core:classe_fiche", pk=classe.pk)
     else:
         form = ClasseForm(instance=classe)
     return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier la Classe"})
@@ -182,7 +184,7 @@ def professeur_liste(request):
 def professeur_modifier(request, pk):
     professeur = get_object_or_404(filtrer(request.user, "professeurs", Professeur.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
-        form = ProfesseurForm(request.POST, instance=professeur)
+        form = ProfesseurForm(request.POST, request.FILES, instance=professeur)
         if form.is_valid():
             form.save()
             professeurs.mettre_a_jour_compte(professeur)
@@ -213,11 +215,11 @@ def employe_liste(request):
 @acces_requis("employes", ecriture=True)
 def employe_creer(request):
     if request.method == "POST":
-        form = EmployeForm(request.POST)
+        form = EmployeForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            employe = form.save()
             messages.success(request, "Employé(e) ajouté(e) avec succès!")
-            return redirect("core:employe_liste")
+            return redirect("core:employe_fiche", pk=employe.pk)
     else:
         form = EmployeForm()
     return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvel Employé"})
@@ -227,11 +229,11 @@ def employe_creer(request):
 def employe_modifier(request, pk):
     employe = get_object_or_404(filtrer(request.user, "employes", Employe.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
-        form = EmployeForm(request.POST, instance=employe)
+        form = EmployeForm(request.POST, request.FILES, instance=employe)
         if form.is_valid():
             form.save()
             messages.success(request, "Employé(e) modifié(e) avec succès!")
-            return redirect("core:employe_liste")
+            return redirect("core:employe_fiche", pk=employe.pk)
     else:
         form = EmployeForm(instance=employe)
     return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'Employé"})
@@ -281,22 +283,28 @@ def paiement_supprimer(request, pk):
 # ─────────────────────────── NOTES ───────────────────────────
 @acces_requis("notes")
 def note_liste(request):
+    """Notes par classe, puis par matière (une colonne par trimestre), comme dans « Mes notes »."""
     q = request.GET.get("q", "").strip()
-    notes = filtrer(request.user, "notes", Note.objects.select_related("eleve", "eleve__classe", "professeur"))
+    notes = filtrer(request.user, "notes", Note.objects.select_related(
+        "eleve", "eleve__classe", "eleve__classe__section", "professeur"))
+    annees = sorted(set(notes.exclude(annee_scolaire="").values_list("annee_scolaire", flat=True)), reverse=True)
+    annee = request.GET.get("annee") or choices.annee_scolaire_courante()
+    if annee == choices.annee_scolaire_courante():
+        # Les anciennes notes sans année sont montrées avec l'année en cours
+        notes = notes.filter(Q(annee_scolaire=annee) | Q(annee_scolaire=""))
+    else:
+        notes = notes.filter(annee_scolaire=annee)
     if q:
         notes = notes.filter(Q(eleve__nom__icontains=q) | Q(eleve__prenom__icontains=q) | Q(matiere__icontains=q)
                              | Q(professeur__nom__icontains=q))
-    # Filtres pour retrouver les notes d'une classe ou d'un trimestre
     classes = filtrer(request.user, "classes", Classe.objects.all()) if peut(request.user, "classes") else Classe.objects.none()
     classe = request.GET.get("classe", "")
     if classe.isdigit():
         notes = notes.filter(eleve__classe_id=classe)
-    periode = request.GET.get("periode", "")
-    if periode in choices.PERIODES:
-        notes = notes.filter(periode=periode)
     return render(request, "core/note_liste.html", {
-        "notes": notes, "q": q, "classes": classes, "classe": classe,
-        "periodes": choices.PERIODES, "periode": periode,
+        "classes_notes": notes_par_classe.grouper(notes), "periodes": choices.PERIODES,
+        "q": q, "classes": classes, "classe": classe,
+        "annees": annees if annee in annees else [annee, *annees], "annee": annee,
     })
 
 
@@ -311,7 +319,10 @@ def note_modifier(request, pk):
             return redirect("core:note_liste")
     else:
         form = NoteForm(instance=note, user=request.user)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "Corriger une note"})
+    return render(request, "core/generic_form.html", {
+        "form": form, "titre": "Corriger une note",
+        "lien_supprimer": reverse("core:note_supprimer", args=[note.pk]),
+    })
 
 
 @acces_requis("notes", ecriture=True)

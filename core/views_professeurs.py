@@ -34,7 +34,7 @@ def professeur_inscrire(request):
         return render(request, "core/professeur_inscrire.html", {"sections": Section.objects.all()})
 
     donnees = request.POST if request.method == "POST" else None
-    form = ProfesseurForm(donnees, section=section)
+    form = ProfesseurForm(donnees, request.FILES if donnees else None, section=section)
     affectation_form = None if section.est_secondaire else AffectationForm(donnees, section=section, prefix="aff")
     cours_formset = CoursFormSet(donnees, section=section, prefix="cours") if section.est_secondaire else None
     horaires_manquants = section.est_secondaire and not Creneau.objects.filter(section=section, est_un_cours=True).exists()

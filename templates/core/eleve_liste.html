@@ -1,5 +1,5 @@
 {% extends "core/base.html" %}
-{% load icones %}
+{% load icones photos %}
 {% block title %}Élèves{% endblock %}
 {% block header_color %}#3b82f6{% endblock %}
 {% block header_title %}{% icone "eleves" %} GESTION DES ÉLÈVES{% endblock %}
@@ -13,18 +13,20 @@
 </div>
 <div class="table-wrapper">
 <table>
-    <thead><tr><th>Nom</th><th>Prénom</th><th>Classe</th><th>Parent/Tuteur</th><th>Tél. Parent</th>{% if acces.eleves.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
+    <thead><tr><th></th><th>Nom</th><th>Prénom</th><th>Classe</th><th>Parent/Tuteur</th><th>Tél. Parent</th>{% if acces.eleves.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
     <tbody>
         {% for e in eleves %}
         <tr>
-            <td>{{ e.nom }}</td><td>{{ e.prenom }}</td><td>{{ e.classe|default:"—" }}</td>
+            <td class="cellule-photo">{% photo e "petite" %}</td>
+            <td><a href="{% url 'core:eleve_fiche' e.pk %}">{{ e.nom }}</a></td><td>{{ e.prenom }}</td>
+            <td>{% if e.classe %}<a href="{% url 'core:classe_fiche' e.classe.pk %}">{{ e.classe }}</a>{% else %}—{% endif %}</td>
             <td>{{ e.nom_parent_tuteur|default:"—" }}</td><td>{{ e.telephone_parent|default:"—" }}</td>
             {% if acces.eleves.ecrire %}<td>
                 <a href="{% url 'core:eleve_modifier' e.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
                 <a href="{% url 'core:eleve_supprimer' e.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
             </td>{% endif %}
         </tr>
-        {% empty %}<tr><td colspan="6">Aucun élève trouvé.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="7">Aucun élève trouvé.</td></tr>{% endfor %}
     </tbody>
 </table>
 </div>
