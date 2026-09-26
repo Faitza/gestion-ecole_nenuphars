@@ -1,0 +1,67 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Préinscription{% endblock %}
+{% block content %}
+<div class="split">
+    <aside class="aside">
+        <h1>Préinscription {{ annee }}</h1>
+        <h2>Comment ça marche</h2>
+        <ol>
+            <li>Remplissez ce formulaire en 5 minutes.</li>
+            <li>Vous recevez un numéro de dossier.</li>
+            <li>Le secrétariat vous appelle pour un rendez-vous.</li>
+            <li>Apportez les originaux et réglez l'inscription.</li>
+        </ol>
+        {% if site.FRAIS %}
+        <dl class="frais">{% for libelle, montant in site.FRAIS %}<div><dt>{{ libelle }}</dt><dd>{{ montant }}</dd></div>{% endfor %}</dl>
+        {% endif %}
+        <p class="rassure">{% icone "securite" %} Vos données restent à l'école et ne sont jamais partagées.</p>
+    </aside>
+
+    <form method="post" enctype="multipart/form-data" class="formz" novalidate>
+        {% csrf_token %}
+        {% if form.errors %}<p class="message error" role="alert">{% icone "attention" %} Certaines informations manquent ou sont à corriger : voir en rouge ci-dessous.</p>{% endif %}
+        {% for erreur in form.non_field_errors %}<p class="message error">{{ erreur }}</p>{% endfor %}
+        <p class="aide">Les champs marqués <span class="obligatoire">*</span> sont obligatoires.</p>
+
+        <fieldset>
+            <legend>{% icone "eleves" %} L'élève</legend>
+            <div class="fgrid">
+                {% include "site_public/_champ.html" with champ=form.nom %}
+                {% include "site_public/_champ.html" with champ=form.prenom %}
+                {% include "site_public/_champ.html" with champ=form.date_naissance %}
+                {% include "site_public/_champ.html" with champ=form.genre %}
+                {% include "site_public/_champ.html" with champ=form.classe_demandee %}
+                {% include "site_public/_champ.html" with champ=form.ecole_precedente %}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>{% icone "equipe" %} Le parent ou tuteur</legend>
+            <div class="fgrid">
+                {% include "site_public/_champ.html" with champ=form.nom_parent %}
+                {% include "site_public/_champ.html" with champ=form.telephone_parent %}
+                {% include "site_public/_champ.html" with champ=form.email_parent %}
+                {% include "site_public/_champ.html" with champ=form.adresse %}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>{% icone "piece-jointe" %} Photo et documents</legend>
+            <p class="aide">Facultatif : PDF ou photo prise avec le téléphone, 5 Mo au plus par fichier. Sinon, apportez-les au rendez-vous.</p>
+            <div class="fgrid fichiers">
+                {% include "site_public/_champ.html" with champ=form.photo %}
+                {% include "site_public/_champ.html" with champ=form.acte_naissance %}
+                {% include "site_public/_champ.html" with champ=form.dernier_bulletin %}
+            </div>
+        </fieldset>
+
+        {# Piège à robots : caché aux visiteurs #}
+        <div class="piege" aria-hidden="true">{{ form.site_web.label_tag }}{{ form.site_web }}</div>
+
+        <div class="actions">
+            <button class="btn btn-lily" type="submit">{% icone "envoyer" %} Envoyer la demande</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

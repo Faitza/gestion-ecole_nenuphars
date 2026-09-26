@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'site_public',
 ]
 
 AUTH_USER_MODEL = 'core.Utilisateur'
@@ -112,6 +113,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.acces',
+                'site_public.context_processors.site',
             ],
         },
     },

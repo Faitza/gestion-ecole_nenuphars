@@ -1,17 +1,13 @@
 # core/urls.py
-from django.urls import path
+# La page d'accueil « / » est celle du site public (site_public/urls.py) ;
+# la gestion de l'école est sous /gestion/.
+from django.urls import include, path
 from django.views.generic import RedirectView
-from . import views, views_fiches, views_notes, views_professeurs
+from . import views, views_admissions, views_fiches, views_notes, views_professeurs
 
 app_name = "core"
 
-urlpatterns = [
-    # Une seule page de connexion pour tout le monde
-    path("connexion/", views.LoginView.as_view(), name="login"),
-    path("login/", RedirectView.as_view(pattern_name="core:login", query_string=True)),
-    path("logout/", views.LogoutView.as_view(), name="logout"),
-    path("mot-de-passe/", views.MotDePasseView.as_view(), name="mot_de_passe"),
-    path("espace/", views.espace, name="espace"),
+gestion = [
     path("", views.dashboard, name="dashboard"),
 
     # Élèves
@@ -58,10 +54,30 @@ urlpatterns = [
     # Photos (seulement pour ceux qui ont le droit de voir la personne)
     path("photos/<str:modele>/<int:pk>/", views_fiches.photo, name="photo"),
 
+    # Préinscriptions envoyées depuis le site public, et messages de la page Contact
+    path("preinscriptions/", views_admissions.preinscription_liste, name="preinscription_liste"),
+    path("preinscriptions/<int:pk>/", views_admissions.preinscription_fiche, name="preinscription_fiche"),
+    path("preinscriptions/<int:pk>/modifier/", views_admissions.preinscription_modifier, name="preinscription_modifier"),
+    path("preinscriptions/<int:pk>/etape/", views_admissions.preinscription_etape, name="preinscription_etape"),
+    path("preinscriptions/<int:pk>/supprimer/", views_admissions.preinscription_supprimer, name="preinscription_supprimer"),
+    path("preinscriptions/<int:pk>/pieces/<str:champ>/", views_admissions.piece, name="piece"),
+    path("messages/", views_admissions.message_liste, name="message_liste"),
+    path("messages/<int:pk>/traite/", views_admissions.message_traite, name="message_traite"),
+
     # Notes
     path("notes/", views.note_liste, name="note_liste"),
     path("notes/saisie/", views_notes.saisie_notes, name="saisie_notes"),
     path("notes/mes-notes/", views_notes.mes_notes, name="mes_notes"),
     path("notes/<int:pk>/modifier/", views.note_modifier, name="note_modifier"),
     path("notes/<int:pk>/supprimer/", views.note_supprimer, name="note_supprimer"),
+]
+
+urlpatterns = [
+    # Une seule page de connexion pour tout le monde
+    path("connexion/", views.LoginView.as_view(), name="login"),
+    path("login/", RedirectView.as_view(pattern_name="core:login", query_string=True)),
+    path("logout/", views.LogoutView.as_view(), name="logout"),
+    path("mot-de-passe/", views.MotDePasseView.as_view(), name="mot_de_passe"),
+    path("espace/", views.espace, name="espace"),
+    path("gestion/", include(gestion)),
 ]

@@ -1,0 +1,50 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Admissions{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">Admissions {{ annee }}</p>
+    <h1>Inscrire votre enfant aux Nénuphars</h1>
+    <p class="chapo">La préinscription se fait en ligne, depuis un téléphone, ou au secrétariat de l'école.</p>
+    <div class="cta"><a class="btn btn-lily" href="{% url 'site:preinscription' %}">{% icone "inscrire" %} Préinscrire mon enfant</a></div>
+</section>
+
+<section class="bande deux-colonnes">
+    <div>
+        <h2>Comment ça marche</h2>
+        <ol class="etapes">
+            <li>Remplissez le formulaire de préinscription en quelques minutes.</li>
+            <li>Vous recevez un numéro de dossier : notez-le.</li>
+            <li>Le secrétariat vous appelle pour fixer un rendez-vous.</li>
+            <li>La direction de la section étudie la demande.</li>
+            <li>Apportez les originaux et réglez les frais d'inscription à la caisse.</li>
+        </ol>
+    </div>
+    <div>
+        <h2>Pièces à fournir</h2>
+        <ul class="liste-coches">
+            {% for piece in site.PIECES_A_FOURNIR %}<li>{% icone "coche" %} {{ piece }}</li>{% endfor %}
+        </ul>
+        <p class="aide">Vous pouvez joindre l'acte de naissance et le dernier bulletin au formulaire (PDF ou photo), et apporter les originaux au rendez-vous.</p>
+    </div>
+</section>
+
+<section class="bande deux-colonnes">
+    <div>
+        <h2>Frais</h2>
+        {% if site.FRAIS %}
+        <dl class="frais">{% for libelle, montant in site.FRAIS %}<div><dt>{{ libelle }}</dt><dd>{{ montant }}</dd></div>{% endfor %}</dl>
+        {% else %}
+        <p>Le secrétariat vous communique les frais de l'année au moment du rendez-vous.</p>
+        {% endif %}
+    </div>
+    <div>
+        <h2>Calendrier</h2>
+        {% if site.DATES %}
+        <dl class="frais">{% for libelle, date in site.DATES %}<div><dt>{{ libelle }}</dt><dd>{{ date }}</dd></div>{% endfor %}</dl>
+        {% else %}
+        <p>Les dates de la rentrée et des réunions de parents sont affichées ici dès qu'elles sont fixées.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

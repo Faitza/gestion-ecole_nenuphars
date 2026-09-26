@@ -2,8 +2,9 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.urls import reverse
-from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Creneau
-from . import choices, photos, professeurs, roles
+from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Creneau, Preinscription
+from . import anniversaires, choices, photos, professeurs, roles
+from .classes import par_section
 from .telephone import normaliser_telephone
 
 
@@ -296,3 +297,69 @@ class NoteForm(forms.ModelForm):
         if not (0 <= note <= 100):
             raise forms.ValidationError("La note doit être comprise entre 0 et 100.")
         return note
+
+
+# ─────────────────────────── Préinscriptions ───────────────────────────
+class PreinscriptionForm(PhotoMixin, forms.ModelForm):
+    """Champs de l'élève et du parent, communs au site public et au secrétariat."""
+
+    class Meta:
+        model = Preinscription
+        fields = ["nom", "prenom", "date_naissance", "genre", "classe_demandee", "ecole_precedente", "photo",
+                  "nom_parent", "telephone_parent", "email_parent", "adresse"]
+        labels = {
+            "ecole_precedente": "École précédente (facultatif)",
+            "photo": "Photo d'identité de l'élève",
+            "email_parent": "E-mail (facultatif)",
+            "adresse": "Adresse (facultatif)",
+        }
+        help_texts = {"photo": ""}
+        widgets = {
+            "photo": forms.FileInput(attrs={"accept": "image/*"}),
+            "date_naissance": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "nom_parent": forms.TextInput(attrs={"autocomplete": "name"}),
+            "telephone_parent": forms.TextInput(attrs={"inputmode": "tel", "autocomplete": "tel", "placeholder": "ex : 3712 3456"}),
+            "email_parent": forms.EmailInput(attrs={"autocomplete": "email"}),
+            "adresse": forms.TextInput(attrs={"autocomplete": "street-address"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["genre"].choices = [("", "Choisissez"), *choices.GENRES_CHOICES]
+        # Classes regroupées par section, dans l'ordre (Kindergarten, primaire, secondaire)
+        self.fields["classe_demandee"].choices = [("", "Choisissez la classe")] + [
+            (str(section or "Autres classes"), [(c.pk, c.nom) for c in classes])
+            for section, classes in par_section(Classe.objects.select_related("section"))
+        ]
+
+    def clean_date_naissance(self):
+        naissance = self.cleaned_data["date_naissance"]
+        if naissance >= anniversaires.aujourd_hui() or not 2 <= anniversaires.age(naissance) <= 25:
+            raise forms.ValidationError("Vérifiez la date de naissance de l'élève.")
+        return naissance
+
+    def clean_telephone_parent(self):
+        telephone = self.cleaned_data["telephone_parent"].strip()
+        if len(normaliser_telephone(telephone)) < 11:
+            raise forms.ValidationError("Numéro incomplet : 8 chiffres, par exemple 3712 3456.")
+        return telephone
+
+
+class PreinscriptionGestionForm(PreinscriptionForm):
+    """Le secrétariat corrige un dossier, ajoute la photo et note le rendez-vous."""
+
+    class Meta(PreinscriptionForm.Meta):
+        fields = ["photo", *[f for f in PreinscriptionForm.Meta.fields if f != "photo"], "rendez_vous", "note_interne"]
+        labels = PreinscriptionForm.Meta.labels
+        help_texts = {"photo": "Photo d'identité, 5 Mo au plus."}
+        widgets = {
+            **PreinscriptionForm.Meta.widgets,
+            "photo": _photo_widget(),
+            "rendez_vous": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "note_interne": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for champ in self.fields.values():
+            champ.widget.attrs.setdefault("class", "form-control")

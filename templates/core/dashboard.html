@@ -41,6 +41,29 @@
     {% endif %}
 </div>
 
+{% if admissions or nb_messages %}
+<div class="bloc alertes">
+    <div class="actions-bar">
+        <h2>{% icone "preinscriptions" %} Admissions</h2>
+        {% if admissions %}<a href="{% url 'core:preinscription_liste' %}" class="btn-sm btn-edit">Toutes les préinscriptions</a>{% endif %}
+    </div>
+    <ul class="liste-evenements">
+        {% for etape, texte, nombre in admissions %}
+        <li>
+            <span class="pastille admissions">{% icone "preinscriptions" %}</span>
+            <div><a href="{% url 'core:preinscription_liste' %}?etape={{ etape|urlencode }}"><strong>{{ nombre }}</strong> {{ texte }}</a></div>
+        </li>
+        {% endfor %}
+        {% if nb_messages is not None %}
+        <li>
+            <span class="pastille admissions">{% icone "messages" %}</span>
+            <div><a href="{% url 'core:message_liste' %}"><strong>{{ nb_messages }}</strong> message{{ nb_messages|pluralize }} du site à traiter</a></div>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+
 {% if dernieres_notes is not None %}
 <div class="bloc alertes">
     <div class="actions-bar">

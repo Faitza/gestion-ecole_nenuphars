@@ -1,0 +1,88 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="kick">Préinscriptions {{ annee }} ouvertes</p>
+        <h1>{{ site.ACCROCHE.0 }} <em>{{ site.ACCROCHE.1 }}</em></h1>
+        <p class="chapo">{{ site.PRESENTATION }}</p>
+        <div class="cta">
+            <a class="btn btn-lily" href="{% url 'site:preinscription' %}">{% icone "inscrire" %} Préinscrire mon enfant</a>
+            <a class="btn btn-ghost" href="{% url 'site:ecole' %}">Découvrir l'école</a>
+        </div>
+    </div>
+    <div class="pond">
+        <canvas id="pond" aria-hidden="true"></canvas>
+        {% with prochaine=site.DATES.0 %}{% if prochaine %}<div class="tag"><b>{{ prochaine.0 }}</b>{{ prochaine.1 }}</div>{% endif %}{% endwith %}
+    </div>
+</section>
+
+<section class="facts" aria-label="L'école en chiffres">
+    <div><b>{{ nb_classes }}</b><span>classes, du Kinder à la NSIV</span></div>
+    <div><b>{{ sections|length }}</b><span>sections : Kindergarten, primaire, secondaire</span></div>
+    <div><b>{{ nb_matieres }}</b><span>matières enseignées</span></div>
+    <div><b>{{ nb_bulletins }}</b><span>bulletins par an</span></div>
+</section>
+
+<section class="bande">
+    <h2>Trois sections, une seule école</h2>
+    <div class="cycles">
+        {% for s in sections %}
+        <a class="cycle c{{ forloop.counter }}" href="{% url 'site:niveaux' %}#{{ s.section.nom|slugify }}">
+            <span class="lv">{{ s.section }}</span>
+            <h3>{{ s.niveaux|default:s.section }}</h3>
+            <p>{{ s.texte }}</p>
+            <span class="plus">Voir les classes {% icone "suivant" %}</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="bande appel">
+    <div>
+        <h2>Inscrire votre enfant en {{ annee }}</h2>
+        <ol class="etapes">
+            <li>Remplissez la préinscription en ligne, depuis votre téléphone.</li>
+            <li>Vous recevez tout de suite un numéro de dossier.</li>
+            <li>Le secrétariat vous appelle pour un rendez-vous.</li>
+            <li>La direction de la section répond, puis l'inscription est finalisée.</li>
+        </ol>
+    </div>
+    <a class="btn btn-lily" href="{% url 'site:preinscription' %}">Commencer la préinscription {% icone "suivant" %}</a>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+/* Petit étang de nénuphars dessiné dans l'image d'accueil */
+(function () {
+    var c = document.getElementById("pond");
+    if (!c || !c.getContext) return;
+    function dessiner() {
+        var r = c.getBoundingClientRect();
+        if (!r.width) return;
+        var d = window.devicePixelRatio || 1;
+        c.width = r.width * d; c.height = r.height * d;
+        var x = c.getContext("2d");
+        x.scale(d, d);
+        var cs = getComputedStyle(document.documentElement);
+        var lily = cs.getPropertyValue("--lily").trim(), leaf = cs.getPropertyValue("--leaf").trim(), amber = cs.getPropertyValue("--amber").trim();
+        [[.30, .35, .18], [.70, .62, .22], [.78, .22, .11]].forEach(function (p) {
+            var cx = p[0] * r.width, cy = p[1] * r.height, rad = p[2] * Math.min(r.width, r.height) * 1.25;
+            x.fillStyle = leaf; x.globalAlpha = .35;
+            x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, rad, .25, Math.PI * 2 - .05); x.closePath(); x.fill();
+            x.fillStyle = lily;
+            for (var k = 0; k < 8; k++) {
+                x.save(); x.translate(cx, cy); x.rotate(k / 8 * Math.PI * 2);
+                x.beginPath(); x.ellipse(0, -rad * .28, rad * .09, rad * .26, 0, 0, Math.PI * 2);
+                x.globalAlpha = .55 + .4 * (k % 2); x.fill(); x.restore();
+            }
+            x.globalAlpha = 1; x.fillStyle = amber;
+            x.beginPath(); x.arc(cx, cy, rad * .08, 0, Math.PI * 2); x.fill();
+        });
+    }
+    dessiner();
+    window.addEventListener("resize", dessiner);
+})();
+</script>
+{% endblock %}

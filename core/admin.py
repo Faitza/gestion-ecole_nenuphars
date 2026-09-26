@@ -1,7 +1,8 @@
 # core/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Affectation, Cours
+from .models import (Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Affectation, Cours,
+                     Preinscription, MessageContact)
 
 
 @admin.register(Utilisateur)
@@ -86,3 +87,18 @@ class AffectationAdmin(admin.ModelAdmin):
 class CoursAdmin(admin.ModelAdmin):
     list_display = ("professeur", "classe", "matiere", "jour", "creneau", "statut", "annee_scolaire")
     list_filter = ("statut", "jour", "classe", "annee_scolaire")
+
+
+@admin.register(Preinscription)
+class PreinscriptionAdmin(admin.ModelAdmin):
+    list_display = ("numero", "nom", "prenom", "classe_demandee", "telephone_parent", "etape", "date_demande")
+    list_filter = ("etape", "classe_demandee__section", "classe_demandee")
+    search_fields = ("numero", "nom", "prenom", "nom_parent", "telephone_parent")
+    readonly_fields = ("numero", "date_demande", "decision_par", "decision_le", "eleve")
+
+
+@admin.register(MessageContact)
+class MessageContactAdmin(admin.ModelAdmin):
+    list_display = ("nom", "telephone", "email", "recu_le", "traite")
+    list_filter = ("traite",)
+    search_fields = ("nom", "telephone", "email", "message")

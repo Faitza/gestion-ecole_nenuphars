@@ -1,0 +1,56 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}L'école{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">L'école</p>
+    <h1>{{ site.NOM }}</h1>
+    <p class="chapo">{{ site.PRESENTATION }}</p>
+</section>
+
+{% if site.HISTOIRE %}
+<section class="bande texte">
+    <h2>Notre histoire</h2>
+    {% for paragraphe in site.HISTOIRE %}<p>{{ paragraphe }}</p>{% endfor %}
+</section>
+{% endif %}
+
+{% if site.MOT_DE_LA_DIRECTRICE %}
+<section class="bande texte">
+    <h2>Le mot de la directrice</h2>
+    <blockquote class="mot">
+        {% for paragraphe in site.MOT_DE_LA_DIRECTRICE %}<p>{{ paragraphe }}</p>{% endfor %}
+        {% with chef=organisation.0.personne %}{% if chef %}<footer>{{ chef.prenom }} {{ chef.nom }}, directrice en chef</footer>{% endif %}{% endwith %}
+    </blockquote>
+</section>
+{% endif %}
+
+{% if site.VALEURS %}
+<section class="bande">
+    <h2>Nos valeurs</h2>
+    <div class="cartes">
+        {% for titre, texte in site.VALEURS %}<div class="carte">{% icone "coeur" "carte-icone" %}<h3>{{ titre }}</h3><p>{{ texte }}</p></div>{% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="bande">
+    <h2>Une direction pour chaque section</h2>
+    <p class="chapo">Chaque section a sa propre direction, qui connaît ses élèves et reçoit les familles. La directrice en chef veille sur l'ensemble de l'école.</p>
+    <div class="cartes">
+        {% for o in organisation %}
+        <div class="carte{% if forloop.first %} carte-chef{% endif %}">
+            {% icone "equipe" "carte-icone" %}
+            <h3>{{ o.titre }}</h3>
+            {% if o.personne %}<p class="personne">{{ o.personne.prenom }} {{ o.personne.nom }}</p>{% endif %}
+            <p>{% if not forloop.first %}{{ o.perimetre }} · {% endif %}{{ o.texte }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="bande appel">
+    <div><h2>Venez nous rencontrer</h2><p>Le secrétariat vous reçoit pour visiter l'école et répondre à vos questions.</p></div>
+    <a class="btn btn-lily" href="{% url 'site:contact' %}">Nous contacter {% icone "suivant" %}</a>
+</section>
+{% endblock %}

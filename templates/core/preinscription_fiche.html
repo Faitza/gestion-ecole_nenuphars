@@ -1,0 +1,71 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}Dossier {{ dossier.numero }}{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "preinscriptions" %} DOSSIER {{ dossier.numero }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'core:preinscription_liste' %}" class="lien-icone">{% icone "retour" %} Toutes les préinscriptions</a></p>
+<ol class="parcours" aria-label="Étapes du dossier">
+    {% for etape in etapes %}<li class="{% if etape == dossier.etape %}actuelle{% endif %}">{{ etape }}</li>{% endfor %}
+</ol>
+
+{% if actions %}
+<div class="bloc decision">
+    {% if dossier.etape == "Acceptée" or dossier.etape == "Refusée" %}
+    <h2>{% icone "info" %} Demande {{ dossier.etape|lower }}{% if dossier.etape == "Acceptée" and not decide %} : l'élève peut être inscrit{% endif %}</h2>
+    {% if decide %}<p class="aide">La décision peut encore changer tant que l'élève n'est pas inscrit.</p>{% endif %}
+    {% else %}
+    <h2>{% icone "info" %} Que faire de ce dossier ?</h2>
+    {% endif %}
+    <form method="post" action="{% url 'core:preinscription_etape' dossier.pk %}">
+        {% csrf_token %}
+        {% if decide %}
+        <label for="avis">Avis de la direction (facultatif, gardé dans le dossier)</label>
+        <textarea name="avis" id="avis" rows="2" class="form-control">{{ dossier.avis_direction }}</textarea>
+        {% endif %}
+        <div class="boutons">
+            {% for action, libelle, icone_action in actions %}
+            <button type="submit" name="action" value="{{ action }}" class="btn btn-{{ action }}">{% icone icone_action %} {{ libelle }}</button>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<div class="bloc fiche-personne">
+    {% photo dossier "grande" %}
+    <div>
+        <div class="entete-fiche"><h2>{{ dossier.prenom }} {{ dossier.nom }}</h2><span class="etape etape-{{ dossier.etape|slugify }}">{{ dossier.etape }}</span></div>
+        <dl class="infos">
+            <dt>Classe demandée</dt><dd>{{ dossier.classe_demandee|default:"—" }}{% if dossier.section %} · {{ dossier.section }}{% endif %}</dd>
+            <dt>Date de naissance</dt><dd>{{ dossier.date_naissance|date:"d/m/Y" }}</dd>
+            <dt>Genre</dt><dd>{{ dossier.genre }}</dd>
+            <dt>École précédente</dt><dd>{{ dossier.ecole_precedente|default:"—" }}</dd>
+            <dt>Parent ou tuteur</dt><dd>{{ dossier.nom_parent }}</dd>
+            <dt>Téléphone</dt><dd><a href="tel:{{ dossier.telephone_parent }}">{{ dossier.telephone_parent }}</a></dd>
+            <dt>E-mail</dt><dd>{{ dossier.email_parent|default:"—" }}</dd>
+            <dt>Adresse</dt><dd>{{ dossier.adresse|default:"—" }}</dd>
+            <dt>Reçue le</dt><dd>{{ dossier.date_demande|date:"d/m/Y à H:i" }}</dd>
+            <dt>Rendez-vous</dt><dd>{{ dossier.rendez_vous|date:"l j F Y à H:i"|default:"Pas encore fixé" }}</dd>
+            {% if dossier.decision_le %}<dt>Décision</dt><dd>{{ dossier.etape }}{% if dossier.etape == "Inscrite" %} (acceptée){% endif %} le {{ dossier.decision_le|date:"d/m/Y" }}{% if dossier.decision_par %} par {{ dossier.decision_par.get_full_name|default:dossier.decision_par.username }}{% endif %}</dd>{% endif %}
+            {% if dossier.avis_direction %}<dt>Avis de la direction</dt><dd>{{ dossier.avis_direction|linebreaksbr }}</dd>{% endif %}
+            {% if dossier.note_interne %}<dt>Note du secrétariat</dt><dd>{{ dossier.note_interne|linebreaksbr }}</dd>{% endif %}
+            <dt>Pièces jointes</dt><dd>{% for champ, libelle in dossier.pieces %}<a href="{% url 'core:piece' dossier.pk champ %}" class="lien-icone">{% icone "piece-jointe" %} {{ libelle|capfirst }}</a>{% if not forloop.last %}<br>{% endif %}{% empty %}Aucune (à apporter au rendez-vous){% endfor %}</dd>
+            {% if dossier.eleve %}<dt>Fiche élève</dt><dd><a href="{% url 'core:eleve_fiche' dossier.eleve.pk %}">{{ dossier.eleve }}</a></dd>{% endif %}
+        </dl>
+        {% if acces.preinscriptions.ecrire %}
+        <div class="boutons">
+            <a href="{% url 'core:preinscription_modifier' dossier.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier, photo, rendez-vous</a>
+            <a href="{% url 'core:preinscription_supprimer' dossier.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if doublons %}
+<div class="bloc">
+    <p class="avertissement">{% icone "attention" %} Un élève du même nom est déjà inscrit : vérifiez qu'il ne s'agit pas du même enfant.</p>
+    <ul>{% for e in doublons %}<li><a href="{% url 'core:eleve_fiche' e.pk %}">{{ e }}</a>{% if e.classe %} · {{ e.classe }}{% endif %}{% if e.date_naissance %} · né(e) le {{ e.date_naissance|date:"d/m/Y" }}{% endif %}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% endblock %}

@@ -6,7 +6,8 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from core.models import Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours
+from core.models import (Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours,
+                         Preinscription, MessageContact)
 from core import choices, professeurs
 
 Utilisateur = get_user_model()
@@ -102,6 +103,17 @@ class Command(BaseCommand):
             secretaire.save()
             self.stdout.write(self.style.SUCCESS("✓ Compte secrétaire créé (secretaire / secretaire123)"))
 
+        # Compte d'essai de la direction du primaire (direction / direction123), pour accepter les préinscriptions
+        directrice, _ = Employe.objects.get_or_create(nom="Célestin", prenom="Rose", defaults=dict(
+            poste=choices.POSTES_DIRECTION_SECTION[1], section=sections.get(choices.SECTION_PRIMAIRE),
+        ))
+        if directrice.utilisateur is None and not Utilisateur.objects.filter(username="direction").exists():
+            directrice.utilisateur = Utilisateur.objects.create_user(
+                "direction", password="direction123", first_name=directrice.prenom, last_name=directrice.nom,
+            )
+            directrice.save()
+            self.stdout.write(self.style.SUCCESS("✓ Compte direction du primaire créé (direction / direction123)"))
+
         # 5) Élèves
         eleves_data = [
             ("Dupont", "Jean", "Masculin", "7ème AF", "Marie Dupont", "509-3456-7890"),
@@ -143,5 +155,22 @@ class Command(BaseCommand):
                 defaults=dict(methode_paiement=methode, statut="Payé"),
             )
         self.stdout.write(self.style.SUCCESS(f"✓ {len(paiements_data)} paiements créés"))
+
+        # 8) Préinscriptions reçues par le site public, à différentes étapes, et un message de la page Contact
+        preinscriptions_data = [
+            ("Désir", "Kerline", "Féminin", il_y_a(9), "4ème AF", "Anne Désir", "3714 5566", choices.ETAPE_RECUE),
+            ("Étienne", "Ruth", "Féminin", il_y_a(3), "1ère Année Kinder", "Paul Étienne", "3822 1144",
+             choices.ETAPE_CHEZ_LA_DIRECTION),
+            ("Noël", "Ricardo", "Masculin", il_y_a(8), "3ème AF", "Mireille Noël", "4611 2299", choices.ETAPE_CHEZ_LA_DIRECTION),
+        ]
+        for nom, prenom, genre, naissance, classe_nom, parent, tel, etape in preinscriptions_data:
+            Preinscription.objects.get_or_create(nom=nom, prenom=prenom, defaults=dict(
+                genre=genre, date_naissance=naissance, classe_demandee=classes[classe_nom], nom_parent=parent,
+                telephone_parent=tel, adresse="Les Cayes", etape=etape,
+            ))
+        MessageContact.objects.get_or_create(nom="Marie-Claude Joseph", defaults=dict(
+            telephone="3712 4455", message="Bonjour, quelle est la date de la réunion des parents ?",
+        ))
+        self.stdout.write(self.style.SUCCESS(f"✓ {len(preinscriptions_data)} préinscriptions et 1 message du site créés"))
 
         self.stdout.write(self.style.SUCCESS("\nBase de données remplie avec succès !"))

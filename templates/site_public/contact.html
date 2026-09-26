@@ -1,0 +1,35 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Contact{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">Contact</p>
+    <h1>Nous joindre</h1>
+</section>
+<div class="bande deux-colonnes">
+    <div class="coordonnees">
+        <h2>L'école</h2>
+        <p>{% icone "lieu" %} {% if site.ADRESSE %}{{ site.ADRESSE }}{% else %}{{ site.VILLE }}, Haïti{% endif %}</p>
+        {% for tel in site.TELEPHONES %}<p><a href="tel:{{ tel|cut:' ' }}">{% icone "telephone" %} {{ tel }}</a></p>{% endfor %}
+        {% if whatsapp_lien %}<p><a class="btn btn-whatsapp" href="{{ whatsapp_lien }}" rel="noopener">{% icone "whatsapp" %} Écrire sur WhatsApp</a></p>{% endif %}
+        {% if site.COURRIEL %}<p><a href="mailto:{{ site.COURRIEL }}">{% icone "courriel" %} {{ site.COURRIEL }}</a></p>{% endif %}
+        {% if site.HORAIRES %}
+        <h2>Horaires du secrétariat</h2>
+        <dl class="frais">{% for jours, heures in site.HORAIRES %}<div><dt>{{ jours }}</dt><dd>{{ heures }}</dd></div>{% endfor %}</dl>
+        {% endif %}
+        {% if not site.TELEPHONES and not site.COURRIEL %}<p class="aide">Écrivez-nous avec ce formulaire : le secrétariat vous rappelle.</p>{% endif %}
+    </div>
+    <form method="post" class="formz carte-formulaire" novalidate>
+        {% csrf_token %}
+        <h2>{% icone "messages" %} Écrire à l'école</h2>
+        <div class="fgrid">
+            {% include "site_public/_champ.html" with champ=form.nom %}
+            {% include "site_public/_champ.html" with champ=form.telephone %}
+            {% include "site_public/_champ.html" with champ=form.email large=True %}
+            {% include "site_public/_champ.html" with champ=form.message large=True %}
+        </div>
+        <div class="piege" aria-hidden="true">{{ form.site_web.label_tag }}{{ form.site_web }}</div>
+        <div class="actions"><button class="btn btn-lily" type="submit">{% icone "envoyer" %} Envoyer</button></div>
+    </form>
+</div>
+{% endblock %}
