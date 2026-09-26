@@ -17,9 +17,10 @@ python manage.py seed_data      # crée les classes, le compte admin et quelques
 python manage.py runserver
 ```
 
-Ouvrez http://127.0.0.1:8000/connexion/ → **admin / admin123** (pour les essais seulement)
+Ouvrez http://127.0.0.1:8000/connexion/ → **admin / admin123** (pour les essais seulement).
+Pour essayer l'espace d'un professeur et la saisie des notes : **prof / prof123**.
 
-⚠️ `seed_data` ne fonctionne qu'avec `DJANGO_DEBUG=1`. En production, créez le
+**Attention :** `seed_data` ne fonctionne qu'avec `DJANGO_DEBUG=1`. En production, créez le
 compte de la directrice en chef avec `python manage.py createsuperuser`.
 
 ## Réglages (fichier `.env`)
@@ -61,6 +62,31 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
 - Les horaires du secondaire (5 heures de 55 minutes et une récréation) se modifient dans
   `/admin/` (Créneaux).
 
+## Notes
+
+- Ce sont les professeurs qui saisissent les notes (menu « Saisie des notes ») : une grille
+  avec les élèves d'une classe, pour une matière et un trimestre. Au secondaire, seulement les
+  classes et matières de leurs cours validés ; au Kindergarten et au primaire, toutes les
+  matières de leur classe.
+- La direction d'une section peut corriger ou retirer une note de sa section.
+- La directrice en chef et le compte admin lisent toutes les notes mais ne peuvent pas en
+  saisir, ni dans le site ni dans `/admin/`.
+
+## Anniversaires et ancienneté
+
+- Les fiches des professeurs et des employés ont la date de naissance, l'adresse et la date
+  d'embauche.
+- Le tableau de bord annonce les anniversaires des 7 prochains jours, et les années passées à
+  l'école, pour le personnel que chacun a le droit de voir (une direction de section : sa section).
+- À la connexion, une petite fenêtre souhaite la bienvenue et rappelle les anniversaires du jour.
+  Le professeur dont c'est l'anniversaire reçoit ses vœux sur son espace.
+
+## Icônes
+
+Les icônes viennent de [Bootstrap Icons](https://icons.getbootstrap.com) (licence MIT) et sont
+dans un seul fichier, `static/icones/icones.svg`. Dans une page : `{% load icones %}` puis
+`{% icone "eleves" %}`. Pour en ajouter une, copiez son `<symbol>` dans ce fichier.
+
 ## Structure du projet
 
 ```
@@ -72,6 +98,9 @@ core/
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
     views_professeurs.py  → inscription, fiche et emploi du temps des professeurs
+    views_notes.py        → saisie des notes par les professeurs
+    anniversaires.py      → anniversaires et années à l'école du personnel
+    templatetags/icones.py → balise {% icone "nom" %}
     backends.py           → connexion avec le téléphone, l'e-mail ou le nom d'utilisateur
     forms.py              → formulaires et validation
     views.py              → connexion, espace de chacun, tableau de bord, gestion de chaque module
@@ -80,6 +109,7 @@ core/
     management/commands/seed_data.py → crée les classes et des données d'exemple
 templates/core/           → toutes les pages HTML
 static/css/style.css
+static/icones/icones.svg  → toutes les icônes du site
 ```
 
 ## Adapter à votre école
@@ -100,9 +130,10 @@ static/css/style.css
 - **Professeurs** : inscription par la secrétaire selon la section, compte de connexion,
   classe ou emploi du temps validé par la direction.
 - **Employés** : le personnel non enseignant (directions, secrétariat, caisse, surveillants,
-  censeurs, etc.).
+  censeurs, etc.), avec date de naissance, adresse et date d'embauche.
 - **Paiements** : suivi des paiements des élèves (scolarité, inscription, etc.) et total reçu.
-- **Notes** : notes par matière, trimestre et année scolaire, avec recherche.
+- **Notes** : saisies par les professeurs, par matière, trimestre et année scolaire ; lecture et
+  recherche pour l'administration.
 
 ## Prochaines étapes possibles
 

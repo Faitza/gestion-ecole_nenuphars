@@ -9,7 +9,7 @@ from django.urls import reverse_lazy
 from .models import Eleve, Professeur, Employe, Paiement, Note, Classe
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
-from . import choices, professeurs
+from . import anniversaires, choices, professeurs
 from .views_professeurs import espace_professeur
 
 
@@ -17,6 +17,12 @@ class LoginView(auth_views.LoginView):
     template_name = "core/login.html"
     authentication_form = LoginForm
     redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        reponse = super().form_valid(form)
+        # Petite fenêtre « Bienvenue » sur la première page après la connexion
+        messages.success(self.request, anniversaires.message_de_bienvenue(self.request.user), extra_tags="bienvenue")
+        return reponse
 
 
 class LogoutView(auth_views.LogoutView):
@@ -63,6 +69,12 @@ def dashboard(request):
     if peut(user, "paiements"):
         paiements = filtrer(user, "paiements", Paiement.objects.filter(statut="Payé"))
         context["revenus"] = paiements.aggregate(total=Sum("montant"))["total"] or 0
+    # Anniversaires et années à l'école du personnel que l'on peut voir, dans les 7 jours
+    context["evenements"] = anniversaires.evenements(anniversaires.personnel_visible(user))
+    context["jours_d_avance"] = anniversaires.JOURS_D_AVANCE
+    context["prenom"] = anniversaires.prenom_de(user)
+    context["aujourd_hui"] = anniversaires.aujourd_hui()
+    context["ma_fete"] = anniversaires.c_est_sa_fete(anniversaires.fiche_de(user))
     return render(request, "core/dashboard.html", context)
 
 
@@ -86,7 +98,7 @@ def eleve_creer(request):
             return redirect("core:eleve_liste")
     else:
         form = EleveForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouvel Élève"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvel Élève"})
 
 
 @acces_requis("eleves", ecriture=True)
@@ -100,7 +112,7 @@ def eleve_modifier(request, pk):
             return redirect("core:eleve_liste")
     else:
         form = EleveForm(instance=eleve)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier l'Élève"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'Élève"})
 
 
 @acces_requis("eleves", ecriture=True)
@@ -130,7 +142,7 @@ def classe_creer(request):
             return redirect("core:classe_liste")
     else:
         form = ClasseForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouvelle Classe"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvelle Classe"})
 
 
 @acces_requis("classes", ecriture=True)
@@ -144,7 +156,7 @@ def classe_modifier(request, pk):
             return redirect("core:classe_liste")
     else:
         form = ClasseForm(instance=classe)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier la Classe"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier la Classe"})
 
 
 @acces_requis("classes", ecriture=True)
@@ -176,7 +188,7 @@ def professeur_modifier(request, pk):
             return redirect("core:professeur_fiche", pk=professeur.pk)
     else:
         form = ProfesseurForm(instance=professeur)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier le Professeur"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier le Professeur"})
 
 
 @acces_requis("professeurs", ecriture=True)
@@ -206,7 +218,7 @@ def employe_creer(request):
             return redirect("core:employe_liste")
     else:
         form = EmployeForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouvel Employé"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvel Employé"})
 
 
 @acces_requis("employes", ecriture=True)
@@ -220,7 +232,7 @@ def employe_modifier(request, pk):
             return redirect("core:employe_liste")
     else:
         form = EmployeForm(instance=employe)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier l'Employé"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'Employé"})
 
 
 @acces_requis("employes", ecriture=True)
@@ -251,7 +263,7 @@ def paiement_creer(request):
             return redirect("core:paiement_liste")
     else:
         form = PaiementForm(initial={"statut": "Payé"})
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouveau Paiement"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouveau Paiement"})
 
 
 @acces_requis("paiements", ecriture=True)
@@ -275,30 +287,17 @@ def note_liste(request):
 
 
 @acces_requis("notes", ecriture=True)
-def note_creer(request):
-    if request.method == "POST":
-        form = NoteForm(request.POST, user=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Note ajoutée avec succès!")
-            return redirect("core:note_liste")
-    else:
-        form = NoteForm(user=request.user)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Ajouter une Note"})
-
-
-@acces_requis("notes", ecriture=True)
 def note_modifier(request, pk):
     note = get_object_or_404(filtrer(request.user, "notes", Note.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
         form = NoteForm(request.POST, instance=note, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Note modifiée avec succès!")
+            messages.success(request, "Note corrigée.")
             return redirect("core:note_liste")
     else:
         form = NoteForm(instance=note, user=request.user)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier la Note"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Corriger une note"})
 
 
 @acces_requis("notes", ecriture=True)

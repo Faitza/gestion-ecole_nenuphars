@@ -1,7 +1,8 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Confirmer la suppression{% endblock %}
 {% block header_color %}#dc2626{% endblock %}
-{% block header_title %}🗑️ Confirmer la suppression{% endblock %}
+{% block header_title %}{% icone "supprimer" %} Confirmer la suppression{% endblock %}
 {% block content %}
 <div class="form-card">
     <p>Voulez-vous vraiment supprimer <strong>{{ objet }}</strong> ?</p>
@@ -10,6 +11,6 @@
         <button type="submit" class="btn-primary" style="background:#dc2626;">Oui, supprimer</button>
     </form>
     <br>
-    <a href="{% url retour %}">← Annuler</a>
+    <a href="{% url retour %}" class="lien-icone">{% icone "retour" %} Annuler</a>
 </div>
 {% endblock %}

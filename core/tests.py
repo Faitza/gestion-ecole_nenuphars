@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from . import choices, roles
-from .models import Affectation, Classe, Creneau, Eleve, Employe, Note, Paiement, Professeur, Section, Utilisateur
+from .models import Affectation, Classe, Cours, Creneau, Eleve, Employe, Note, Paiement, Professeur, Section, Utilisateur
 from .telephone import normaliser_telephone
 
 
@@ -145,7 +145,8 @@ class RolesEtAccesTests(TestCase):
         self.assertEqual(self.client.get(reverse("core:paiement_creer")).status_code, 403)
         self.assertEqual(self.client.get(reverse("core:employe_liste")).status_code, 403)
         reponse = self.client.get(reverse("core:note_liste"))
-        self.assertNotContains(reponse, reverse("core:note_creer"))
+        self.assertEqual(reponse.status_code, 200)
+        self.assertNotContains(reponse, reverse("core:note_modifier", args=[self.note_pri.pk]))
 
     def test_caisse_enregistre_les_paiements(self):
         self.client.force_login(self.compte_employe("cais", "Caissier(ère)"))
@@ -166,13 +167,20 @@ class RolesEtAccesTests(TestCase):
         self.assertEqual(self.client.get(reverse("core:note_modifier", args=[self.note_sec.pk])).status_code, 404)
         self.assertEqual(self.client.get(reverse("core:eleve_creer")).status_code, 403)
 
-        formulaire = self.client.get(reverse("core:note_creer")).context["form"]
+        # La direction corrige une note de sa section, sans pouvoir la donner à un élève d'une autre section
+        formulaire = self.client.get(reverse("core:note_modifier", args=[self.note_pri.pk])).context["form"]
         self.assertEqual(list(formulaire.fields["eleve"].queryset), [self.eleve_pri])
-        reponse = self.client.post(reverse("core:note_creer"), {
+        reponse = self.client.post(reverse("core:note_modifier", args=[self.note_pri.pk]), {
             "eleve": self.eleve_sec.pk, "matiere": "Français", "note": "90", "periode": "1er Trimestre",
         })
         self.assertEqual(reponse.status_code, 200)
         self.assertEqual(Note.objects.filter(eleve=self.eleve_sec).count(), 1)
+        reponse = self.client.post(reverse("core:note_modifier", args=[self.note_pri.pk]), {
+            "eleve": self.eleve_pri.pk, "matiere": "Français", "note": "85", "periode": "1er Trimestre",
+        })
+        self.assertRedirects(reponse, reverse("core:note_liste"))
+        self.note_pri.refresh_from_db()
+        self.assertEqual(self.note_pri.note, 85)
 
     def test_direction_ne_voit_pas_les_salaires(self):
         Employe.objects.create(nom="Surv", prenom="Test", poste="Surveillant(e)", section=self.primaire, salaire=12345)
@@ -195,6 +203,25 @@ class RolesEtAccesTests(TestCase):
         self.assertContains(reponse, "Pierre")
         self.assertContains(self.client.get(reverse("core:employe_liste")), "12345")
         self.assertEqual(self.client.get(reverse("core:employe_creer")).status_code, 200)
+
+    def test_directrice_en_chef_et_admin_lisent_les_notes_sans_les_saisir(self):
+        admin = Utilisateur.objects.create_superuser("admin", password="x")
+        for compte in [self.compte_employe("chef", "Directeur(trice) en chef"), admin]:
+            with self.subTest(compte=compte.username):
+                self.client.force_login(compte)
+                reponse = self.client.get(reverse("core:note_liste"))
+                self.assertContains(reponse, "Joseph")
+                self.assertContains(reponse, "Pierre")
+                self.assertNotContains(reponse, reverse("core:note_modifier", args=[self.note_pri.pk]))
+                self.assertEqual(self.client.get(reverse("core:note_modifier", args=[self.note_pri.pk])).status_code, 403)
+                self.assertEqual(self.client.post(reverse("core:note_supprimer", args=[self.note_pri.pk])).status_code, 403)
+                self.assertEqual(self.client.get(reverse("core:saisie_notes")).status_code, 403)
+        # Dans /admin/ aussi, les notes sont en lecture seule
+        self.assertEqual(self.client.get("/admin/core/note/add/").status_code, 403)
+        self.assertEqual(self.client.get(f"/admin/core/note/{self.note_pri.pk}/change/").status_code, 200)
+        self.assertEqual(self.client.post(f"/admin/core/note/{self.note_pri.pk}/change/", {"note": "10"}).status_code, 403)
+        self.note_pri.refresh_from_db()
+        self.assertEqual(self.note_pri.note, 80)
 
 
 class InscriptionProfesseursTests(TestCase):
@@ -377,3 +404,198 @@ class InscriptionProfesseursTests(TestCase):
         self.assertEqual(lamour.affectations.count(), 2)
         self.client.post(reverse("core:affectation_terminer", args=[lamour.affectation_active.pk]))
         self.assertIsNone(lamour.affectation_active)
+
+
+class SaisieDesNotesTests(TestCase):
+    """Les professeurs saisissent les notes de leurs classes, et seulement celles-là."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.primaire = Section.objects.get(nom=choices.SECTION_PRIMAIRE)
+        cls.secondaire = Section.objects.get(nom=choices.SECTION_SECONDAIRE)
+        cls.sixieme = Classe.objects.create(nom="6ème AF", section=cls.primaire)
+        cls.septieme = Classe.objects.create(nom="7ème AF", section=cls.secondaire)
+        cls.nsi = Classe.objects.create(nom="NSI", section=cls.secondaire)
+        cls.anne = Eleve.objects.create(nom="Joseph", prenom="Anne", genre="Féminin", classe=cls.sixieme)
+        cls.paul = Eleve.objects.create(nom="Louis", prenom="Paul", genre="Masculin", classe=cls.sixieme)
+        cls.marc = Eleve.objects.create(nom="Pierre", prenom="Marc", genre="Masculin", classe=cls.septieme)
+        cls.heure = Creneau.objects.filter(section=cls.secondaire, est_un_cours=True).first()
+
+    def professeur(self, nom, section):
+        compte = Utilisateur.objects.create_user(nom.lower(), password="x")
+        return Professeur.objects.create(nom=nom, prenom="Test", section=section, utilisateur=compte)
+
+    def choix(self, classe, matiere):
+        return f"{classe.pk}:{matiere}"
+
+    def test_primaire_toutes_les_matieres_de_sa_classe(self):
+        prof = self.professeur("Blaise", self.primaire)
+        Affectation.objects.create(professeur=prof, classe=self.sixieme)
+        self.client.force_login(prof.utilisateur)
+        page = self.client.get(reverse("core:saisie_notes"))
+        self.assertContains(page, "6ème AF · Mathématiques")
+        self.assertNotContains(page, "7ème AF")
+
+        choix = self.choix(self.sixieme, "Mathématiques")
+        page = self.client.get(reverse("core:saisie_notes"), {"choix": choix, "periode": "2e Trimestre"})
+        self.assertContains(page, "Joseph Anne")
+        self.assertContains(page, "Louis Paul")
+        self.assertNotContains(page, "Pierre Marc")
+
+        reponse = self.client.post(reverse("core:saisie_notes"), {
+            "choix": choix, "periode": "2e Trimestre", f"note_{self.anne.pk}": "72,5", f"note_{self.paul.pk}": "",
+        })
+        self.assertEqual(reponse.status_code, 302)
+        note = Note.objects.get()
+        self.assertEqual((note.eleve, note.matiere, note.periode, note.professeur), (self.anne, "Mathématiques", "2e Trimestre", prof))
+        self.assertEqual(float(note.note), 72.5)
+        self.assertEqual(note.annee_scolaire, choices.annee_scolaire_courante())
+
+        # La page affiche la note ; la changer met à jour la même ligne, la vider la retire
+        page = self.client.get(reverse("core:saisie_notes"), {"choix": choix, "periode": "2e Trimestre"})
+        self.assertContains(page, 'value="72,5"')
+        self.client.post(reverse("core:saisie_notes"), {"choix": choix, "periode": "2e Trimestre", f"note_{self.anne.pk}": "80"})
+        self.assertEqual(Note.objects.get().note, 80)
+        self.client.post(reverse("core:saisie_notes"), {"choix": choix, "periode": "2e Trimestre", f"note_{self.anne.pk}": ""})
+        self.assertFalse(Note.objects.exists())
+
+    def test_note_invalide_rien_n_est_enregistre(self):
+        prof = self.professeur("Blaise", self.primaire)
+        Affectation.objects.create(professeur=prof, classe=self.sixieme)
+        self.client.force_login(prof.utilisateur)
+        reponse = self.client.post(reverse("core:saisie_notes"), {
+            "choix": self.choix(self.sixieme, "Français"), "periode": "1er Trimestre",
+            f"note_{self.anne.pk}": "85", f"note_{self.paul.pk}": "120",
+        })
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "La note doit être comprise entre 0 et 100.")
+        self.assertContains(reponse, 'value="120"')
+        self.assertFalse(Note.objects.exists())
+
+    def test_secondaire_seulement_les_cours_valides(self):
+        prof = self.professeur("Durand", self.secondaire)
+        Cours.objects.create(professeur=prof, classe=self.septieme, matiere="Anglais", jour=1, creneau=self.heure,
+                             statut=choices.STATUT_COURS_VALIDE, annee_scolaire=choices.annee_scolaire_courante())
+        Cours.objects.create(professeur=prof, classe=self.nsi, matiere="Anglais", jour=2, creneau=self.heure,
+                             statut=choices.STATUT_COURS_PROPOSE, annee_scolaire=choices.annee_scolaire_courante())
+        self.client.force_login(prof.utilisateur)
+        page = self.client.get(reverse("core:saisie_notes"))
+        # Un seul choix : la grille s'ouvre directement
+        self.assertContains(page, "7ème AF · Anglais")
+        self.assertContains(page, "Pierre Marc")
+        self.assertNotContains(page, "NSI")
+        for choix in [self.choix(self.nsi, "Anglais"), self.choix(self.septieme, "Français"), self.choix(self.sixieme, "Anglais")]:
+            with self.subTest(choix=choix):
+                reponse = self.client.post(reverse("core:saisie_notes"), {"choix": choix, "periode": "1er Trimestre",
+                                                                          f"note_{self.marc.pk}": "50"})
+                self.assertEqual(reponse.status_code, 403)
+        self.assertFalse(Note.objects.exists())
+
+    def test_sans_classe_rien_a_noter_et_menu(self):
+        prof = self.professeur("Blaise", self.primaire)
+        self.client.force_login(prof.utilisateur)
+        page = self.client.get(reverse("core:saisie_notes"))
+        self.assertContains(page, "pas encore de classe à noter")
+        self.assertContains(page, reverse("core:saisie_notes"))  # lien du menu
+
+    def test_personnel_sans_fiche_professeur_refuse(self):
+        compte = Utilisateur.objects.create_user("sec", password="x")
+        Employe.objects.create(nom="Auguste", prenom="Nadège", poste="Secrétaire", utilisateur=compte)
+        self.client.force_login(compte)
+        self.assertEqual(self.client.get(reverse("core:saisie_notes")).status_code, 403)
+        self.assertNotContains(self.client.get(reverse("core:dashboard")), reverse("core:saisie_notes"))
+
+
+class AnniversairesTests(TestCase):
+    """Dates de naissance et d'embauche : alertes du tableau de bord et message de bienvenue."""
+
+    def setUp(self):
+        from datetime import date
+        self.date = date
+        self.jour = date(2026, 9, 26)
+
+    def test_evenements_des_7_prochains_jours(self):
+        from . import anniversaires
+        d = self.date
+        gens = [
+            Professeur(nom="Blaise", prenom="Rose", date_naissance=d(1990, 9, 26)),            # aujourd'hui
+            Employe(nom="Jean", prenom="Luc", poste="Censeur", date_naissance=d(1985, 9, 29),    # dans 3 jours
+                    date_embauche=d(2016, 10, 3)),                                            # 10 ans dans 7 jours
+            Professeur(nom="Noël", prenom="Ana", date_naissance=d(1980, 10, 4)),                # dans 8 jours : non
+            Professeur(nom="Neuf", prenom="Eva", date_embauche=d(2026, 9, 26)),                 # arrivée aujourd'hui : non
+        ]
+        evenements = anniversaires.evenements(gens, le=self.jour)
+        self.assertEqual([(e.personne.nom, e.genre, e.dans, e.annees) for e in evenements], [
+            ("Blaise", "naissance", 0, 36), ("Jean", "naissance", 3, 41), ("Jean", "embauche", 7, 10),
+        ])
+        self.assertEqual(evenements[0].quand, "Aujourd'hui")
+        self.assertEqual(evenements[1].fonction, "Censeur")
+        self.assertEqual(evenements[2].texte, "Luc Jean : 10 ans à l'école")
+
+    def test_ne_le_29_fevrier(self):
+        from . import anniversaires
+        d = self.date
+        self.assertEqual(anniversaires.prochaine_date(d(2000, 2, 29), d(2027, 2, 20)), d(2027, 2, 28))
+        self.assertEqual(anniversaires.prochaine_date(d(2000, 2, 29), d(2028, 2, 20)), d(2028, 2, 29))
+        self.assertEqual(anniversaires.prochaine_date(d(1990, 1, 5), d(2026, 9, 26)), d(2027, 1, 5))
+
+    def test_tableau_de_bord_et_bienvenue(self):
+        from django.utils import timezone
+        aujourd_hui = timezone.localdate()
+        primaire = Section.objects.get(nom=choices.SECTION_PRIMAIRE)
+        secondaire = Section.objects.get(nom=choices.SECTION_SECONDAIRE)
+        Professeur.objects.create(nom="Blaise", prenom="Rose", section=primaire,
+                                  date_naissance=aujourd_hui.replace(year=1990) if aujourd_hui.month != 2 or aujourd_hui.day != 29 else aujourd_hui)
+        Professeur.objects.create(nom="Autre", prenom="Section", section=secondaire,
+                                  date_naissance=aujourd_hui.replace(year=1991) if aujourd_hui.month != 2 or aujourd_hui.day != 29 else aujourd_hui)
+        compte = Utilisateur.objects.create_user("dirpri", password="Motdepasse-2026", first_name="Marie")
+        Employe.objects.create(nom="Jean", prenom="Marie", poste="Directeur(trice) du primaire", section=primaire,
+                               utilisateur=compte)
+
+        reponse = self.client.post(reverse("core:login"), {"username": "dirpri", "password": "Motdepasse-2026"}, follow=True)
+        self.assertContains(reponse, "Bienvenue, Marie !")
+        self.assertContains(reponse, "Aujourd&#x27;hui, c&#x27;est l&#x27;anniversaire de Rose Blaise.")
+        self.assertContains(reponse, '<dialog class="bienvenue"')
+        # Le tableau de bord ne montre que la section de la direction
+        self.assertContains(reponse, "Anniversaire de Rose Blaise")
+        self.assertNotContains(reponse, "Section Autre")
+        # La fenêtre ne s'ouvre qu'une fois
+        self.assertNotContains(self.client.get(reverse("core:dashboard")), '<dialog class="bienvenue"')
+
+    def test_le_professeur_recoit_ses_voeux(self):
+        from django.utils import timezone
+        aujourd_hui = timezone.localdate()
+        if (aujourd_hui.month, aujourd_hui.day) == (2, 29):
+            self.skipTest("29 février")
+        compte = Utilisateur.objects.create_user("rose", password="x")
+        prof = Professeur.objects.create(nom="Blaise", prenom="Rose", utilisateur=compte,
+                                         date_naissance=aujourd_hui.replace(year=1990),
+                                         date_embauche=aujourd_hui.replace(year=aujourd_hui.year - 5))
+        self.assertEqual((prof.age, prof.anciennete), (aujourd_hui.year - 1990, 5))
+        self.client.force_login(compte)
+        self.assertContains(self.client.get(reverse("core:espace")), "Joyeux anniversaire, Rose !")
+
+
+class IconesTests(TestCase):
+    def test_plus_aucun_emoji_dans_les_pages(self):
+        import re
+        from pathlib import Path
+        from django.conf import settings
+        emoji = re.compile("[\U0001F300-\U0001FAFF☀-➿️]")
+        for fichier in Path(settings.BASE_DIR, "templates").rglob("*.html"):
+            with self.subTest(fichier=fichier.name):
+                self.assertIsNone(emoji.search(fichier.read_text(encoding="utf-8")))
+
+    def test_les_icones_existent_dans_le_fichier_svg(self):
+        import re
+        from pathlib import Path
+        from django.conf import settings
+        svg = Path(settings.BASE_DIR, "static", "icones", "icones.svg").read_text(encoding="utf-8")
+        disponibles = set(re.findall(r'<symbol id="([^"]+)"', svg))
+        utilisees = set()
+        for fichier in Path(settings.BASE_DIR, "templates").rglob("*.html"):
+            utilisees |= set(re.findall(r'{% icone "([^"]+)"', fichier.read_text(encoding="utf-8")))
+        for fichier in Path(settings.BASE_DIR, "core").glob("views*.py"):
+            utilisees |= set(re.findall(r'"icone_titre": "([^"]+)"', fichier.read_text(encoding="utf-8")))
+        self.assertTrue(utilisees)
+        self.assertEqual(utilisees - disponibles, set())

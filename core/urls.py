@@ -1,7 +1,7 @@
 # core/urls.py
 from django.urls import path
 from django.views.generic import RedirectView
-from . import views, views_professeurs
+from . import views, views_notes, views_professeurs
 
 app_name = "core"
 
@@ -54,7 +54,7 @@ urlpatterns = [
 
     # Notes
     path("notes/", views.note_liste, name="note_liste"),
-    path("notes/nouveau/", views.note_creer, name="note_creer"),
+    path("notes/saisie/", views_notes.saisie_notes, name="saisie_notes"),
     path("notes/<int:pk>/modifier/", views.note_modifier, name="note_modifier"),
     path("notes/<int:pk>/supprimer/", views.note_supprimer, name="note_supprimer"),
 ]

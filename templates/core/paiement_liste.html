@@ -1,10 +1,11 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Paiements{% endblock %}
 {% block header_color %}#10b981{% endblock %}
-{% block header_title %}💰 GESTION DES PAIEMENTS{% endblock %}
+{% block header_title %}{% icone "paiements" %} GESTION DES PAIEMENTS{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    {% if acces.paiements.ecrire %}<a href="{% url 'core:paiement_creer' %}" class="btn btn-add">➕ Nouveau Paiement</a>{% endif %}
+    {% if acces.paiements.ecrire %}<a href="{% url 'core:paiement_creer' %}" class="btn btn-add">{% icone "ajouter" %} Nouveau paiement</a>{% endif %}
     <div class="stat-card" style="background:#10b981; padding:14px 24px;">
         <span style="font-size:13px;">Total reçu : </span>
         <span style="font-size:20px; font-weight:bold;">{{ total|floatformat:0 }} HTG</span>
@@ -19,7 +20,7 @@
             <td>{{ p.eleve }}</td><td>{{ p.montant }} HTG</td><td>{{ p.type_paiement }}</td>
             <td>{{ p.methode_paiement }}</td><td>{{ p.date_paiement|date:"d/m/Y H:i" }}</td>
             <td>{{ p.statut }}</td>
-            {% if acces.paiements.ecrire %}<td><a href="{% url 'core:paiement_supprimer' p.pk %}" class="btn-sm btn-delete">Supprimer</a></td>{% endif %}
+            {% if acces.paiements.ecrire %}<td><a href="{% url 'core:paiement_supprimer' p.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a></td>{% endif %}
         </tr>
         {% empty %}<tr><td colspan="7">Aucun paiement enregistré.</td></tr>{% endfor %}
     </tbody>

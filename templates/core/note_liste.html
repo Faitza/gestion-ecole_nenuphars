@@ -1,12 +1,14 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Notes{% endblock %}
 {% block header_color %}#8b5cf6{% endblock %}
-{% block header_title %}📝 GESTION DES NOTES{% endblock %}
+{% block header_title %}{% icone "notes" %} NOTES{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    {% if acces.notes.ecrire %}<a href="{% url 'core:note_creer' %}" class="btn btn-add">➕ Ajouter une Note</a>{% endif %}
-    <form method="get">
-        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="🔍 Rechercher par élève ou matière...">
+    <p class="aide">{% icone "info" %} Les notes sont saisies par les professeurs.{% if acces.notes.ecrire %} La direction de la section peut les corriger.{% endif %}</p>
+    <form method="get" class="recherche">
+        {% icone "rechercher" %}
+        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="Rechercher par élève ou matière...">
     </form>
 </div>
 <div class="table-wrapper">
@@ -18,8 +20,8 @@
             <td>{{ n.eleve }}</td><td>{{ n.professeur|default:"—" }}</td><td>{{ n.matiere }}</td>
             <td>{{ n.note }}/100</td><td>{{ n.periode }}</td><td>{{ n.annee_scolaire|default:"—" }}</td>
             {% if acces.notes.ecrire %}<td>
-                <a href="{% url 'core:note_modifier' n.pk %}" class="btn-sm btn-edit">Modifier</a>
-                <a href="{% url 'core:note_supprimer' n.pk %}" class="btn-sm btn-delete">Supprimer</a>
+                <a href="{% url 'core:note_modifier' n.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Corriger</a>
+                <a href="{% url 'core:note_supprimer' n.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
             </td>{% endif %}
         </tr>
         {% empty %}<tr><td colspan="7">Aucune note trouvée.</td></tr>{% endfor %}

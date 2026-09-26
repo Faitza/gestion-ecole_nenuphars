@@ -8,7 +8,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from . import choices, professeurs
+from . import anniversaires, choices, professeurs
 from .forms import AffectationForm, CoursFormSet, ProfesseurForm
 from .models import Affectation, Cours, Creneau, Professeur, Section
 from .roles import acces_requis, filtrer, peut, peut_valider_cours
@@ -128,7 +128,7 @@ def professeur_affecter(request, pk):
             professeurs.affecter(professeur, d["classe"], d["role"], remplacer=d["a_remplacer"])
         messages.success(request, f"{professeur} est maintenant en {d['classe']}.")
         return redirect("core:professeur_fiche", pk=pk)
-    return render(request, "core/generic_form.html", {"form": form, "titre": f"🏷️ Classe de {professeur}"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "classes", "titre": f"Classe de {professeur}"})
 
 
 @require_POST
@@ -197,4 +197,6 @@ def espace_professeur(request, professeur):
         "jours": [nom for _, nom in choices.JOURS_CHOICES],
         "resume": professeurs.resume(cours),
         "en_attente": professeurs.cours_de_l_annee(professeur).filter(statut=choices.STATUT_COURS_PROPOSE).count(),
+        "ma_fete": anniversaires.c_est_sa_fete(professeur),
+        "a_noter": bool(professeurs.matieres_a_noter(professeur)),
     })

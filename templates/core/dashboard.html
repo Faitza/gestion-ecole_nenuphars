@@ -1,35 +1,66 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Tableau de bord{% endblock %}
-{% block header_title %}📊 TABLEAU DE BORD{% endblock %}
+{% block header_title %}{% icone "tableau-de-bord" %} TABLEAU DE BORD{% endblock %}
 {% block content %}
+{% if ma_fete %}
+<div class="fete">{% icone "gateau" %}<div><strong>Joyeux anniversaire, {{ prenom }} !</strong><br>Toute l'équipe des Nénuphars vous souhaite une belle journée.</div></div>
+{% endif %}
+<div class="salutation">
+    <h2>Bonjour, {{ prenom }}</h2>
+    <span>{% icone "calendrier" %} {{ aujourd_hui|date:"l j F Y"|capfirst }}</span>
+</div>
 <div class="stats-grid">
     {% if nb_eleves is not None %}
     <div class="stat-card" style="background:#3b82f6;">
-        <div class="emoji">🧒</div>
+        {% icone "eleves" %}
         <div class="label">Élèves</div>
         <div class="value">{{ nb_eleves }}</div>
     </div>
     {% endif %}
     {% if nb_professeurs is not None %}
     <div class="stat-card" style="background:#ef4444;">
-        <div class="emoji">👨‍🏫</div>
+        {% icone "professeurs" %}
         <div class="label">Professeurs</div>
         <div class="value">{{ nb_professeurs }}</div>
     </div>
     {% endif %}
     {% if nb_employes is not None %}
     <div class="stat-card" style="background:#f59e0b;">
-        <div class="emoji">👔</div>
+        {% icone "employes" %}
         <div class="label">Employés</div>
         <div class="value">{{ nb_employes }}</div>
     </div>
     {% endif %}
     {% if revenus is not None %}
     <div class="stat-card" style="background:#10b981;">
-        <div class="emoji">💰</div>
-        <div class="label">Revenus Total</div>
+        {% icone "argent" %}
+        <div class="label">Revenus total</div>
         <div class="value">{{ revenus|floatformat:0 }} HTG</div>
     </div>
     {% endif %}
 </div>
+
+{% if nb_professeurs is not None or nb_employes is not None %}
+<div class="bloc alertes">
+    <h2>{% icone "gateau" %} Anniversaires des {{ jours_d_avance }} prochains jours</h2>
+    {% if evenements %}
+    <ul class="liste-evenements">
+        {% for e in evenements %}
+        <li class="{% if e.aujourd_hui %}aujourd-hui{% endif %}">
+            {% if e.genre == "naissance" %}
+                <span class="pastille">{% icone "gateau" %}</span>
+            {% else %}
+                <span class="pastille anciennete">{% icone "medaille" %}</span>
+            {% endif %}
+            <div><strong>{{ e.texte }}</strong><br><span class="aide">{{ e.fonction }} · {{ e.jour|date:"l j F"|capfirst }}</span></div>
+            <span class="quand">{{ e.quand }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p class="aide">Aucun anniversaire cette semaine. Pensez à remplir la date de naissance et la date d'embauche sur les fiches.</p>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

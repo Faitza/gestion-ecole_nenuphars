@@ -1,10 +1,11 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Employés{% endblock %}
 {% block header_color %}#f59e0b{% endblock %}
-{% block header_title %}👔 GESTION DES EMPLOYÉS{% endblock %}
+{% block header_title %}{% icone "employes" %} GESTION DES EMPLOYÉS{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    {% if acces.employes.ecrire %}<a href="{% url 'core:employe_creer' %}" class="btn btn-add">➕ Nouvel Employé</a>{% endif %}
+    {% if acces.employes.ecrire %}<a href="{% url 'core:employe_creer' %}" class="btn btn-add">{% icone "ajouter" %} Nouvel employé</a>{% endif %}
 </div>
 <div class="table-wrapper">
 <table>
@@ -15,8 +16,8 @@
             <td>{{ emp.nom }}</td><td>{{ emp.prenom }}</td><td>{{ emp.poste|default:"—" }}</td>
             <td>{{ emp.section|default:"—" }}</td>{% if voit_salaires %}<td>{{ emp.salaire|default:"—" }}</td>{% endif %}<td>{{ emp.telephone|default:"—" }}</td>
             {% if acces.employes.ecrire %}<td>
-                <a href="{% url 'core:employe_modifier' emp.pk %}" class="btn-sm btn-edit">Modifier</a>
-                <a href="{% url 'core:employe_supprimer' emp.pk %}" class="btn-sm btn-delete">Supprimer</a>
+                <a href="{% url 'core:employe_modifier' emp.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
+                <a href="{% url 'core:employe_supprimer' emp.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
             </td>{% endif %}
         </tr>
         {% empty %}<tr><td colspan="7">Aucun employé trouvé.</td></tr>{% endfor %}

@@ -1,3 +1,4 @@
+{% load icones %}
 {# Lignes de cours (secondaire). Le bouton « Ajouter un cours » copie la ligne vide. #}
 {{ cours_formset.management_form }}
 {% for e in cours_formset.non_form_errors %}<p class="erreur">{{ e }}</p>{% endfor %}
@@ -19,7 +20,7 @@
 <template id="ligne-cours-vide">
     <tr><td>{{ cours_formset.empty_form.matiere }}</td><td>{{ cours_formset.empty_form.classe }}</td><td>{{ cours_formset.empty_form.jour }}</td><td>{{ cours_formset.empty_form.creneau }}</td></tr>
 </template>
-<button type="button" class="btn btn-secondaire" id="ajouter-cours">➕ Ajouter un cours</button>
+<button type="button" class="btn btn-secondaire" id="ajouter-cours">{% icone "ajouter" %} Ajouter un cours</button>
 <p class="aide">Les lignes laissées vides sont ignorées. Un horaire déjà pris dans une classe, ou deux cours du professeur à la même heure, sont refusés.</p>
 </div>
 <script>

@@ -1,7 +1,8 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Ajouter des cours{% endblock %}
 {% block header_color %}#ef4444{% endblock %}
-{% block header_title %}📅 COURS DE {{ professeur|upper }}{% endblock %}
+{% block header_title %}{% icone "calendrier" %} COURS DE {{ professeur|upper }}{% endblock %}
 {% block content %}
 <form method="post" novalidate>
     {% csrf_token %}

@@ -1,7 +1,8 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}{{ professeur }}{% endblock %}
 {% block header_color %}#ef4444{% endblock %}
-{% block header_title %}👨‍🏫 {{ professeur.prenom|upper }} {{ professeur.nom|upper }}{% endblock %}
+{% block header_title %}{% icone "fiche" %} {{ professeur.prenom|upper }} {{ professeur.nom|upper }}{% endblock %}
 {% block content %}
 <div class="colonnes">
     <div class="bloc">
@@ -10,16 +11,16 @@
             <dt>Section</dt><dd>{{ professeur.section|default:"—" }}</dd>
             <dt>Téléphone</dt><dd>{{ professeur.telephone|default:"—" }}</dd>
             <dt>E-mail</dt><dd>{{ professeur.email|default:"—" }}</dd>
-            <dt>Date de naissance</dt><dd>{{ professeur.date_naissance|date:"d/m/Y"|default:"—" }}</dd>
+            <dt>Date de naissance</dt><dd>{% if professeur.date_naissance %}{{ professeur.date_naissance|date:"d/m/Y" }} ({{ professeur.age }} ans){% else %}—{% endif %}</dd>
             <dt>Adresse</dt><dd>{{ professeur.adresse|default:"—" }}</dd>
             <dt>Diplôme</dt><dd>{{ professeur.diplome|default:"—" }}</dd>
             {% if professeur.section.est_secondaire %}<dt>Matière principale</dt><dd>{{ professeur.matiere_principale|default:"—" }}</dd>{% endif %}
-            <dt>Début à l'école</dt><dd>{{ professeur.date_embauche|date:"d/m/Y"|default:"—" }}</dd>
+            <dt>Date d'embauche</dt><dd>{% if professeur.date_embauche %}{{ professeur.date_embauche|date:"d/m/Y" }}{% if professeur.anciennete %} ({{ professeur.anciennete }} an{{ professeur.anciennete|pluralize }} à l'école){% endif %}{% else %}—{% endif %}</dd>
             <dt>Compte</dt><dd>{% if professeur.utilisateur %}{% if professeur.utilisateur.doit_changer_mot_de_passe %}Créé, pas encore utilisé{% else %}Actif{% endif %}{% else %}Pas de compte{% endif %}</dd>
         </dl>
         {% if peut_modifier %}
         <div class="actions-bar">
-            <a href="{% url 'core:professeur_modifier' professeur.pk %}" class="btn-sm btn-edit">Modifier</a>
+            <a href="{% url 'core:professeur_modifier' professeur.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
             <form method="post" action="{% url 'core:professeur_nouveau_mot_de_passe' professeur.pk %}" class="en-ligne">
                 {% csrf_token %}
                 <button type="submit" class="btn-sm btn-edit">{% if professeur.utilisateur %}Nouveau mot de passe{% else %}Créer le compte{% endif %}</button>
@@ -41,7 +42,7 @@
             {% if peut_valider %}
             <form method="post" action="{% url 'core:professeur_valider_cours' professeur.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-add">✓ Valider les cours</button>
+                <button type="submit" class="btn btn-add">{% icone "valider" %} Valider les cours</button>
             </form>
             {% endif %}
         {% elif cours %}
@@ -77,7 +78,7 @@
 <div class="bloc">
     <div class="actions-bar">
         <h2>Emploi du temps</h2>
-        {% if peut_modifier %}<a href="{% url 'core:professeur_cours' professeur.pk %}" class="btn btn-add">➕ Ajouter des cours</a>{% endif %}
+        {% if peut_modifier %}<a href="{% url 'core:professeur_cours' professeur.pk %}" class="btn btn-add">{% icone "ajouter" %} Ajouter des cours</a>{% endif %}
     </div>
     {% if grille %}
         {% include "core/_emploi_du_temps.html" %}

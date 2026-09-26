@@ -118,7 +118,7 @@ class Professeur(models.Model):
         Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="professeur",
         help_text="Compte de connexion du professeur.",
     )
-    date_embauche = models.DateField("début à l'école", null=True, blank=True)
+    date_embauche = models.DateField("date d'embauche", null=True, blank=True, help_text="Premier jour à l'école.")
 
     class Meta:
         ordering = ["nom", "prenom"]
@@ -131,6 +131,17 @@ class Professeur(models.Model):
         ancien = _ancien_utilisateur(self)
         super().save(*args, **kwargs)
         synchroniser_role(self, ancien)
+
+    @property
+    def age(self):
+        from .anniversaires import age
+        return age(self.date_naissance) if self.date_naissance else None
+
+    @property
+    def anciennete(self):
+        """Années complètes passées à l'école."""
+        from .anniversaires import age
+        return age(self.date_embauche) if self.date_embauche else None
 
     @property
     def affectation_active(self):
@@ -146,6 +157,8 @@ class Employe(models.Model):
     poste = models.CharField(max_length=100, choices=choices.POSTES_CHOICES, blank=True)
     email = models.EmailField(blank=True, null=True)
     telephone = models.CharField(max_length=50, blank=True)
+    date_naissance = models.DateField("date de naissance", null=True, blank=True)
+    adresse = models.TextField(blank=True)
     section = models.ForeignKey(
         Section, on_delete=models.SET_NULL, null=True, blank=True, related_name="employes",
         help_text="À remplir pour une direction de section, un(e) surveillant(e) ou un censeur.",
@@ -155,7 +168,7 @@ class Employe(models.Model):
         help_text="Compte de connexion. Son rôle suit le poste.",
     )
     salaire = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    date_embauche = models.DateField(null=True, blank=True)
+    date_embauche = models.DateField("date d'embauche", null=True, blank=True, help_text="Premier jour à l'école.")
 
     class Meta:
         ordering = ["nom", "prenom"]

@@ -1,6 +1,7 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Mot de passe{% endblock %}
-{% block header_title %}🔑 CHANGER MON MOT DE PASSE{% endblock %}
+{% block header_title %}{% icone "cle" %} CHANGER MON MOT DE PASSE{% endblock %}
 {% block content %}
 <div class="form-card">
     {% if user.doit_changer_mot_de_passe %}
@@ -14,7 +15,7 @@
             {{ field }}
             {% if field.errors %}<p style="color:#dc2626; font-size:12px;">{{ field.errors|striptags }}</p>{% endif %}
         {% endfor %}
-        <button type="submit" class="btn-primary">💾 Enregistrer</button>
+        <button type="submit" class="btn-primary">{% icone "enregistrer" %} Enregistrer</button>
     </form>
 </div>
 {% endblock %}

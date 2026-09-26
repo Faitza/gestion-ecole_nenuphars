@@ -204,16 +204,20 @@ CoursFormSet = forms.formset_factory(CoursForm, formset=BaseCoursFormSet, extra=
 class EmployeForm(forms.ModelForm):
     class Meta:
         model = Employe
-        fields = ["nom", "prenom", "poste", "section", "email", "telephone", "salaire", "date_embauche"]
+        fields = ["nom", "prenom", "date_naissance", "poste", "section", "email", "telephone", "adresse",
+                  "salaire", "date_embauche"]
+        labels = {"prenom": "Prénom", "telephone": "Téléphone", "email": "E-mail"}
         widgets = {
             "nom": _ctrl(forms.TextInput),
             "prenom": _ctrl(forms.TextInput),
+            "date_naissance": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
             "poste": _ctrl(forms.Select),
             "section": _ctrl(forms.Select),
             "email": _ctrl(forms.EmailInput),
             "telephone": _ctrl(forms.TextInput),
+            "adresse": _ctrl(forms.Textarea, attrs={"class": "form-control", "rows": 2}),
             "salaire": _ctrl(forms.NumberInput),
-            "date_embauche": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}),
+            "date_embauche": _ctrl(forms.DateInput, attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
         }
 
 

@@ -142,6 +142,25 @@ def cours_de_l_annee(professeur):
         .select_related("classe", "creneau", "classe__section")
 
 
+# ─────────────────────────────── Notes ───────────────────────────────
+def matieres_a_noter(professeur):
+    """Classes et matières que le professeur peut noter cette année : {classe: [matières]}.
+
+    Secondaire : les cours validés par la direction. Kindergarten et primaire :
+    toutes les matières de la classe où il est affecté.
+    """
+    resultat = {}
+    affectation = professeur.affectation_active
+    if affectation is not None:
+        resultat[affectation.classe] = list(choices.MATIERES)
+    cours = cours_de_l_annee(professeur).filter(statut=choices.STATUT_COURS_VALIDE).order_by("classe__nom", "matiere")
+    for c in cours:
+        matieres = resultat.setdefault(c.classe, [])
+        if c.matiere not in matieres:
+            matieres.append(c.matiere)
+    return resultat
+
+
 # ─────────────────────────────── Commun ───────────────────────────────
 def synchroniser_classes(professeur):
     """Professeur.classes = classe de son affectation + classes de ses cours de l'année."""

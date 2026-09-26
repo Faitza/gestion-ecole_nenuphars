@@ -1,8 +1,12 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Mon emploi du temps{% endblock %}
 {% block header_color %}#ef4444{% endblock %}
-{% block header_title %}👋 BONJOUR {{ professeur.prenom|upper }}{% endblock %}
+{% block header_title %}{% icone "maison" %} BONJOUR {{ professeur.prenom|upper }}{% endblock %}
 {% block content %}
+{% if ma_fete %}
+<div class="fete">{% icone "gateau" %}<div><strong>Joyeux anniversaire, {{ professeur.prenom }} !</strong><br>Toute l'équipe des Nénuphars vous souhaite une belle journée.</div></div>
+{% endif %}
 {% if professeur.section.est_secondaire %}
     <div class="bloc">
         <h2>Mon emploi du temps</h2>
@@ -29,5 +33,14 @@
         {% endif %}
     </div>
 {% endif %}
-<p class="aide">Bientôt ici : votre arrivée, vos absences, la saisie des notes et les alertes de fin de cours.</p>
+<div class="bloc">
+    <h2>Notes</h2>
+    {% if a_noter %}
+        <p>Entrez les notes de vos élèves par classe, matière et trimestre.</p>
+        <a href="{% url 'core:saisie_notes' %}" class="btn btn-add">{% icone "saisie" %} Saisir les notes</a>
+    {% else %}
+        <p class="aide">La saisie des notes s'ouvrira quand vous aurez une classe ou des cours validés.</p>
+    {% endif %}
+</div>
+<p class="aide">Bientôt ici : votre arrivée, vos absences et les alertes de fin de cours.</p>
 {% endblock %}

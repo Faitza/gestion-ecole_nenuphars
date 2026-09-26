@@ -65,6 +65,11 @@ ACCES = {
 }
 MODULES = list(ACCES)
 
+# Les notes sont saisies par les professeurs (page « Saisie des notes »). La
+# direction d'une section peut les corriger ; la directrice en chef et le
+# compte admin les lisent sans pouvoir en écrire.
+LECTURE_SEULE_POUR_TOUT_VOIR = {"notes"}
+
 # Chemin vers la section, pour filtrer chaque liste
 CHEMIN_SECTION = {
     "eleves": "classe__section",
@@ -91,7 +96,7 @@ def a_tout(user):
 def portee(user, module, ecriture=False):
     """« tout », « section » ou None (aucun accès)."""
     if a_tout(user):
-        return "tout"
+        return None if ecriture and module in LECTURE_SEULE_POUR_TOUT_VOIR else "tout"
     autorises = roles_de(user) & ACCES[module]["ecrire" if ecriture else "lire"]
     if not autorises:
         return None
@@ -104,6 +109,11 @@ def peut(user, module, ecriture=False):
 
 def voit_salaires(user):
     return a_tout(user) or CAISSE in roles_de(user)
+
+
+def professeur_de(user):
+    """Fiche professeur liée au compte, ou None."""
+    return getattr(user, "professeur", None) if user.is_authenticated else None
 
 
 def section_de(user):

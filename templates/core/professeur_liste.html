@@ -1,10 +1,11 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Professeurs{% endblock %}
 {% block header_color %}#ef4444{% endblock %}
-{% block header_title %}👨‍🏫 GESTION DES PROFESSEURS{% endblock %}
+{% block header_title %}{% icone "professeurs" %} GESTION DES PROFESSEURS{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    {% if acces.professeurs.ecrire %}<a href="{% url 'core:professeur_creer' %}" class="btn btn-add">➕ Inscrire un professeur</a>{% endif %}
+    {% if acces.professeurs.ecrire %}<a href="{% url 'core:professeur_creer' %}" class="btn btn-add">{% icone "ajouter" %} Inscrire un professeur</a>{% endif %}
 </div>
 <div class="table-wrapper">
 <table>
@@ -16,10 +17,10 @@
             <td>{{ p.section|default:"—" }}</td>
             <td>{% for c in p.classes.all %}{{ c.nom }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
             <td>{{ p.telephone|default:"—" }}</td>
-            <td>{% if p.utilisateur_id %}✓{% else %}—{% endif %}</td>
+            <td>{% if p.utilisateur_id %}{% icone "coche" "ok-icone" %}{% else %}—{% endif %}</td>
             {% if acces.professeurs.ecrire %}<td>
-                <a href="{% url 'core:professeur_fiche' p.pk %}" class="btn-sm btn-edit">Fiche</a>
-                <a href="{% url 'core:professeur_supprimer' p.pk %}" class="btn-sm btn-delete">Supprimer</a>
+                <a href="{% url 'core:professeur_fiche' p.pk %}" class="btn-sm btn-edit">{% icone "fiche" %} Fiche</a>
+                <a href="{% url 'core:professeur_supprimer' p.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
             </td>{% endif %}
         </tr>
         {% empty %}<tr><td colspan="7">Aucun professeur trouvé.</td></tr>{% endfor %}
