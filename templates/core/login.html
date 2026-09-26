@@ -1,43 +1,51 @@
-{% load static %}
+{% load static icones %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion - Institution Les Nénuphars</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 <div class="login-wrapper">
     <div class="login-left">
-        <div class="emoji">🏫</div>
+        <div class="login-logo">{% icone "logo" %}</div>
         <h1>INSTITUTION</h1>
         <h2>LES NÉNUPHARS</h2>
         <hr>
-        <p>Les Cayes, Haïti</p>
+        <p class="login-message">Bienvenue sur l'espace numérique de l'école.<br>Les Cayes, Haïti</p>
         <ul>
-            <li>• Parents</li>
-            <li>• Professeurs</li>
-            <li>• Vie scolaire</li>
-            <li>• Administration et direction</li>
+            <li>{% icone "eleves" %} Suivi des élèves et des classes</li>
+            <li>{% icone "notes" %} Notes et bulletins</li>
+            <li>{% icone "calendrier" %} Emploi du temps des professeurs</li>
+            <li>{% icone "paiements" %} Paiements de la scolarité</li>
         </ul>
     </div>
     <div class="login-right">
         <div class="login-box">
             <h1>Connexion</h1>
-            <p class="subtitle">Parents, professeurs et personnel : une seule page pour tous.</p>
+            <p class="subtitle">Parents, professeurs et personnel : entrez vos identifiants pour continuer.</p>
 
             {% if form.non_field_errors %}
-                <p style="color:#dc2626; font-size:13px; margin-bottom:16px;">{{ form.non_field_errors|striptags }}</p>
+                <p class="login-erreur">{% icone "attention" %} {{ form.non_field_errors|striptags }}</p>
             {% endif %}
 
             <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}">
-                <label for="{{ form.username.id_for_label }}">👤 {{ form.username.label }}</label>
-                {{ form.username }}
-                <label for="{{ form.password.id_for_label }}">🔒 {{ form.password.label }}</label>
-                {{ form.password }}
-                <button type="submit" class="btn-primary">Se connecter</button>
+                <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                <div class="champ-icone">
+                    <span>{% icone "utilisateur" %}</span>
+                    {{ form.username }}
+                </div>
+                <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                <div class="champ-icone">
+                    <span>{% icone "cadenas" %}</span>
+                    {{ form.password }}
+                </div>
+                <button type="submit" class="btn-primary btn-connexion">SE CONNECTER</button>
             </form>
             <p class="login-hint">Mot de passe oublié ? Adressez-vous au secrétariat.</p>
         </div>

@@ -1,0 +1,31 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}{{ eleve }}{% endblock %}
+{% block header_color %}#3b82f6{% endblock %}
+{% block header_title %}{% icone "fiche" %} {{ eleve.prenom|upper }} {{ eleve.nom|upper }}{% endblock %}
+{% block content %}
+<div class="bloc fiche-personne">
+    {% photo eleve "grande" %}
+    <div>
+        <dl class="infos">
+            <dt>Classe</dt><dd>{% if eleve.classe %}<a href="{% url 'core:classe_fiche' eleve.classe.pk %}">{{ eleve.classe }}</a>{% if eleve.classe.section %} · {{ eleve.classe.section }}{% endif %}{% else %}—{% endif %}</dd>
+            <dt>Genre</dt><dd>{{ eleve.genre|default:"—" }}</dd>
+            <dt>Date de naissance</dt><dd>{{ eleve.date_naissance|date:"d/m/Y"|default:"—" }}</dd>
+            <dt>Parent ou tuteur</dt><dd>{{ eleve.nom_parent_tuteur|default:"—" }}</dd>
+            <dt>Téléphone du parent</dt><dd>{{ eleve.telephone_parent|default:"—" }}</dd>
+            <dt>E-mail</dt><dd>{{ eleve.email|default:"—" }}</dd>
+            <dt>Adresse</dt><dd>{{ eleve.adresse|default:"—" }}</dd>
+            <dt>Inscrit(e) le</dt><dd>{{ eleve.date_inscription|date:"d/m/Y" }}</dd>
+        </dl>
+        {% if acces.eleves.ecrire %}
+        <div class="boutons">
+            <a href="{% url 'core:eleve_modifier' eleve.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% if classes_notes is not None %}
+    <h2 class="titre-section">{% icone "notes" %} Notes</h2>
+    {% include "core/_notes_par_classe.html" with ouvrir=True periodes=periodes texte_vide="Pas encore de notes pour cet élève." %}
+{% endif %}
+{% endblock %}

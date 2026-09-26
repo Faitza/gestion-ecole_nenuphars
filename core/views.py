@@ -4,18 +4,26 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 
 from .models import Eleve, Professeur, Employe, Paiement, Note, Classe
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
-from . import choices
+from . import anniversaires, choices, professeurs
+from . import notes as notes_par_classe
+from .views_professeurs import espace_professeur
 
 
 class LoginView(auth_views.LoginView):
     template_name = "core/login.html"
     authentication_form = LoginForm
     redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        reponse = super().form_valid(form)
+        # Petite fenêtre « Bienvenue » sur la première page après la connexion
+        messages.success(self.request, anniversaires.message_de_bienvenue(self.request.user), extra_tags="bienvenue")
+        return reponse
 
 
 class LogoutView(auth_views.LogoutView):
@@ -42,6 +50,9 @@ def espace(request):
     """Après la connexion, chacun est envoyé vers son propre espace."""
     if utilise_la_gestion(request.user):
         return redirect("core:dashboard")
+    professeur = getattr(request.user, "professeur", None)
+    if professeur is not None:
+        return espace_professeur(request, professeur)
     return render(request, "core/espace_a_venir.html", {"roles": sorted(roles_de(request.user))})
 
 
@@ -59,6 +70,14 @@ def dashboard(request):
     if peut(user, "paiements"):
         paiements = filtrer(user, "paiements", Paiement.objects.filter(statut="Payé"))
         context["revenus"] = paiements.aggregate(total=Sum("montant"))["total"] or 0
+    if peut(user, "notes"):
+        context["dernieres_notes"] = filtrer(user, "notes", Note.objects.select_related("eleve", "professeur"))[:5]
+    # Anniversaires et années à l'école du personnel que l'on peut voir, dans les 7 jours
+    context["evenements"] = anniversaires.evenements(anniversaires.personnel_visible(user))
+    context["jours_d_avance"] = anniversaires.JOURS_D_AVANCE
+    context["prenom"] = anniversaires.prenom_de(user)
+    context["aujourd_hui"] = anniversaires.aujourd_hui()
+    context["ma_fete"] = anniversaires.c_est_sa_fete(anniversaires.fiche_de(user))
     return render(request, "core/dashboard.html", context)
 
 
@@ -75,28 +94,29 @@ def eleve_liste(request):
 @acces_requis("eleves", ecriture=True)
 def eleve_creer(request):
     if request.method == "POST":
-        form = EleveForm(request.POST)
+        form = EleveForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            eleve = form.save()
             messages.success(request, "Élève ajouté(e) avec succès!")
-            return redirect("core:eleve_liste")
+            return redirect("core:eleve_fiche", pk=eleve.pk)
     else:
-        form = EleveForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouvel Élève"})
+        # Depuis la fiche d'une classe, la classe est déjà choisie
+        form = EleveForm(initial={"classe": request.GET.get("classe")})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvel Élève"})
 
 
 @acces_requis("eleves", ecriture=True)
 def eleve_modifier(request, pk):
     eleve = get_object_or_404(filtrer(request.user, "eleves", Eleve.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
-        form = EleveForm(request.POST, instance=eleve)
+        form = EleveForm(request.POST, request.FILES, instance=eleve)
         if form.is_valid():
             form.save()
             messages.success(request, "Élève modifié(e) avec succès!")
-            return redirect("core:eleve_liste")
+            return redirect("core:eleve_fiche", pk=eleve.pk)
     else:
         form = EleveForm(instance=eleve)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier l'Élève"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'Élève"})
 
 
 @acces_requis("eleves", ecriture=True)
@@ -126,7 +146,7 @@ def classe_creer(request):
             return redirect("core:classe_liste")
     else:
         form = ClasseForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouvelle Classe"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvelle Classe"})
 
 
 @acces_requis("classes", ecriture=True)
@@ -137,10 +157,10 @@ def classe_modifier(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, "Classe modifiée avec succès!")
-            return redirect("core:classe_liste")
+            return redirect("core:classe_fiche", pk=classe.pk)
     else:
         form = ClasseForm(instance=classe)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier la Classe"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier la Classe"})
 
 
 @acces_requis("classes", ecriture=True)
@@ -156,35 +176,23 @@ def classe_supprimer(request, pk):
 # ─────────────────────────── PROFESSEURS ───────────────────────────
 @acces_requis("professeurs")
 def professeur_liste(request):
-    professeurs = filtrer(request.user, "professeurs", Professeur.objects.select_related("section").prefetch_related("classes"))
-    return render(request, "core/professeur_liste.html", {"professeurs": professeurs})
-
-
-@acces_requis("professeurs", ecriture=True)
-def professeur_creer(request):
-    if request.method == "POST":
-        form = ProfesseurForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Professeur ajouté(e) avec succès!")
-            return redirect("core:professeur_liste")
-    else:
-        form = ProfesseurForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouveau Professeur"})
+    liste = filtrer(request.user, "professeurs", Professeur.objects.select_related("section").prefetch_related("classes"))
+    return render(request, "core/professeur_liste.html", {"professeurs": liste})
 
 
 @acces_requis("professeurs", ecriture=True)
 def professeur_modifier(request, pk):
     professeur = get_object_or_404(filtrer(request.user, "professeurs", Professeur.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
-        form = ProfesseurForm(request.POST, instance=professeur)
+        form = ProfesseurForm(request.POST, request.FILES, instance=professeur)
         if form.is_valid():
             form.save()
+            professeurs.mettre_a_jour_compte(professeur)
             messages.success(request, "Professeur modifié(e) avec succès!")
-            return redirect("core:professeur_liste")
+            return redirect("core:professeur_fiche", pk=professeur.pk)
     else:
-        form = ProfesseurForm(instance=professeur, initial={"classes": professeur.classes.all()})
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier le Professeur"})
+        form = ProfesseurForm(instance=professeur)
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier le Professeur"})
 
 
 @acces_requis("professeurs", ecriture=True)
@@ -207,28 +215,28 @@ def employe_liste(request):
 @acces_requis("employes", ecriture=True)
 def employe_creer(request):
     if request.method == "POST":
-        form = EmployeForm(request.POST)
+        form = EmployeForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            employe = form.save()
             messages.success(request, "Employé(e) ajouté(e) avec succès!")
-            return redirect("core:employe_liste")
+            return redirect("core:employe_fiche", pk=employe.pk)
     else:
         form = EmployeForm()
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouvel Employé"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouvel Employé"})
 
 
 @acces_requis("employes", ecriture=True)
 def employe_modifier(request, pk):
     employe = get_object_or_404(filtrer(request.user, "employes", Employe.objects.all(), ecriture=True), pk=pk)
     if request.method == "POST":
-        form = EmployeForm(request.POST, instance=employe)
+        form = EmployeForm(request.POST, request.FILES, instance=employe)
         if form.is_valid():
             form.save()
             messages.success(request, "Employé(e) modifié(e) avec succès!")
-            return redirect("core:employe_liste")
+            return redirect("core:employe_fiche", pk=employe.pk)
     else:
         form = EmployeForm(instance=employe)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier l'Employé"})
+    return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'Employé"})
 
 
 @acces_requis("employes", ecriture=True)
@@ -259,7 +267,7 @@ def paiement_creer(request):
             return redirect("core:paiement_liste")
     else:
         form = PaiementForm(initial={"statut": "Payé"})
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Nouveau Paiement"})
+    return render(request, "core/generic_form.html", {"form": form, "icone_titre": "ajouter", "titre": "Nouveau Paiement"})
 
 
 @acces_requis("paiements", ecriture=True)
@@ -275,24 +283,29 @@ def paiement_supprimer(request, pk):
 # ─────────────────────────── NOTES ───────────────────────────
 @acces_requis("notes")
 def note_liste(request):
+    """Notes par classe, puis par matière (une colonne par trimestre), comme dans « Mes notes »."""
     q = request.GET.get("q", "").strip()
-    notes = filtrer(request.user, "notes", Note.objects.select_related("eleve", "professeur"))
-    if q:
-        notes = notes.filter(Q(eleve__nom__icontains=q) | Q(matiere__icontains=q))
-    return render(request, "core/note_liste.html", {"notes": notes, "q": q})
-
-
-@acces_requis("notes", ecriture=True)
-def note_creer(request):
-    if request.method == "POST":
-        form = NoteForm(request.POST, user=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Note ajoutée avec succès!")
-            return redirect("core:note_liste")
+    notes = filtrer(request.user, "notes", Note.objects.select_related(
+        "eleve", "eleve__classe", "eleve__classe__section", "professeur"))
+    annees = sorted(set(notes.exclude(annee_scolaire="").values_list("annee_scolaire", flat=True)), reverse=True)
+    annee = request.GET.get("annee") or choices.annee_scolaire_courante()
+    if annee == choices.annee_scolaire_courante():
+        # Les anciennes notes sans année sont montrées avec l'année en cours
+        notes = notes.filter(Q(annee_scolaire=annee) | Q(annee_scolaire=""))
     else:
-        form = NoteForm(user=request.user)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "➕ Ajouter une Note"})
+        notes = notes.filter(annee_scolaire=annee)
+    if q:
+        notes = notes.filter(Q(eleve__nom__icontains=q) | Q(eleve__prenom__icontains=q) | Q(matiere__icontains=q)
+                             | Q(professeur__nom__icontains=q))
+    classes = filtrer(request.user, "classes", Classe.objects.all()) if peut(request.user, "classes") else Classe.objects.none()
+    classe = request.GET.get("classe", "")
+    if classe.isdigit():
+        notes = notes.filter(eleve__classe_id=classe)
+    return render(request, "core/note_liste.html", {
+        "classes_notes": notes_par_classe.grouper(notes), "periodes": choices.PERIODES,
+        "q": q, "classes": classes, "classe": classe,
+        "annees": annees if annee in annees else [annee, *annees], "annee": annee,
+    })
 
 
 @acces_requis("notes", ecriture=True)
@@ -302,11 +315,14 @@ def note_modifier(request, pk):
         form = NoteForm(request.POST, instance=note, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Note modifiée avec succès!")
+            messages.success(request, "Note corrigée.")
             return redirect("core:note_liste")
     else:
         form = NoteForm(instance=note, user=request.user)
-    return render(request, "core/generic_form.html", {"form": form, "titre": "✏️ Modifier la Note"})
+    return render(request, "core/generic_form.html", {
+        "form": form, "titre": "Corriger une note",
+        "lien_supprimer": reverse("core:note_supprimer", args=[note.pk]),
+    })
 
 
 @acces_requis("notes", ecriture=True)

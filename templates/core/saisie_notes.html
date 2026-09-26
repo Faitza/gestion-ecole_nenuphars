@@ -1,0 +1,65 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}Saisie des notes{% endblock %}
+{% block header_color %}#8b5cf6{% endblock %}
+{% block header_title %}{% icone "saisie" %} SAISIE DES NOTES{% endblock %}
+{% block content %}
+{% if not choix %}
+    <div class="bloc">
+        <p>Vous n'avez pas encore de classe à noter.</p>
+        <p class="aide">Au secondaire, vos cours doivent d'abord être validés par la direction de votre section. Au Kindergarten et au primaire, le secrétariat doit vous attribuer une classe.</p>
+    </div>
+{% else %}
+    <form method="get" class="bloc filtres-notes">
+        <div class="champ">
+            <label for="choix">Classe et matière</label>
+            <select name="choix" id="choix" class="form-control">
+                {% if choix|length > 1 %}<option value="">Choisir…</option>{% endif %}
+                {% for valeur, libelle in choix %}<option value="{{ valeur }}"{% if valeur == choisi %} selected{% endif %}>{{ libelle }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="champ">
+            <label for="periode">Trimestre</label>
+            <select name="periode" id="periode" class="form-control">
+                {% for p in periodes %}<option value="{{ p }}"{% if p == periode %} selected{% endif %}>{{ p }}</option>{% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-secondaire">{% icone "rechercher" %} Afficher</button>
+    </form>
+
+    {% if classe %}
+    <form method="post" class="bloc">
+        {% csrf_token %}
+        <input type="hidden" name="choix" value="{{ choisi }}">
+        <input type="hidden" name="periode" value="{{ periode }}">
+        <div class="actions-bar">
+            <h2>{{ classe }} · {{ matiere }} · {{ periode }} {{ annee }}</h2>
+            <span class="aide">{{ nb_notes }} note{{ nb_notes|pluralize }} sur {{ lignes|length }} élève{{ lignes|length|pluralize }}</span>
+        </div>
+        {% if lignes %}
+        <div class="table-wrapper">
+        <table class="table-notes">
+            <thead><tr><th>Élève</th><th>Note sur 100</th></tr></thead>
+            <tbody>
+            {% for ligne in lignes %}
+                <tr{% if ligne.erreur %} class="ligne-erreur"{% endif %}>
+                    <td><label for="note_{{ ligne.eleve.pk }}" class="eleve-avec-photo">{% photo ligne.eleve "petite" %} {{ ligne.eleve.nom }} {{ ligne.eleve.prenom }}</label></td>
+                    <td>
+                        <input type="text" inputmode="decimal" name="note_{{ ligne.eleve.pk }}" id="note_{{ ligne.eleve.pk }}"
+                               value="{{ ligne.valeur }}" class="form-control" autocomplete="off" placeholder="—">
+                        {% if ligne.erreur %}<p class="erreur">{{ ligne.erreur }}</p>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <p class="aide">Laissez vide un élève qui n'a pas encore de note. Vider une case retire la note.</p>
+        <button type="submit" class="btn btn-add btn-large">{% icone "enregistrer" %} Enregistrer les notes</button>
+        {% else %}
+            <p>Aucun élève dans cette classe pour le moment.</p>
+        {% endif %}
+    </form>
+    {% endif %}
+{% endif %}
+{% endblock %}

@@ -1,29 +1,25 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Notes{% endblock %}
 {% block header_color %}#8b5cf6{% endblock %}
-{% block header_title %}📝 GESTION DES NOTES{% endblock %}
+{% block header_title %}{% icone "notes" %} NOTES {{ annee }}{% endblock %}
 {% block content %}
-<div class="actions-bar">
-    {% if acces.notes.ecrire %}<a href="{% url 'core:note_creer' %}" class="btn btn-add">➕ Ajouter une Note</a>{% endif %}
-    <form method="get">
-        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="🔍 Rechercher par élève ou matière...">
-    </form>
-</div>
-<div class="table-wrapper">
-<table>
-    <thead><tr><th>Élève</th><th>Professeur</th><th>Matière</th><th>Note</th><th>Période</th><th>Année</th>{% if acces.notes.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
-    <tbody>
-        {% for n in notes %}
-        <tr>
-            <td>{{ n.eleve }}</td><td>{{ n.professeur|default:"—" }}</td><td>{{ n.matiere }}</td>
-            <td>{{ n.note }}/100</td><td>{{ n.periode }}</td><td>{{ n.annee_scolaire|default:"—" }}</td>
-            {% if acces.notes.ecrire %}<td>
-                <a href="{% url 'core:note_modifier' n.pk %}" class="btn-sm btn-edit">Modifier</a>
-                <a href="{% url 'core:note_supprimer' n.pk %}" class="btn-sm btn-delete">Supprimer</a>
-            </td>{% endif %}
-        </tr>
-        {% empty %}<tr><td colspan="7">Aucune note trouvée.</td></tr>{% endfor %}
-    </tbody>
-</table>
-</div>
+<p class="aide">{% icone "info" %} Les notes sont saisies par les professeurs et apparaissent ici dès qu'ils les enregistrent, par classe puis par matière.{% if acces.notes.ecrire %} Cliquez sur une note pour la corriger.{% endif %}</p>
+<form method="get" class="actions-bar filtres-liste">
+    <div class="recherche">
+        {% icone "rechercher" %}
+        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="Élève, matière ou professeur...">
+    </div>
+    {% if classes %}
+    <select name="classe" class="form-control" aria-label="Classe">
+        <option value="">Toutes les classes</option>
+        {% for c in classes %}<option value="{{ c.pk }}"{% if c.pk|stringformat:"s" == classe %} selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+    {% endif %}
+    <select name="annee" class="form-control" aria-label="Année scolaire">
+        {% for a in annees %}<option value="{{ a }}"{% if a == annee %} selected{% endif %}>{{ a }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-secondaire">Filtrer</button>
+</form>
+{% include "core/_notes_par_classe.html" with corriger=acces.notes.ecrire lien_eleves=acces.eleves.lire ouvrir=classe %}
 {% endblock %}

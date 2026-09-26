@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Mon emploi du temps{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}{% icone "maison" %} BONJOUR {{ professeur.prenom|upper }}{% endblock %}
+{% block content %}
+{% if ma_fete %}
+<div class="fete">{% icone "gateau" %}<div><strong>Joyeux anniversaire, {{ professeur.prenom }} !</strong><br>Toute l'équipe des Nénuphars vous souhaite une belle journée.</div></div>
+{% endif %}
+{% if professeur.section.est_secondaire %}
+    <div class="bloc">
+        <h2>Mon emploi du temps</h2>
+        {% if grille %}
+            <div class="chiffres">
+                <div><strong>{{ resume.nb_cours }}</strong><span>cours</span></div>
+                <div><strong>{{ resume.classes|length }}</strong><span>classe{{ resume.classes|length|pluralize }}</span></div>
+                <div><strong>{{ resume.heures }}</strong><span>par semaine</span></div>
+            </div>
+            {% include "core/_emploi_du_temps.html" %}
+        {% else %}
+            <p>Votre emploi du temps sera visible ici après sa validation par la direction de votre section.</p>
+        {% endif %}
+        {% if en_attente %}<p class="aide">{{ en_attente }} cours attendent encore la validation.</p>{% endif %}
+    </div>
+{% else %}
+    <div class="bloc">
+        <h2>Ma classe</h2>
+        {% if affectation %}
+            <p><strong>{{ affectation.classe }}</strong>{% if professeur.section.est_kindergarten %} · {{ affectation.role }}{% endif %}</p>
+            <p>Vous êtes avec votre classe toute la journée.</p>
+        {% else %}
+            <p>Le secrétariat ne vous a pas encore attribué de classe.</p>
+        {% endif %}
+    </div>
+{% endif %}
+<div class="bloc">
+    <h2>Notes</h2>
+    {% if a_noter %}
+        <p>Entrez les notes de vos élèves par classe, matière et trimestre. Vous avez saisi <strong>{{ nb_notes }}</strong> note{{ nb_notes|pluralize }} cette année.</p>
+        <div class="boutons">
+            <a href="{% url 'core:saisie_notes' %}" class="btn btn-add">{% icone "saisie" %} Saisir les notes</a>
+            <a href="{% url 'core:mes_notes' %}" class="btn btn-secondaire">{% icone "notes" %} Voir mes notes</a>
+        </div>
+    {% else %}
+        <p class="aide">La saisie des notes s'ouvrira quand vous aurez une classe ou des cours validés.</p>
+        {% if nb_notes %}<a href="{% url 'core:mes_notes' %}" class="btn btn-secondaire">{% icone "notes" %} Voir mes notes</a>{% endif %}
+    {% endif %}
+</div>
+<p class="aide">Bientôt ici : votre arrivée, vos absences et les alertes de fin de cours.</p>
+{% endblock %}

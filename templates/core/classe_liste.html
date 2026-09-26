@@ -1,23 +1,27 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Classes{% endblock %}
 {% block header_color %}#06b6d4{% endblock %}
-{% block header_title %}🏷️ GESTION DES CLASSES{% endblock %}
+{% block header_title %}{% icone "classes" %} GESTION DES CLASSES{% endblock %}
 {% block content %}
 <div class="actions-bar">
-    {% if acces.classes.ecrire %}<a href="{% url 'core:classe_creer' %}" class="btn btn-add">➕ Nouvelle Classe</a>{% endif %}
+    {% if acces.classes.ecrire %}<a href="{% url 'core:classe_creer' %}" class="btn btn-add">{% icone "ajouter" %} Nouvelle classe</a>{% endif %}
 </div>
 <div class="table-wrapper">
 <table>
-    <thead><tr><th>Nom</th><th>Section</th><th>Cycle</th><th>Année scolaire</th><th>Nb élèves</th>{% if acces.classes.ecrire %}<th>Actions</th>{% endif %}</tr></thead>
+    <thead><tr><th>Nom</th><th>Section</th><th>Cycle</th><th>Année scolaire</th><th>Nb élèves</th><th>Actions</th></tr></thead>
     <tbody>
         {% for c in classes %}
         <tr>
-            <td>{{ c.nom }}</td><td>{{ c.section|default:"—" }}</td><td>{{ c.cycle|default:"—" }}</td><td>{{ c.annee_scolaire|default:"—" }}</td>
+            <td><a href="{% url 'core:classe_fiche' c.pk %}"><strong>{{ c.nom }}</strong></a></td><td>{{ c.section|default:"—" }}</td><td>{{ c.cycle|default:"—" }}</td><td>{{ c.annee_scolaire|default:"—" }}</td>
             <td>{{ c.eleves.count }}</td>
-            {% if acces.classes.ecrire %}<td>
-                <a href="{% url 'core:classe_modifier' c.pk %}" class="btn-sm btn-edit">Modifier</a>
-                <a href="{% url 'core:classe_supprimer' c.pk %}" class="btn-sm btn-delete">Supprimer</a>
-            </td>{% endif %}
+            <td>
+                <a href="{% url 'core:classe_fiche' c.pk %}" class="btn-sm btn-voir">{% icone "eleves" %} Voir les élèves</a>
+            {% if acces.classes.ecrire %}
+                <a href="{% url 'core:classe_modifier' c.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
+                <a href="{% url 'core:classe_supprimer' c.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
+            {% endif %}
+            </td>
         </tr>
         {% empty %}<tr><td colspan="6">Aucune classe créée.</td></tr>{% endfor %}
     </tbody>

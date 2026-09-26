@@ -65,6 +65,20 @@ SECTION_PAR_CLASSE = {
 }
 
 # ========================================
+# PROFESSEURS : rôle dans une classe (Kindergarten et primaire),
+# jours de cours et horaires par défaut du secondaire
+# ========================================
+ROLE_TITULAIRE = "Titulaire"
+ROLE_DEUXIEME_MAITRESSE = "Deuxième maîtresse"
+ROLES_AFFECTATION_CHOICES = _vers_choix([ROLE_TITULAIRE, ROLE_DEUXIEME_MAITRESSE])
+
+JOURS_CHOICES = [(1, "Lundi"), (2, "Mardi"), (3, "Mercredi"), (4, "Jeudi"), (5, "Vendredi")]
+
+STATUT_COURS_PROPOSE = "Proposé"
+STATUT_COURS_VALIDE = "Validé"
+STATUTS_COURS_CHOICES = _vers_choix([STATUT_COURS_PROPOSE, STATUT_COURS_VALIDE])
+
+# ========================================
 # MATIÈRES (utilisées pour les professeurs et les notes)
 # ========================================
 MATIERES = [
@@ -115,6 +129,14 @@ STATUTS_PAIEMENT_CHOICES = _vers_choix(STATUTS_PAIEMENT)
 # ========================================
 PERIODES = ["1er Trimestre", "2e Trimestre", "3e Trimestre"]
 PERIODES_CHOICES = _vers_choix(PERIODES)
+
+
+def annee_scolaire_courante(aujourd_hui=None):
+    """L'année scolaire commence en septembre : le 25/09/2026 donne '2026-2027'."""
+    from datetime import date
+    jour = aujourd_hui or date.today()
+    debut = jour.year if jour.month >= 9 else jour.year - 1
+    return f"{debut}-{debut + 1}"
 
 
 def obtenir_annees_scolaires():

@@ -1,0 +1,8 @@
+{% if widget.is_initial %}<div class="photo-actuelle">
+    {% if widget.url_actuelle %}<img src="{{ widget.url_actuelle }}" alt="Photo actuelle" class="photo moyenne">{% endif %}
+    <div>
+        <p class="aide">Une photo est déjà enregistrée. Choisissez-en une autre pour la remplacer.</p>
+        {% if not widget.required %}<label class="case"><input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"> Retirer la photo</label>{% endif %}
+    </div>
+</div>{% endif %}
+<input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>

@@ -1,0 +1,36 @@
+{% load icones notes %}
+{# Notes par classe, puis par matière : une ligne par élève, une colonne par trimestre. #}
+{% for groupe in classes_notes %}
+<details class="bloc classe-notes"{% if ouvrir or classes_notes|length == 1 %} open{% endif %}>
+    <summary>
+        <h2>{% icone "classes" %} {{ groupe.classe|default:"Sans classe" }}</h2>
+        <span class="aide">{{ groupe.matieres|length }} matière{{ groupe.matieres|length|pluralize }} · {{ groupe.nb_notes }} note{{ groupe.nb_notes|pluralize }}</span>
+    </summary>
+    {% for m in groupe.matieres %}
+    <div class="matiere-notes" id="{{ m.ancre|default:'' }}">
+        <div class="actions-bar">
+            <h3>{{ m.matiere }}{% if m.professeurs and not cacher_professeur %} <small>· {{ m.professeurs|join:", " }}</small>{% endif %}</h3>
+        </div>
+        <div class="table-wrapper">
+        <table class="table-bulletin">
+            <thead><tr><th>Élève</th>{% for p in periodes %}<th>{{ p }}{% if m.saisie %}{% with lien=m.saisie|slice:forloop.counter|last %}{% if lien %} <a href="{{ lien }}" class="lien-icone" title="Saisir ou modifier">{% icone "modifier" %}</a>{% endif %}{% endwith %}{% endif %}</th>{% endfor %}<th>Moyenne</th></tr></thead>
+            <tbody>
+            {% for ligne in m.lignes %}
+                <tr>
+                    <td>{% if lien_eleves %}<a href="{% url 'core:eleve_fiche' ligne.eleve.pk %}">{{ ligne.eleve.nom }} {{ ligne.eleve.prenom }}</a>{% else %}{{ ligne.eleve.nom }} {{ ligne.eleve.prenom }}{% endif %}</td>
+                    {% for n in ligne.cellules %}
+                        <td>{% if n %}{% if corriger %}<a href="{% url 'core:note_modifier' n.pk %}" title="Corriger">{{ n.note|note }}</a>{% else %}{{ n.note|note }}{% endif %}{% else %}<span class="vide">—</span>{% endif %}</td>
+                    {% endfor %}
+                    <td><strong>{% if ligne.moyenne is not None %}{{ ligne.moyenne|floatformat:"-2" }}{% else %}—{% endif %}</strong></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot><tr><th>Moyenne de la classe</th>{% for moy in m.moyennes %}<th>{% if moy is not None %}{{ moy|floatformat:"-2" }}{% else %}—{% endif %}</th>{% endfor %}<th></th></tr></tfoot>
+        </table>
+        </div>
+    </div>
+    {% endfor %}
+</details>
+{% empty %}
+<div class="bloc"><p>{{ texte_vide|default:"Aucune note trouvée." }}</p></div>
+{% endfor %}

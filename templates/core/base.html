@@ -1,31 +1,38 @@
-{% load static %}
+{% load static icones %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Institution Les Nénuphars{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 <div class="app-layout">
     <aside class="sidebar">
         <div class="brand">
-            <div class="emoji">🏫</div>
+            <div class="logo">{% icone "logo" %}</div>
             <h2>LES NÉNUPHARS</h2>
             <span>Les Cayes</span>
         </div>
         <nav>
-            {% if utilise_la_gestion %}<a href="{% url 'core:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Tableau de Bord</a>{% endif %}
-            {% if acces.eleves.lire %}<a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in request.resolver_match.url_name %}active{% endif %}">🧒 Élèves</a>{% endif %}
-            {% if acces.classes.lire %}<a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in request.resolver_match.url_name %}active{% endif %}">🏷️ Classes</a>{% endif %}
-            {% if acces.paiements.lire %}<a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in request.resolver_match.url_name %}active{% endif %}">💰 Paiements</a>{% endif %}
-            {% if acces.notes.lire %}<a href="{% url 'core:note_liste' %}" style="--accent:#8b5cf6" class="{% if 'note' in request.resolver_match.url_name %}active{% endif %}">📝 Notes</a>{% endif %}
-            {% if acces.professeurs.lire %}<a href="{% url 'core:professeur_liste' %}" style="--accent:#ef4444" class="{% if 'professeur' in request.resolver_match.url_name %}active{% endif %}">👨‍🏫 Professeurs</a>{% endif %}
-            {% if acces.employes.lire %}<a href="{% url 'core:employe_liste' %}" style="--accent:#f59e0b" class="{% if 'employe' in request.resolver_match.url_name %}active{% endif %}">👔 Employés</a>{% endif %}
-            <a href="{% url 'core:mot_de_passe' %}" class="{% if request.resolver_match.url_name == 'mot_de_passe' %}active{% endif %}">🔑 Mot de passe</a>
+            {% with nom=request.resolver_match.url_name %}
+            {% if not utilise_la_gestion %}<a href="{% url 'core:espace' %}" class="{% if nom == 'espace' %}active{% endif %}">{% icone "maison" %} Mon espace</a>{% endif %}
+            {% if est_professeur %}<a href="{% url 'core:saisie_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'saisie_notes' %}active{% endif %}">{% icone "saisie" %} Saisie des notes</a>
+            <a href="{% url 'core:mes_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'mes_notes' %}active{% endif %}">{% icone "notes" %} Mes notes</a>{% endif %}
+            {% if utilise_la_gestion %}<a href="{% url 'core:dashboard' %}" class="{% if nom == 'dashboard' %}active{% endif %}">{% icone "tableau-de-bord" %} Tableau de bord</a>{% endif %}
+            {% if acces.eleves.lire %}<a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in nom %}active{% endif %}">{% icone "eleves" %} Élèves</a>{% endif %}
+            {% if acces.classes.lire %}<a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in nom %}active{% endif %}">{% icone "classes" %} Classes</a>{% endif %}
+            {% if acces.paiements.lire %}<a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in nom %}active{% endif %}">{% icone "paiements" %} Paiements</a>{% endif %}
+            {% if acces.notes.lire %}<a href="{% url 'core:note_liste' %}" style="--accent:#8b5cf6" class="{% if 'note_' in nom %}active{% endif %}">{% icone "notes" %} Notes</a>{% endif %}
+            {% if acces.professeurs.lire %}<a href="{% url 'core:professeur_liste' %}" style="--accent:#ef4444" class="{% if 'professeur' in nom %}active{% endif %}">{% icone "professeurs" %} Professeurs</a>{% endif %}
+            {% if acces.employes.lire %}<a href="{% url 'core:employe_liste' %}" style="--accent:#f59e0b" class="{% if 'employe' in nom %}active{% endif %}">{% icone "employes" %} Employés</a>{% endif %}
+            <a href="{% url 'core:mot_de_passe' %}" class="{% if nom == 'mot_de_passe' %}active{% endif %}">{% icone "cle" %} Mot de passe</a>
+            {% endwith %}
             <form method="post" action="{% url 'core:logout' %}">
                 {% csrf_token %}
-                <a href="#" class="logout" onclick="this.closest('form').submit(); return false;">🚪 Déconnexion</a>
+                <button type="submit" class="logout">{% icone "deconnexion" %} Déconnexion</button>
             </form>
         </nav>
     </aside>
@@ -36,11 +43,30 @@
         </div>
         <div class="page-body">
             {% if messages %}
-                <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+                <div class="messages">
+                {% for message in messages %}
+                    {% if "bienvenue" in message.tags %}
+                        {# Message de bienvenue après la connexion, dans une petite fenêtre #}
+                        <dialog class="bienvenue" id="bienvenue">
+                            <div class="bienvenue-titre">{% icone "logo" %} Institution Les Nénuphars</div>
+                            <div class="bienvenue-corps">{% icone "info" "bienvenue-icone" %}<p>{{ message|linebreaksbr }}</p></div>
+                            <form method="dialog" class="bienvenue-pied"><button class="btn btn-ok" autofocus>OK</button></form>
+                        </dialog>
+                    {% else %}
+                        <p class="message {{ message.level_tag }}">{% if message.level_tag == "error" or message.level_tag == "warning" %}{% icone "attention" %}{% else %}{% icone "valider" %}{% endif %} {{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+                </div>
             {% endif %}
             {% block content %}{% endblock %}
         </div>
     </main>
 </div>
+<script>
+    (function () {
+        var d = document.getElementById("bienvenue");
+        if (d && d.showModal) { d.showModal(); } else if (d) { d.setAttribute("open", ""); }
+    })();
+</script>
 </body>
 </html>

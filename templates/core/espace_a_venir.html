@@ -1,6 +1,7 @@
 {% extends "core/base.html" %}
+{% load icones %}
 {% block title %}Mon espace{% endblock %}
-{% block header_title %}👋 BIENVENUE{% endblock %}
+{% block header_title %}{% icone "maison" %} BIENVENUE{% endblock %}
 {% block content %}
 <div class="form-card">
     {% if roles %}

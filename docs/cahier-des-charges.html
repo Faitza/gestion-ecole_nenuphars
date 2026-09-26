@@ -85,7 +85,7 @@ td.c{text-align:center}
   <h1>Cahier des charges du site web de l’école</h1>
   <p class="lead">Ce document décrit le site public, les espaces parents et professeurs, et l’évolution du back-office Django déjà commencé. Il sert de référence pour développer, tester et recetter le projet.</p>
   <div class="meta">
-    <span><b>Version</b> 1.7 (brouillon)</span>
+    <span><b>Version</b> 1.8 (brouillon)</span>
     <span><b>Date</b> 25 septembre 2026</span>
     <span><b>Nouveau</b> problématique (tout se fait à la main aujourd’hui), reprise des données papier, un seul directeur de la 7<sup>e</sup> AF à la NSIV</span>
     <span><b>Technologie</b> Python · Django 6.1</span>
@@ -340,10 +340,10 @@ td.c{text-align:center}
       <tr><td><b>Secrétariat</b></td><td class="yes">Tout</td><td>Lecture</td><td>Lecture, impression</td><td>Lecture</td><td>Inscription des professeurs, lecture</td><td>Lecture</td><td class="no">Non</td><td class="yes">Tout</td></tr>
       <tr><td><b>Caisse</b></td><td>Lecture</td><td class="no">Non</td><td class="no">Non</td><td class="no">Non</td><td class="no">Non</td><td class="yes">Tout</td><td>Lecture</td><td>Lecture</td></tr>
       <tr><td><b>Direction de section</b></td><td>Sa section</td><td>Correction, sa section</td><td>Validation, sa section</td><td>Sa section</td><td>Validation, remplacements, sa section</td><td>Lecture, sa section</td><td>Sa section, sans salaires</td><td>Lecture</td></tr>
-      <tr><td><b>Directrice en chef</b></td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td></tr>
+      <tr><td><b>Directrice en chef</b></td><td class="yes">Tout</td><td>Lecture, toute l’école</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td><td class="yes">Tout</td></tr>
     </tbody>
   </table></div>
-  <p>« Tout » veut dire voir et modifier. Tout le monde voit les pages publiques et peut envoyer une préinscription. Les parents créent leur compte avec un code du secrétariat, les professeurs sont inscrits par la secrétaire, et les comptes du personnel sont créés par la directrice en chef. La directrice en chef voit en plus le journal d’activité de toute l’école. Le personnel d’entretien n’a pas de compte.</p>
+  <p>« Tout » veut dire voir et modifier. Les notes sont saisies seulement par les professeurs : la direction d’une section peut les corriger, la directrice en chef et le compte administrateur les lisent sans pouvoir en saisir. Tout le monde voit les pages publiques et peut envoyer une préinscription. Les parents créent leur compte avec un code du secrétariat, les professeurs sont inscrits par la secrétaire, et les comptes du personnel sont créés par la directrice en chef. La directrice en chef voit en plus le journal d’activité de toute l’école. Le personnel d’entretien n’a pas de compte.</p>
 </section>
 
 <section id="donnees">

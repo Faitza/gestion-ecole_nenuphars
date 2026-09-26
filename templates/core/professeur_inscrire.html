@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Inscrire un professeur{% endblock %}
+{% block header_color %}#ef4444{% endblock %}
+{% block header_title %}{% icone "professeurs" %} INSCRIRE UN PROFESSEUR{% endblock %}
+{% block content %}
+<p class="intro">Le site crée son compte. Le professeur n'a plus qu'à se connecter avec son téléphone.</p>
+
+<div class="bloc">
+    <h2>1. Section</h2>
+    <div class="choix-sections">
+        {% for s in sections %}
+        <a href="?section={{ s.pk }}" class="choix-section{% if s == section %} actif{% endif %}">
+            <strong>{{ s.nom }}</strong>
+            <span>{% if s.est_kindergarten %}Une classe, deux maîtresses au plus{% elif s.est_primaire %}Une classe, un seul professeur pour toutes les matières{% elif s.est_secondaire %}Plusieurs cours et plusieurs classes, avec le jour et l'heure{% endif %}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% if section %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="section" value="{{ section.pk }}">
+
+    <div class="bloc">
+        <h2>2. Informations personnelles</h2>
+        <div class="grille-champs">
+            {% for field in form %}{% include "core/_champ.html" %}{% endfor %}
+        </div>
+    </div>
+
+    <div class="bloc">
+    {% if affectation_form %}
+        <h2>3. {% if section.est_kindergarten %}Classe et rôle{% else %}Classe{% endif %}</h2>
+        <div class="grille-champs">
+            {% for field in affectation_form %}{% include "core/_champ.html" %}{% endfor %}
+        </div>
+        <p class="aide">{% if section.est_kindergarten %}Deux maîtresses au plus par classe, dont une seule titulaire. Horaire : toute la journée avec sa classe.{% else %}Le professeur fait toutes les matières de sa classe, toute la journée.{% endif %}</p>
+    {% else %}
+        <h2>3. Cours de la semaine</h2>
+        {% if horaires_manquants %}
+            <p class="erreur">Les horaires du secondaire ne sont pas encore réglés. Ajoutez les créneaux dans l'administration avant d'inscrire un professeur.</p>
+        {% endif %}
+        {% include "core/_cours_formset.html" %}
+    {% endif %}
+    </div>
+
+    <button type="submit" class="btn-primary btn-large">Inscrire et créer le compte</button>
+</form>
+{% endif %}
+{% endblock %}

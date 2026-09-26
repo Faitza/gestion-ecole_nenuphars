@@ -14,4 +14,5 @@ def acces(request):
         },
         "voit_salaires": roles.voit_salaires(user),
         "utilise_la_gestion": roles.utilise_la_gestion(user),
+        "est_professeur": roles.professeur_de(user) is not None,
     }
