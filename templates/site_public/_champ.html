@@ -1,0 +1,7 @@
+{# Un champ du formulaire public : libellé, saisie, aide et erreur #}
+<div class="champ{% if large %} large{% endif %}{% if champ.errors %} en-erreur{% endif %}">
+    <label for="{{ champ.id_for_label }}">{{ champ.label }}{% if champ.field.required %} <span class="obligatoire" aria-hidden="true">*</span>{% endif %}</label>
+    {{ champ }}
+    {% if champ.help_text %}<small class="aide">{{ champ.help_text }}</small>{% endif %}
+    {% for erreur in champ.errors %}<small class="erreur" role="alert">{{ erreur }}</small>{% endfor %}
+</div>

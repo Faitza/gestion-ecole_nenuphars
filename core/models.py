@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from . import choices
-from .photos import chemin_photo
+from .photos import chemin_photo, chemin_piece
 from .telephone import normaliser_telephone
 
 
@@ -333,3 +333,89 @@ class Cours(models.Model):
 
     def __str__(self):
         return f"{self.classe} · {self.matiere} · {self.get_jour_display()} {self.creneau.nom}"
+
+
+# ─────────────────────────────────────────────────────────────
+# PRÉINSCRIPTION (formulaire du site public). Le secrétariat vérifie le
+# dossier, la direction de la section accepte ou refuse, puis le
+# secrétariat inscrit l'élève, ce qui crée sa fiche Eleve.
+# ─────────────────────────────────────────────────────────────
+class Preinscription(AvecPhoto):
+    numero = models.CharField("numéro de dossier", max_length=20, unique=True, null=True, blank=True, editable=False)
+    # L'élève
+    nom = models.CharField(max_length=100)
+    prenom = models.CharField("prénom", max_length=100)
+    date_naissance = models.DateField("date de naissance")
+    genre = models.CharField(max_length=20, choices=choices.GENRES_CHOICES)
+    classe_demandee = models.ForeignKey(
+        Classe, on_delete=models.SET_NULL, null=True, verbose_name="classe demandée", related_name="preinscriptions",
+    )
+    ecole_precedente = models.CharField("école précédente", max_length=150, blank=True)
+    # Le parent ou tuteur
+    nom_parent = models.CharField("nom du parent ou tuteur", max_length=150)
+    telephone_parent = models.CharField("téléphone", max_length=30)
+    email_parent = models.EmailField("e-mail", blank=True)
+    adresse = models.CharField(max_length=250, blank=True)
+    # Pièces jointes, facultatives (PDF ou photo)
+    acte_naissance = models.FileField("acte de naissance", upload_to=chemin_piece, blank=True)
+    dernier_bulletin = models.FileField("dernier bulletin", upload_to=chemin_piece, blank=True)
+    # Suivi par l'école
+    etape = models.CharField("étape", max_length=30, choices=choices.ETAPES_PREINSCRIPTION_CHOICES, default=choices.ETAPE_RECUE)
+    rendez_vous = models.DateTimeField("rendez-vous", null=True, blank=True, help_text="Rendez-vous avec la famille au secrétariat.")
+    note_interne = models.TextField("note du secrétariat", blank=True, help_text="Visible seulement par le personnel.")
+    avis_direction = models.TextField("avis de la direction", blank=True)
+    decision_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    decision_le = models.DateTimeField(null=True, blank=True)
+    eleve = models.OneToOneField(Eleve, on_delete=models.SET_NULL, null=True, blank=True, related_name="preinscription")
+    date_demande = models.DateTimeField("reçue le", auto_now_add=True)
+    mise_a_jour = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date_demande"]
+        verbose_name = "préinscription"
+
+    def __str__(self):
+        return f"{self.numero or 'Préinscription'} · {self.nom} {self.prenom}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Numéro de dossier donné à la famille : PRE-2026-0147
+        if not self.numero:
+            self.numero = f"PRE-{self.date_demande.year}-{self.pk:04d}"
+            type(self).objects.filter(pk=self.pk).update(numero=self.numero)
+
+    @property
+    def section(self):
+        return self.classe_demandee.section if self.classe_demandee_id else None
+
+    @property
+    def en_cours(self):
+        return self.etape in choices.ETAPES_EN_COURS
+
+    @property
+    def pieces(self):
+        """[(nom du champ, libellé)] des pièces jointes envoyées."""
+        return [(champ, type(self)._meta.get_field(champ).verbose_name)
+                for champ in ("acte_naissance", "dernier_bulletin") if getattr(self, champ)]
+
+
+# ─────────────────────────────────────────────────────────────
+# MESSAGE envoyé depuis la page Contact du site public
+# ─────────────────────────────────────────────────────────────
+class MessageContact(models.Model):
+    nom = models.CharField(max_length=150)
+    telephone = models.CharField("téléphone", max_length=30, blank=True)
+    email = models.EmailField("e-mail", blank=True)
+    message = models.TextField()
+    recu_le = models.DateTimeField("reçu le", auto_now_add=True)
+    traite = models.BooleanField("traité", default=False)
+    traite_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    traite_le = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["traite", "-recu_le"]
+        verbose_name = "message du site"
+        verbose_name_plural = "messages du site"
+
+    def __str__(self):
+        return f"{self.nom} · {self.recu_le:%d/%m/%Y}"

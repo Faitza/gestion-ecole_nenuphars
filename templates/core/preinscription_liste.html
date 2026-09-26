@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}Préinscriptions{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "preinscriptions" %} PRÉINSCRIPTIONS{% endblock %}
+{% block content %}
+<p class="intro">Les demandes envoyées depuis le site public. Le secrétariat vérifie le dossier et le transmet, la direction de la section accepte ou refuse, puis le secrétariat inscrit l'élève.</p>
+<nav class="onglets" aria-label="Étapes">
+    {% for valeur, libelle, nombre in onglets %}
+    <a href="?etape={{ valeur|urlencode }}" class="{% if valeur == filtre %}actif{% endif %}">{{ libelle }} <span>{{ nombre }}</span></a>
+    {% endfor %}
+</nav>
+<div class="actions-bar">
+    {% if acces.preinscriptions.ecrire %}<a href="{% url 'site:preinscription' %}" class="btn btn-add">{% icone "ajouter" %} Saisir une demande</a>{% endif %}
+    <form method="get" class="recherche">
+        <input type="hidden" name="etape" value="{{ filtre }}">
+        {% icone "rechercher" %}
+        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="Nom, numéro de dossier ou téléphone...">
+    </form>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Dossier</th><th></th><th>Élève</th><th>Classe demandée</th><th>Parent</th><th>Reçue le</th><th>Étape</th><th></th></tr></thead>
+    <tbody>
+        {% for d in dossiers %}
+        <tr>
+            <td><a href="{% url 'core:preinscription_fiche' d.pk %}">{{ d.numero }}</a></td>
+            <td class="cellule-photo">{% photo d "petite" %}</td>
+            <td><a href="{% url 'core:preinscription_fiche' d.pk %}">{{ d.nom }} {{ d.prenom }}</a></td>
+            <td>{{ d.classe_demandee|default:"—" }}</td>
+            <td>{{ d.nom_parent }}<br><span class="aide">{{ d.telephone_parent }}</span></td>
+            <td>{{ d.date_demande|date:"d/m/Y" }}</td>
+            <td><span class="etape etape-{{ d.etape|slugify }}">{{ d.etape }}</span></td>
+            <td>{% if d.actions %}<a href="{% url 'core:preinscription_fiche' d.pk %}" class="btn-sm btn-voir">{% icone d.actions.0.2 %} {{ d.actions.0.1 }}</a>{% else %}<a href="{% url 'core:preinscription_fiche' d.pk %}" class="btn-sm btn-secondaire">{% icone "fiche" %} Dossier</a>{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="8">Aucune demande{% if filtre != "toutes" %} à cette étape{% endif %}.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

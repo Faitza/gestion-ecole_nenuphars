@@ -23,11 +23,14 @@
             <a href="{% url 'core:mes_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'mes_notes' %}active{% endif %}">{% icone "notes" %} Mes notes</a>{% endif %}
             {% if utilise_la_gestion %}<a href="{% url 'core:dashboard' %}" class="{% if nom == 'dashboard' %}active{% endif %}">{% icone "tableau-de-bord" %} Tableau de bord</a>{% endif %}
             {% if acces.eleves.lire %}<a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in nom %}active{% endif %}">{% icone "eleves" %} Élèves</a>{% endif %}
+            {% if acces.preinscriptions.lire %}<a href="{% url 'core:preinscription_liste' %}" style="--accent:#14b8a6" class="{% if 'preinscription' in nom %}active{% endif %}">{% icone "preinscriptions" %} Préinscriptions</a>{% endif %}
+            {% if acces.messages_site.lire %}<a href="{% url 'core:message_liste' %}" style="--accent:#14b8a6" class="{% if 'message_' in nom %}active{% endif %}">{% icone "messages" %} Messages du site</a>{% endif %}
             {% if acces.classes.lire %}<a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in nom %}active{% endif %}">{% icone "classes" %} Classes</a>{% endif %}
             {% if acces.paiements.lire %}<a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in nom %}active{% endif %}">{% icone "paiements" %} Paiements</a>{% endif %}
             {% if acces.notes.lire %}<a href="{% url 'core:note_liste' %}" style="--accent:#8b5cf6" class="{% if 'note_' in nom %}active{% endif %}">{% icone "notes" %} Notes</a>{% endif %}
             {% if acces.professeurs.lire %}<a href="{% url 'core:professeur_liste' %}" style="--accent:#ef4444" class="{% if 'professeur' in nom %}active{% endif %}">{% icone "professeurs" %} Professeurs</a>{% endif %}
             {% if acces.employes.lire %}<a href="{% url 'core:employe_liste' %}" style="--accent:#f59e0b" class="{% if 'employe' in nom %}active{% endif %}">{% icone "employes" %} Employés</a>{% endif %}
+            <a href="{% url 'site:accueil' %}">{% icone "ecole" %} Site de l'école</a>
             <a href="{% url 'core:mot_de_passe' %}" class="{% if nom == 'mot_de_passe' %}active{% endif %}">{% icone "cle" %} Mot de passe</a>
             {% endwith %}
             <form method="post" action="{% url 'core:logout' %}">

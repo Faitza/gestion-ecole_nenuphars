@@ -1,8 +1,8 @@
 # Système de Gestion Scolaire — Institution Les Nénuphars
 
-Application Django pour la gestion de l'école : élèves, classes, professeurs,
-employés, paiements et notes. Toutes les classes sont prévues, de la
-**1ère Année Kindergarten à la NSIV**.
+Site de l'école et application Django pour sa gestion : site public avec préinscription en
+ligne, élèves, classes, professeurs, employés, paiements et notes. Toutes les classes sont
+prévues, de la **1ère Année Kindergarten à la NSIV**.
 
 ## Installation rapide
 
@@ -17,10 +17,12 @@ python manage.py seed_data      # crée les classes, le compte admin et quelques
 python manage.py runserver
 ```
 
-Ouvrez http://127.0.0.1:8000/connexion/. Comptes d'essai (pour les essais seulement) :
+Ouvrez http://127.0.0.1:8000/ pour le site public, et http://127.0.0.1:8000/connexion/ pour
+la gestion (elle est sous `/gestion/`). Comptes d'essai (pour les essais seulement) :
 
 - **admin / admin123** : compte administrateur ;
 - **secretaire / secretaire123** : la secrétaire ;
+- **direction / direction123** : la direction du primaire, pour accepter les préinscriptions ;
 - **prof / prof123** : un professeur du secondaire, pour la saisie des notes.
 
 **Attention :** `seed_data` ne fonctionne qu'avec `DJANGO_DEBUG=1`. En production, créez le
@@ -98,6 +100,25 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
 - Les photos sont rangées dans le dossier `media/` (ou `DJANGO_MEDIA_ROOT`), qui n'est pas envoyé
   sur GitHub. Pensez à le sauvegarder avec la base de données.
 
+## Site public et préinscriptions
+
+- Pages ouvertes à tous : Accueil (`/`), L'école, Niveaux, Admissions et Contact. Les textes,
+  l'adresse, les téléphones, WhatsApp, les horaires, les frais et les dates sont dans
+  `site_public/contenu.py` : ce qui est vide n'est pas affiché.
+- Une famille remplit la préinscription sur son téléphone (avec, si elle veut, la photo de
+  l'enfant, l'acte de naissance et le dernier bulletin, en PDF ou en photo) et reçoit un
+  numéro de dossier, par exemple `PRE-2026-0147`. Le secrétariat peut aussi la saisir pour elle
+  (bouton « Saisir une demande »).
+- Dans « Préinscriptions », le dossier suit ses étapes : **reçue**, **chez la direction**,
+  **acceptée** ou **refusée**, puis **inscrite**. Le secrétariat vérifie le dossier, note le
+  rendez-vous et le transmet ; la direction de la section (ou la directrice en chef) accepte ou
+  refuse ; le secrétariat clique sur « Inscrire l'élève », ce qui crée sa fiche dans la classe
+  demandée, avec sa photo.
+- Une direction de section ne voit que les demandes de sa section. Les pièces jointes et les
+  photos ne sont visibles que par ceux qui voient le dossier.
+- Les messages de la page Contact arrivent dans « Messages du site » (secrétariat).
+- Un champ caché aux visiteurs arrête les robots qui remplissent les formulaires.
+
 ## Icônes
 
 Les icônes viennent de [Bootstrap Icons](https://icons.getbootstrap.com) (licence MIT) et sont
@@ -108,15 +129,18 @@ dans un seul fichier, `static/icones/icones.svg`. Dans une page : `{% load icone
 
 ```
 gestion_ecole/            → réglages Django (settings.py, urls.py)
+site_public/              → site public : pages, préinscription, contact
+    contenu.py            → textes et coordonnées de l'école, à compléter
 core/
     models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note,
-                            Creneau, Affectation, Cours
+                            Creneau, Affectation, Cours, Preinscription, MessageContact
     choices.py            → nom de l'école, classes (Kinder → NSIV), sections, matières, postes, types de paiement
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
     views_professeurs.py  → inscription, fiche et emploi du temps des professeurs
     views_notes.py        → saisie des notes par les professeurs, « Mes notes »
     views_fiches.py       → fiches d'un élève, d'une classe, d'un employé, et photos protégées
+    views_admissions.py   → suivi des préinscriptions et messages du site
     notes.py              → notes par classe, puis par matière
     photos.py             → réduction et rangement des photos
     anniversaires.py      → anniversaires et années à l'école du personnel
@@ -127,13 +151,15 @@ core/
     tests.py              → tests automatiques (python manage.py test)
     admin.py              → gestion des données dans /admin/
     management/commands/seed_data.py → crée les classes et des données d'exemple
-templates/core/           → toutes les pages HTML
-static/css/style.css
+templates/core/           → les pages de la gestion
+templates/site_public/    → les pages du site public
+static/css/style.css      → gestion ; static/css/site.css → site public
 static/icones/icones.svg  → toutes les icônes du site
 ```
 
 ## Adapter à votre école
 
+- **Textes et coordonnées du site public** : `site_public/contenu.py`.
 - **Nom de l'école et ville** : changez `NOM_ECOLE` et `VILLE_ECOLE` dans `core/choices.py`,
   ainsi que dans `templates/core/login.html` et `base.html` (textes « LES NÉNUPHARS » et « Les Cayes »).
 - **Liste des classes** : `CLASSES_PAR_DEFAUT` dans `core/choices.py`. Vous pouvez aussi gérer
@@ -143,6 +169,9 @@ static/icones/icones.svg  → toutes les icônes du site
 
 ## Fonctionnalités
 
+- **Site public** : présentation de l'école, niveaux, admissions, contact et préinscription en
+  ligne avec numéro de dossier.
+- **Préinscriptions** : suivi de chaque demande jusqu'à l'inscription de l'élève.
 - **Élèves** : informations de l'élève, nom et téléphone du parent ou tuteur, classe
   (une seule classe par élève).
 - **Classes** : créer et modifier les classes (nom, section, cycle : Préscolaire, Fondamentale
@@ -158,5 +187,7 @@ static/icones/icones.svg  → toutes les icônes du site
 ## Prochaines étapes possibles
 
 - Ajouter un bulletin (relevé de notes) par élève et par trimestre.
+- Ajouter les actualités, le calendrier et la galerie au site public.
+- Remettre un code d'accès aux parents à l'inscription, pour leur espace.
 - Exporter les listes d'élèves et de paiements en PDF ou en Excel.
 - Mettre le site en ligne (Render, Railway, PythonAnywhere).

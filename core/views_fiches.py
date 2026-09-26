@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, render
 
 from . import choices
 from . import notes as outils_notes
-from .models import Classe, Cours, Eleve, Employe, Note, Professeur
+from .models import Classe, Cours, Eleve, Employe, Note, Preinscription, Professeur
 from .roles import acces_requis, filtrer, peut, professeur_de
 
 
@@ -14,6 +14,8 @@ from .roles import acces_requis, filtrer, peut, professeur_de
 def _photo_visible(user, objet):
     """Qui peut voir une photo : ceux qui voient la fiche, la personne elle-même,
     et le professeur pour les élèves de ses classes."""
+    if isinstance(objet, Preinscription):
+        return filtrer(user, "preinscriptions", Preinscription.objects.filter(pk=objet.pk)).exists()
     if isinstance(objet, Eleve):
         if filtrer(user, "eleves", Eleve.objects.filter(pk=objet.pk)).exists():
             return True
@@ -26,7 +28,7 @@ def _photo_visible(user, objet):
     return filtrer(user, module, type(objet).objects.filter(pk=objet.pk)).exists()
 
 
-MODELES_AVEC_PHOTO = {"eleve": Eleve, "professeur": Professeur, "employe": Employe}
+MODELES_AVEC_PHOTO = {"eleve": Eleve, "professeur": Professeur, "employe": Employe, "preinscription": Preinscription}
 
 
 @login_required

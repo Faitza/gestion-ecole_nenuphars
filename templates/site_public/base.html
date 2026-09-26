@@ -1,0 +1,73 @@
+{% load static icones %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ site.NOM }}{% endblock %} · {{ site.VILLE }}</title>
+    <meta name="description" content="{% block description %}{{ site.PRESENTATION }}{% endblock %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+<a class="aller-au-contenu" href="#contenu">Aller au contenu</a>
+<header class="pnav">
+    <a class="logo" href="{% url 'site:accueil' %}">
+        <svg width="36" height="36" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="var(--leaf-soft)"/><path d="M17 8c3 4 3 9 0 13-3-4-3-9 0-13z" fill="var(--lily)"/><path d="M9 14c4 1 7 4 8 7-4 0-7-3-8-7zM25 14c-4 1-7 4-8 7 4 0 7-3 8-7z" fill="var(--lily)" opacity=".7"/><path d="M7 23c6 3 14 3 20 0" stroke="var(--leaf)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span>Les Nénuphars<small>Institution · {{ site.VILLE }}</small></span>
+    </a>
+    {% with nom=request.resolver_match.url_name %}
+    <nav aria-label="Pages du site">
+        <a href="{% url 'site:accueil' %}" {% if nom == 'accueil' %}class="on" aria-current="page"{% endif %}>Accueil</a>
+        <a href="{% url 'site:ecole' %}" {% if nom == 'ecole' %}class="on" aria-current="page"{% endif %}>L'école</a>
+        <a href="{% url 'site:niveaux' %}" {% if nom == 'niveaux' %}class="on" aria-current="page"{% endif %}>Niveaux</a>
+        <a href="{% url 'site:admissions' %}" {% if nom == 'admissions' or 'preinscription' in nom %}class="on" aria-current="page"{% endif %}>Admissions</a>
+        <a href="{% url 'site:contact' %}" {% if nom == 'contact' %}class="on" aria-current="page"{% endif %}>Contact</a>
+    </nav>
+    {% endwith %}
+    {% if user.is_authenticated %}
+        <a class="btn btn-ghost" href="{% url 'core:espace' %}">{% icone "maison" %} Mon espace</a>
+    {% else %}
+        <a class="btn btn-ghost" href="{% url 'core:login' %}">{% icone "connexion" %} Se connecter</a>
+    {% endif %}
+</header>
+
+<main id="contenu">
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}{% if "bienvenue" not in message.tags %}
+        <p class="message {{ message.level_tag }}">{% icone "valider" %} {{ message }}</p>
+        {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="pied">
+    <div class="pied-grille">
+        <div>
+            <p class="pied-nom">{{ site.NOM }}</p>
+            <p>{% if site.ADRESSE %}{% icone "lieu" %} {{ site.ADRESSE }}{% else %}{{ site.VILLE }}, Haïti{% endif %}</p>
+        </div>
+        <div>
+            <p class="pied-titre">Nous joindre</p>
+            {% for tel in site.TELEPHONES %}<p><a href="tel:{{ tel|cut:' ' }}">{% icone "telephone" %} {{ tel }}</a></p>{% endfor %}
+            {% if whatsapp_lien %}<p><a href="{{ whatsapp_lien }}" rel="noopener">{% icone "whatsapp" %} WhatsApp</a></p>{% endif %}
+            {% if site.COURRIEL %}<p><a href="mailto:{{ site.COURRIEL }}">{% icone "courriel" %} {{ site.COURRIEL }}</a></p>{% endif %}
+            <p><a href="{% url 'site:contact' %}">{% icone "messages" %} Écrire à l'école</a></p>
+        </div>
+        <div>
+            <p class="pied-titre">Admissions</p>
+            <p><a href="{% url 'site:admissions' %}">Conditions et pièces à fournir</a></p>
+            <p><a href="{% url 'site:preinscription' %}">Préinscrire mon enfant</a></p>
+            <p><a href="{% url 'core:login' %}">Parents, professeurs et personnel</a></p>
+        </div>
+    </div>
+    <p class="pied-bas">&copy; {% now "Y" %} {{ site.NOM }} · {{ site.VILLE }}, Haïti</p>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

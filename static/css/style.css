@@ -66,7 +66,7 @@ body {
 .form-control {
   width: 100%; padding: 11px 12px; margin-bottom: 18px;
   border: none; border-bottom: 1px solid var(--fond-gris);
-  background: var(--fond-gris-clair); border-radius: 4px; font-size: 14px;
+  background: var(--fond-gris-clair); border-radius: 4px; font-size: 14px; font-family: inherit;
 }
 select.form-control { border: 1px solid var(--fond-gris); }
 textarea.form-control { border: 1px solid var(--fond-gris); }
@@ -324,3 +324,36 @@ details.classe-notes:not([open]) > summary::after { content: "▸"; }
   .fiche-personne { flex-direction: column; align-items: center; }
   .photo.grande { width: 120px; height: 120px; }
 }
+
+/* ── PRÉINSCRIPTIONS ET MESSAGES DU SITE ──────────────────── */
+.onglets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.onglets a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 99px; background: white;
+  color: var(--texte-moyen); text-decoration: none; font-size: 13px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.onglets a span { background: var(--fond-gris-clair); border-radius: 99px; padding: 0 8px; font-size: 12px; }
+.onglets a.actif { background: #0f766e; color: white; }
+.onglets a.actif span { background: rgba(255,255,255,0.2); }
+.etape { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+.etape-recue { background: #dbeafe; color: #1e40af; }
+.etape-chez-la-direction { background: #fef3c7; color: #92400e; }
+.etape-acceptee { background: #d1fae5; color: #065f46; }
+.etape-refusee { background: #fee2e2; color: #991b1b; }
+.etape-inscrite { background: var(--fond-gris); color: var(--texte-moyen); }
+.parcours { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 18px; counter-reset: etape; }
+.parcours li { counter-increment: etape; padding: 6px 12px; border-radius: 6px; background: white; color: var(--texte-clair); font-size: 12px; font-weight: bold; }
+.parcours li::before { content: counter(etape) ". "; }
+.parcours li.actuelle { background: #0f766e; color: white; }
+.decision { border-left: 4px solid #0f766e; }
+.decision label { display: block; font-weight: bold; font-size: 13px; color: var(--texte-moyen); margin-bottom: 6px; }
+.decision .boutons { margin-top: 4px; }
+.decision h2 .icone { color: #0f766e; }
+.btn-transmettre, .btn-inscrire { background: #0f766e; color: white; }
+.btn-accepter { background: var(--succes); color: white; }
+.btn-refuser { background: #fee2e2; color: var(--erreur); }
+.lien-icone { display: inline-flex; align-items: center; gap: 6px; }
+a.lien-icone { color: var(--primaire); }
+.liste-evenements .pastille.admissions { background: #ccfbf1; color: #0f766e; }
+.liste-evenements a { color: var(--texte-fonce); text-decoration: none; }
+.liste-evenements a:hover { text-decoration: underline; }
+.message-site .coordonnees { display: flex; flex-wrap: wrap; gap: 16px; margin: 0 0 10px; font-size: 13px; }
+.message-site .texte-message { background: var(--fond-gris-clair); border-radius: 8px; padding: 12px 14px; margin: 0 0 12px; font-size: 14px; }
+.message-site.traite { opacity: 0.7; }

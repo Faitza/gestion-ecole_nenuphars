@@ -144,3 +144,17 @@ def obtenir_annees_scolaires():
     from datetime import datetime
     annee_courante = datetime.now().year
     return [f"{annee_courante - i}-{annee_courante - i + 1}" for i in range(10, -1, -1)]
+
+
+# ========================================
+# PRÉINSCRIPTIONS : de la demande envoyée par la famille à l'inscription
+# ========================================
+ETAPE_RECUE = "Reçue"
+ETAPE_CHEZ_LA_DIRECTION = "Chez la direction"
+ETAPE_ACCEPTEE = "Acceptée"
+ETAPE_REFUSEE = "Refusée"
+ETAPE_INSCRITE = "Inscrite"
+ETAPES_PREINSCRIPTION = [ETAPE_RECUE, ETAPE_CHEZ_LA_DIRECTION, ETAPE_ACCEPTEE, ETAPE_REFUSEE, ETAPE_INSCRITE]
+ETAPES_PREINSCRIPTION_CHOICES = _vers_choix(ETAPES_PREINSCRIPTION)
+# Demandes pas encore terminées (ni refusées, ni inscrites)
+ETAPES_EN_COURS = [ETAPE_RECUE, ETAPE_CHEZ_LA_DIRECTION, ETAPE_ACCEPTEE]

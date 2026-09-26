@@ -3,10 +3,10 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Sum, Q
+from django.db.models import Count, Sum, Q
 from django.urls import reverse, reverse_lazy
 
-from .models import Eleve, Professeur, Employe, Paiement, Note, Classe
+from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Preinscription, MessageContact
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
 from . import anniversaires, choices, professeurs
@@ -72,6 +72,19 @@ def dashboard(request):
         context["revenus"] = paiements.aggregate(total=Sum("montant"))["total"] or 0
     if peut(user, "notes"):
         context["dernieres_notes"] = filtrer(user, "notes", Note.objects.select_related("eleve", "professeur"))[:5]
+    # Préinscriptions du site public en attente, étape par étape
+    if peut(user, "preinscriptions"):
+        dossiers = filtrer(user, "preinscriptions", Preinscription.objects.order_by())
+        nombres = dict(dossiers.values_list("etape").annotate(n=Count("pk")))
+        context["admissions"] = [
+            (etape, texte, nombres.get(etape, 0)) for etape, texte in (
+                (choices.ETAPE_RECUE, "demandes reçues, dossier à vérifier"),
+                (choices.ETAPE_CHEZ_LA_DIRECTION, "chez la direction, en attente de décision"),
+                (choices.ETAPE_ACCEPTEE, "acceptées, élève à inscrire"),
+            )
+        ]
+    if peut(user, "messages_site"):
+        context["nb_messages"] = MessageContact.objects.filter(traite=False).count()
     # Anniversaires et années à l'école du personnel que l'on peut voir, dans les 7 jours
     context["evenements"] = anniversaires.evenements(anniversaires.personnel_visible(user))
     context["jours_d_avance"] = anniversaires.JOURS_D_AVANCE

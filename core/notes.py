@@ -3,6 +3,7 @@
 # une colonne par trimestre. Sert à « Mes notes » (professeur), à la page Notes
 # (secrétariat, directions) et à la fiche d'un élève.
 from . import choices
+from .classes import ordre as _ordre_classe
 
 
 def _moyenne(valeurs):
@@ -48,11 +49,3 @@ def grouper(notes, toute_la_classe=False):
         resultat.append(groupe)
     return resultat
 
-
-def _ordre_classe(classe):
-    """Kindergarten, puis primaire, puis secondaire, et dans l'ordre des classes par défaut."""
-    if classe is None:
-        return (99, 99, "")
-    noms = [nom for nom, _ in choices.CLASSES_PAR_DEFAUT]
-    section = classe.section.ordre if classe.section_id else 99
-    return (section, noms.index(classe.nom) if classe.nom in noms else 99, classe.nom)

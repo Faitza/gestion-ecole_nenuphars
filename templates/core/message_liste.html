@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Messages du site{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "messages" %} MESSAGES DU SITE{% endblock %}
+{% block content %}
+<p class="intro">Les messages envoyés par la page Contact du site public. Répondez par téléphone ou par e-mail, puis marquez le message comme traité.</p>
+<nav class="onglets" aria-label="Messages">
+    <a href="?" class="{% if not tous %}actif{% endif %}">À traiter <span>{{ nb_a_traiter }}</span></a>
+    <a href="?voir=tous" class="{% if tous %}actif{% endif %}">Tous</a>
+</nav>
+{% for m in liste %}
+<div class="bloc message-site{% if m.traite %} traite{% endif %}">
+    <div class="entete-fiche">
+        <h2>{{ m.nom }}</h2>
+        <span class="aide">{{ m.recu_le|date:"l j F Y à H:i"|capfirst }}</span>
+    </div>
+    <p class="coordonnees">
+        {% if m.telephone %}<a href="tel:{{ m.telephone }}" class="lien-icone">{% icone "telephone" %} {{ m.telephone }}</a>{% endif %}
+        {% if m.email %}<a href="mailto:{{ m.email }}" class="lien-icone">{% icone "courriel" %} {{ m.email }}</a>{% endif %}
+    </p>
+    <p class="texte-message">{{ m.message|linebreaksbr }}</p>
+    {% if acces.messages_site.ecrire %}
+    <form method="post" action="{% url 'core:message_traite' m.pk %}" class="en-ligne">
+        {% csrf_token %}
+        {% if tous %}<input type="hidden" name="voir" value="tous">{% endif %}
+        {% if m.traite %}
+            <span class="aide">Traité le {{ m.traite_le|date:"d/m/Y" }}{% if m.traite_par %} par {{ m.traite_par.get_full_name|default:m.traite_par.username }}{% endif %}.</span>
+            <button type="submit" class="btn-sm btn-secondaire">Remettre à traiter</button>
+        {% else %}
+            <button type="submit" class="btn-sm btn-voir">{% icone "valider" %} Marquer comme traité</button>
+        {% endif %}
+    </form>
+    {% endif %}
+</div>
+{% empty %}
+<div class="bloc"><p class="aide">Aucun message {% if not tous %}à traiter{% endif %}.</p></div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Demande reçue{% endblock %}
+{% block content %}
+<section class="page-titre recu">
+    {% icone "valider" "grande-icone" %}
+    <p class="kick">Demande reçue</p>
+    {% if dossier %}
+    <h1>Merci, la demande pour {{ dossier.prenom }} {{ dossier.nom }} est bien arrivée.</h1>
+    <div class="numero-dossier">
+        <span>Numéro de dossier</span>
+        <strong>{{ dossier.numero }}</strong>
+        <small>{{ dossier.classe_demandee }} · reçue le {{ dossier.date_demande|date:"j F Y" }}</small>
+    </div>
+    <p class="chapo">Notez ce numéro : il vous sera demandé au secrétariat. Le secrétariat vous appelle au {{ dossier.telephone_parent }} pour fixer un rendez-vous.</p>
+    {% else %}
+    <h1>Merci, votre demande est bien arrivée.</h1>
+    <p class="chapo">Le secrétariat vous appelle pour fixer un rendez-vous.</p>
+    {% endif %}
+    <div class="cta">
+        <button type="button" class="btn btn-ghost" onclick="window.print()">{% icone "imprimer" %} Imprimer</button>
+        <a class="btn btn-ghost" href="{% url 'site:preinscription' %}">Préinscrire un autre enfant</a>
+        <a class="btn btn-lily" href="{% url 'site:accueil' %}">Retour à l'accueil</a>
+    </div>
+</section>
+{% endblock %}

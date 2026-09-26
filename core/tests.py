@@ -59,7 +59,7 @@ class ConnexionTests(TestCase):
 
     def test_page_protegee_renvoie_vers_la_connexion(self):
         reponse = self.client.get(reverse("core:eleve_liste"))
-        self.assertRedirects(reponse, "/connexion/?next=/eleves/", fetch_redirect_response=False)
+        self.assertRedirects(reponse, "/connexion/?next=/gestion/eleves/", fetch_redirect_response=False)
 
     def test_mot_de_passe_provisoire_a_changer(self):
         self.compte.doit_changer_mot_de_passe = True
@@ -671,6 +671,9 @@ class NotesVisiblesTests(TestCase):
         self.assertTrue(secretaire.check_password("secretaire123"))
         self.assertEqual(roles.roles_de(secretaire), {roles.SECRETARIAT})
         self.assertEqual(roles.roles_de(Utilisateur.objects.get(username="prof")), {roles.PROFESSEUR})
+        direction = Utilisateur.objects.get(username="direction")
+        self.assertEqual(roles.roles_de(direction), {roles.DIRECTION_SECTION})
+        self.assertEqual(roles.section_de(direction).nom, choices.SECTION_PRIMAIRE)
 
 
 class PhotosEtFichesTests(TestCase):

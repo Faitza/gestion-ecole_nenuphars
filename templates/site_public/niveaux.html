@@ -1,0 +1,30 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Niveaux{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">Niveaux</p>
+    <h1>Du Kindergarten au Nouveau Secondaire</h1>
+    <p class="chapo">Les élèves sont évalués à chaque trimestre, avec des notes sur 100 et un bulletin par trimestre ({{ periodes|join:", " }}).</p>
+</section>
+
+{% for s in sections %}
+<section class="bande niveau c{{ forloop.counter }}" id="{{ s.section.nom|slugify }}">
+    <p class="lv">{{ s.section }}</p>
+    <h2>{{ s.niveaux|default:s.section }}</h2>
+    <p class="chapo">{{ s.texte }}</p>
+    <ul class="classes" aria-label="Classes">
+        {% for classe in s.classes %}<li>{{ classe.nom }}</li>{% endfor %}
+    </ul>
+    {% if s.section.est_secondaire %}
+    <h3>Matières enseignées</h3>
+    <ul class="matieres">{% for m in matieres %}<li>{{ m }}</li>{% endfor %}</ul>
+    {% endif %}
+</section>
+{% endfor %}
+
+<section class="bande appel">
+    <div><h2>Une place pour votre enfant ?</h2><p>La préinscription se fait en ligne en quelques minutes.</p></div>
+    <a class="btn btn-lily" href="{% url 'site:preinscription' %}">Préinscrire mon enfant {% icone "suivant" %}</a>
+</section>
+{% endblock %}

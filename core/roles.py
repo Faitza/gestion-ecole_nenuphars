@@ -62,6 +62,17 @@ ACCES = {
         "lire": {SECRETARIAT, DIRECTION_SECTION},
         "ecrire": {DIRECTION_SECTION},
     },
+    # Le secrétariat suit les demandes ; la direction de la section les voit
+    # et décide (voir peut_decider_preinscription)
+    "preinscriptions": {
+        "lire": {SECRETARIAT, DIRECTION_SECTION},
+        "ecrire": {SECRETARIAT},
+    },
+    # Messages envoyés depuis la page Contact du site public
+    "messages_site": {
+        "lire": {SECRETARIAT},
+        "ecrire": {SECRETARIAT},
+    },
 }
 MODULES = list(ACCES)
 
@@ -78,6 +89,7 @@ CHEMIN_SECTION = {
     "employes": "section",
     "paiements": "eleve__classe__section",
     "notes": "eleve__classe__section",
+    "preinscriptions": "classe_demandee__section",
 }
 
 
@@ -131,8 +143,9 @@ def filtrer(user, module, queryset, ecriture=False, chemin=None):
     if niveau == "tout":
         return queryset
     section = section_de(user)
-    if niveau == "section" and section is not None:
-        return queryset.filter(**{chemin or CHEMIN_SECTION[module]: section})
+    chemin = chemin or CHEMIN_SECTION.get(module)
+    if niveau == "section" and section is not None and chemin:
+        return queryset.filter(**{chemin: section})
     return queryset.none()
 
 
@@ -141,6 +154,11 @@ def peut_valider_cours(user, section):
     if a_tout(user):
         return True
     return DIRECTION_SECTION in roles_de(user) and section is not None and section_de(user) == section
+
+
+def peut_decider_preinscription(user, preinscription):
+    """La direction de la section demandée accepte ou refuse ; la directrice en chef aussi."""
+    return peut_valider_cours(user, preinscription.section)
 
 
 def acces_requis(module, ecriture=False):
