@@ -1,5 +1,5 @@
 {% extends "core/base.html" %}
-{% load icones %}
+{% load icones notes %}
 {% block title %}Tableau de bord{% endblock %}
 {% block header_title %}{% icone "tableau-de-bord" %} TABLEAU DE BORD{% endblock %}
 {% block content %}
@@ -40,6 +40,28 @@
     </div>
     {% endif %}
 </div>
+
+{% if dernieres_notes is not None %}
+<div class="bloc alertes">
+    <div class="actions-bar">
+        <h2>{% icone "notes" %} Dernières notes saisies</h2>
+        <a href="{% url 'core:note_liste' %}" class="btn-sm btn-edit">Toutes les notes</a>
+    </div>
+    {% if dernieres_notes %}
+    <ul class="liste-evenements">
+        {% for n in dernieres_notes %}
+        <li>
+            <span class="pastille notes">{% icone "notes" %}</span>
+            <div><strong>{{ n.eleve }} : {{ n.note|note }}/100</strong><br><span class="aide">{{ n.matiere }} · {{ n.periode }} · {{ n.professeur|default:"—" }}</span></div>
+            <span class="quand">{{ n.date_note|date:"d/m H:i" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p class="aide">Aucune note pour le moment.</p>
+    {% endif %}
+</div>
+{% endif %}
 
 {% if nb_professeurs is not None or nb_employes is not None %}
 <div class="bloc alertes">

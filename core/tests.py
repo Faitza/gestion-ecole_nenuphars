@@ -445,7 +445,14 @@ class SaisieDesNotesTests(TestCase):
         reponse = self.client.post(reverse("core:saisie_notes"), {
             "choix": choix, "periode": "2e Trimestre", f"note_{self.anne.pk}": "72,5", f"note_{self.paul.pk}": "",
         })
-        self.assertEqual(reponse.status_code, 302)
+        # Après l'enregistrement, le professeur arrive sur « Mes notes », sur le groupe enregistré
+        ancre = f"g-{self.sixieme.pk}-mathematiques-2"
+        self.assertRedirects(reponse, f"{reverse('core:mes_notes')}#{ancre}", fetch_redirect_response=False)
+        page = self.client.get(reverse("core:mes_notes"))
+        self.assertContains(page, f'id="{ancre}"')
+        self.assertContains(page, "6ème AF · Mathématiques · 2e Trimestre")
+        self.assertContains(page, "<strong>72,5</strong>/100", html=False)
+        self.assertContains(page, "<strong>1/2</strong>", html=False)
         note = Note.objects.get()
         self.assertEqual((note.eleve, note.matiere, note.periode, note.professeur), (self.anne, "Mathématiques", "2e Trimestre", prof))
         self.assertEqual(float(note.note), 72.5)
@@ -599,3 +606,64 @@ class IconesTests(TestCase):
             utilisees |= set(re.findall(r'"icone_titre": "([^"]+)"', fichier.read_text(encoding="utf-8")))
         self.assertTrue(utilisees)
         self.assertEqual(utilisees - disponibles, set())
+
+
+class NotesVisiblesTests(TestCase):
+    """Une note saisie par un professeur apparaît dans « Mes notes » et chez la secrétaire."""
+
+    @classmethod
+    def setUpTestData(cls):
+        primaire = Section.objects.get(nom=choices.SECTION_PRIMAIRE)
+        cls.sixieme = Classe.objects.create(nom="6ème AF", section=primaire)
+        cls.cinquieme = Classe.objects.create(nom="5ème AF", section=primaire)
+        cls.anne = Eleve.objects.create(nom="Joseph", prenom="Anne", genre="Féminin", classe=cls.sixieme)
+        cls.luc = Eleve.objects.create(nom="Noël", prenom="Luc", genre="Masculin", classe=cls.cinquieme)
+        cls.prof = Professeur.objects.create(nom="Blaise", prenom="Rose", section=primaire,
+                                             utilisateur=Utilisateur.objects.create_user("rose", password="x"))
+        Affectation.objects.create(professeur=cls.prof, classe=cls.sixieme)
+        autre = Professeur.objects.create(nom="Autre", prenom="Prof", section=primaire)
+        annee = choices.annee_scolaire_courante()
+        Note.objects.create(eleve=cls.luc, professeur=autre, matiere="Français", note=55, periode="1er Trimestre",
+                            annee_scolaire=annee)
+
+    def test_le_professeur_ne_voit_que_ses_notes(self):
+        self.client.force_login(self.prof.utilisateur)
+        self.client.post(reverse("core:saisie_notes"), {"choix": f"{self.sixieme.pk}:Français", "periode": "1er Trimestre",
+                                                        f"note_{self.anne.pk}": "91"})
+        page = self.client.get(reverse("core:mes_notes"))
+        self.assertContains(page, "Joseph Anne")
+        self.assertNotContains(page, "Noël Luc")
+        self.assertContains(page, reverse("core:saisie_notes"))  # bouton Modifier vers la grille
+        espace = self.client.get(reverse("core:espace"))
+        self.assertContains(espace, "Vous avez saisi <strong>1</strong> note cette année.", html=False)
+        self.assertContains(espace, reverse("core:mes_notes"))
+
+    def test_la_secretaire_voit_les_notes_saisies(self):
+        Note.objects.create(eleve=self.anne, professeur=self.prof, matiere="Français", note=91, periode="2e Trimestre",
+                            annee_scolaire=choices.annee_scolaire_courante())
+        compte = Utilisateur.objects.create_user("sec", password="x")
+        Employe.objects.create(nom="Jean", prenom="Marie", poste="Secrétaire", utilisateur=compte)
+        self.client.force_login(compte)
+        tableau = self.client.get(reverse("core:dashboard"))
+        self.assertContains(tableau, "Dernières notes saisies")
+        self.assertContains(tableau, "Joseph Anne : 91/100")
+        liste = self.client.get(reverse("core:note_liste"), {"classe": self.sixieme.pk})
+        self.assertContains(liste, "Joseph Anne")
+        self.assertNotContains(liste, "Noël Luc")
+        liste = self.client.get(reverse("core:note_liste"), {"periode": "1er Trimestre"})
+        self.assertContains(liste, "Noël Luc")
+        self.assertNotContains(liste, "Joseph Anne")
+        liste = self.client.get(reverse("core:note_liste"), {"q": "Blaise"})
+        self.assertContains(liste, "Joseph Anne")
+        self.assertNotContains(liste, "Noël Luc")
+        self.assertEqual(self.client.get(reverse("core:mes_notes")).status_code, 403)
+
+    def test_comptes_d_essai(self):
+        from django.core.management import call_command
+        from io import StringIO
+        with self.settings(DEBUG=True):
+            call_command("seed_data", stdout=StringIO())
+        secretaire = Utilisateur.objects.get(username="secretaire")
+        self.assertTrue(secretaire.check_password("secretaire123"))
+        self.assertEqual(roles.roles_de(secretaire), {roles.SECRETARIAT})
+        self.assertEqual(roles.roles_de(Utilisateur.objects.get(username="prof")), {roles.PROFESSEUR})

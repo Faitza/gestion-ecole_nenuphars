@@ -55,6 +55,7 @@ urlpatterns = [
     # Notes
     path("notes/", views.note_liste, name="note_liste"),
     path("notes/saisie/", views_notes.saisie_notes, name="saisie_notes"),
+    path("notes/mes-notes/", views_notes.mes_notes, name="mes_notes"),
     path("notes/<int:pk>/modifier/", views.note_modifier, name="note_modifier"),
     path("notes/<int:pk>/supprimer/", views.note_supprimer, name="note_supprimer"),
 ]

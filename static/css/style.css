@@ -276,3 +276,14 @@ button.btn-sm { border: none; cursor: pointer; font-family: inherit; }
   .page-body { padding: 0; }
   .fiche-acces { border-style: solid; }
 }
+
+/* « Mes notes » : le groupe que le professeur vient d'enregistrer est mis en avant */
+.groupe-notes { scroll-margin-top: 16px; }
+.groupe-notes:target { outline: 3px solid #8b5cf6; }
+.liste-evenements .pastille.notes { background: #ede9fe; color: #7c3aed; }
+.boutons { display: flex; flex-wrap: wrap; gap: 10px; }
+.filtres-liste { justify-content: flex-start; }
+.filtres-liste .form-control { width: auto; margin: 0; }
+@media (max-width: 760px) {
+  .filtres-liste .form-control { width: 100%; }
+}

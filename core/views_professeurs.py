@@ -199,4 +199,5 @@ def espace_professeur(request, professeur):
         "en_attente": professeurs.cours_de_l_annee(professeur).filter(statut=choices.STATUT_COURS_PROPOSE).count(),
         "ma_fete": anniversaires.c_est_sa_fete(professeur),
         "a_noter": bool(professeurs.matieres_a_noter(professeur)),
+        "nb_notes": professeur.notes.filter(annee_scolaire=choices.annee_scolaire_courante()).count(),
     })

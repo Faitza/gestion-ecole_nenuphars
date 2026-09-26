@@ -93,6 +93,15 @@ class Command(BaseCommand):
             ))
         self.stdout.write(self.style.SUCCESS(f"✓ {len(employes_data)} employés créés"))
 
+        # Compte d'essai de la secrétaire (secretaire / secretaire123) : son rôle suit son poste
+        secretaire = Employe.objects.get(nom="Jean", prenom="Marie")
+        if secretaire.utilisateur is None and not Utilisateur.objects.filter(username="secretaire").exists():
+            secretaire.utilisateur = Utilisateur.objects.create_user(
+                "secretaire", password="secretaire123", first_name=secretaire.prenom, last_name=secretaire.nom,
+            )
+            secretaire.save()
+            self.stdout.write(self.style.SUCCESS("✓ Compte secrétaire créé (secretaire / secretaire123)"))
+
         # 5) Élèves
         eleves_data = [
             ("Dupont", "Jean", "Masculin", "7ème AF", "Marie Dupont", "509-3456-7890"),

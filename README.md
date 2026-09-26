@@ -17,8 +17,11 @@ python manage.py seed_data      # crée les classes, le compte admin et quelques
 python manage.py runserver
 ```
 
-Ouvrez http://127.0.0.1:8000/connexion/ → **admin / admin123** (pour les essais seulement).
-Pour essayer l'espace d'un professeur et la saisie des notes : **prof / prof123**.
+Ouvrez http://127.0.0.1:8000/connexion/. Comptes d'essai (pour les essais seulement) :
+
+- **admin / admin123** : compte administrateur ;
+- **secretaire / secretaire123** : la secrétaire ;
+- **prof / prof123** : un professeur du secondaire, pour la saisie des notes.
 
 **Attention :** `seed_data` ne fonctionne qu'avec `DJANGO_DEBUG=1`. En production, créez le
 compte de la directrice en chef avec `python manage.py createsuperuser`.
@@ -68,6 +71,10 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   avec les élèves d'une classe, pour une matière et un trimestre. Au secondaire, seulement les
   classes et matières de leurs cours validés ; au Kindergarten et au primaire, toutes les
   matières de leur classe.
+- Après l'enregistrement, le professeur arrive sur « Mes notes » : ses notes de l'année, par
+  classe, matière et trimestre, avec la moyenne.
+- La secrétaire et les directions voient les notes dès qu'elles sont enregistrées : « Dernières
+  notes saisies » sur le tableau de bord, et la page Notes avec des filtres par classe et trimestre.
 - La direction d'une section peut corriger ou retirer une note de sa section.
 - La directrice en chef et le compte admin lisent toutes les notes mais ne peuvent pas en
   saisir, ni dans le site ni dans `/admin/`.

@@ -69,6 +69,8 @@ def dashboard(request):
     if peut(user, "paiements"):
         paiements = filtrer(user, "paiements", Paiement.objects.filter(statut="Payé"))
         context["revenus"] = paiements.aggregate(total=Sum("montant"))["total"] or 0
+    if peut(user, "notes"):
+        context["dernieres_notes"] = filtrer(user, "notes", Note.objects.select_related("eleve", "professeur"))[:5]
     # Anniversaires et années à l'école du personnel que l'on peut voir, dans les 7 jours
     context["evenements"] = anniversaires.evenements(anniversaires.personnel_visible(user))
     context["jours_d_avance"] = anniversaires.JOURS_D_AVANCE
@@ -280,10 +282,22 @@ def paiement_supprimer(request, pk):
 @acces_requis("notes")
 def note_liste(request):
     q = request.GET.get("q", "").strip()
-    notes = filtrer(request.user, "notes", Note.objects.select_related("eleve", "professeur"))
+    notes = filtrer(request.user, "notes", Note.objects.select_related("eleve", "eleve__classe", "professeur"))
     if q:
-        notes = notes.filter(Q(eleve__nom__icontains=q) | Q(matiere__icontains=q))
-    return render(request, "core/note_liste.html", {"notes": notes, "q": q})
+        notes = notes.filter(Q(eleve__nom__icontains=q) | Q(eleve__prenom__icontains=q) | Q(matiere__icontains=q)
+                             | Q(professeur__nom__icontains=q))
+    # Filtres pour retrouver les notes d'une classe ou d'un trimestre
+    classes = filtrer(request.user, "classes", Classe.objects.all()) if peut(request.user, "classes") else Classe.objects.none()
+    classe = request.GET.get("classe", "")
+    if classe.isdigit():
+        notes = notes.filter(eleve__classe_id=classe)
+    periode = request.GET.get("periode", "")
+    if periode in choices.PERIODES:
+        notes = notes.filter(periode=periode)
+    return render(request, "core/note_liste.html", {
+        "notes": notes, "q": q, "classes": classes, "classe": classe,
+        "periodes": choices.PERIODES, "periode": periode,
+    })
 
 
 @acces_requis("notes", ecriture=True)

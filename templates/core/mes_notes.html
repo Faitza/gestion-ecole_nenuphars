@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% load icones notes %}
+{% block title %}Mes notes{% endblock %}
+{% block header_color %}#8b5cf6{% endblock %}
+{% block header_title %}{% icone "notes" %} MES NOTES {{ annee }}{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <p class="aide">{% icone "info" %} {{ nb_notes }} note{{ nb_notes|pluralize }} saisie{{ nb_notes|pluralize }} cette année. La secrétaire et la direction de votre section les voient aussi.</p>
+    {% if a_noter %}<a href="{% url 'core:saisie_notes' %}" class="btn btn-add">{% icone "saisie" %} Saisir des notes</a>{% endif %}
+</div>
+
+{% for g in groupes %}
+<div class="bloc groupe-notes" id="{{ g.ancre }}">
+    <div class="actions-bar">
+        <h2>{{ g.classe|default:"Sans classe" }} · {{ g.matiere }} · {{ g.periode }}</h2>
+        {% if g.lien %}<a href="{{ g.lien }}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>{% endif %}
+    </div>
+    <div class="chiffres">
+        <div><strong>{{ g.notes|length }}/{{ g.nb_eleves }}</strong><span>élèves notés</span></div>
+        <div><strong>{{ g.moyenne|floatformat:2 }}</strong><span>moyenne sur 100</span></div>
+    </div>
+    <div class="table-wrapper">
+    <table>
+        <thead><tr><th>Élève</th><th>Note</th><th>Saisie le</th></tr></thead>
+        <tbody>
+        {% for n in g.notes %}
+            <tr><td>{{ n.eleve.nom }} {{ n.eleve.prenom }}</td><td><strong>{{ n.note|note }}</strong>/100</td><td>{{ n.date_note|date:"d/m/Y" }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% empty %}
+<div class="bloc">
+    <p>Vous n'avez pas encore saisi de notes cette année.</p>
+    {% if a_noter %}<a href="{% url 'core:saisie_notes' %}" class="btn btn-add">{% icone "saisie" %} Saisir des notes</a>{% endif %}
+</div>
+{% endfor %}
+{% endblock %}

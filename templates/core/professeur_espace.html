@@ -36,10 +36,14 @@
 <div class="bloc">
     <h2>Notes</h2>
     {% if a_noter %}
-        <p>Entrez les notes de vos élèves par classe, matière et trimestre.</p>
-        <a href="{% url 'core:saisie_notes' %}" class="btn btn-add">{% icone "saisie" %} Saisir les notes</a>
+        <p>Entrez les notes de vos élèves par classe, matière et trimestre. Vous avez saisi <strong>{{ nb_notes }}</strong> note{{ nb_notes|pluralize }} cette année.</p>
+        <div class="boutons">
+            <a href="{% url 'core:saisie_notes' %}" class="btn btn-add">{% icone "saisie" %} Saisir les notes</a>
+            <a href="{% url 'core:mes_notes' %}" class="btn btn-secondaire">{% icone "notes" %} Voir mes notes</a>
+        </div>
     {% else %}
         <p class="aide">La saisie des notes s'ouvrira quand vous aurez une classe ou des cours validés.</p>
+        {% if nb_notes %}<a href="{% url 'core:mes_notes' %}" class="btn btn-secondaire">{% icone "notes" %} Voir mes notes</a>{% endif %}
     {% endif %}
 </div>
 <p class="aide">Bientôt ici : votre arrivée, vos absences et les alertes de fin de cours.</p>

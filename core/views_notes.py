@@ -11,10 +11,12 @@ from django.db import transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
+from django.utils.text import slugify
 
 from . import choices, professeurs
 from .models import Note
 from .roles import professeur_de
+from .templatetags.notes import note as format_note
 
 
 def _lire_note(texte):
@@ -31,6 +33,15 @@ def _lire_note(texte):
     if valeur != valeur.quantize(Decimal("0.01")):
         return None, "Deux chiffres après la virgule au plus."
     return valeur, None
+
+
+def ancre(classe, matiere, periode):
+    """Repère d'un groupe (classe, matière, trimestre) dans la page « Mes notes »."""
+    return f"g-{classe.pk if classe else 0}-{slugify(matiere)}-{choices.PERIODES.index(periode) + 1}"
+
+
+def _lien_saisie(classe, matiere, periode):
+    return f"{reverse('core:saisie_notes')}?{urlencode({'choix': f'{classe.pk}:{matiere}', 'periode': periode})}"
 
 
 @login_required
@@ -69,7 +80,7 @@ def saisie_notes(request):
                 ligne["nouvelle"], ligne["erreur"] = _lire_note(ligne["valeur"])
                 erreurs += ligne["erreur"] is not None
             elif note is not None:
-                ligne["valeur"] = f"{note.note.normalize():f}".replace(".", ",")
+                ligne["valeur"] = format_note(note.note)
             lignes.append(ligne)
 
         if request.method == "POST" and not erreurs:
@@ -89,8 +100,9 @@ def saisie_notes(request):
                         note.note, note.professeur = nouvelle, professeur
                         note.save(update_fields=["note", "professeur"])
                         nb += 1
-            messages.success(request, f"Notes enregistrées ({nb} changement{'s' if nb > 1 else ''}).")
-            return redirect(f"{reverse('core:saisie_notes')}?{urlencode({'choix': choisi, 'periode': periode})}")
+            messages.success(request, f"Notes enregistrées ({nb} changement{'s' if nb > 1 else ''}). Les voici dans « Mes notes ».")
+            # Le professeur retrouve tout de suite ses notes dans son espace « Mes notes »
+            return redirect(f"{reverse('core:mes_notes')}#{ancre(classe, matiere, periode)}")
         if erreurs:
             messages.error(request, "Rien n'a été enregistré : corrigez les notes en rouge.")
 
@@ -98,4 +110,40 @@ def saisie_notes(request):
         "choix": choix, "choisi": choisi, "periodes": choices.PERIODES, "periode": periode, "annee": annee,
         "classe": classe, "matiere": matiere, "lignes": lignes,
         "nb_notes": sum(1 for ligne in lignes if ligne["note"] is not None),
+    })
+
+
+@login_required
+def mes_notes(request):
+    """Les notes saisies par le professeur cette année, par classe, matière et trimestre."""
+    professeur = professeur_de(request.user)
+    if professeur is None:
+        raise PermissionDenied
+    annee = choices.annee_scolaire_courante()
+    possibles = professeurs.matieres_a_noter(professeur)
+    notes = Note.objects.filter(professeur=professeur, annee_scolaire=annee) \
+        .select_related("eleve", "eleve__classe").order_by("eleve__nom", "eleve__prenom")
+
+    groupes = {}
+    for note in notes:
+        classe = note.eleve.classe
+        cle = (note.periode, classe.nom if classe else "", note.matiere)
+        groupe = groupes.setdefault(cle, {
+            "classe": classe, "matiere": note.matiere, "periode": note.periode, "notes": [],
+            "ancre": ancre(classe, note.matiere, note.periode),
+            "lien": _lien_saisie(classe, note.matiere, note.periode)
+            if classe is not None and note.matiere in possibles.get(classe, []) else None,
+        })
+        groupe["notes"].append(note)
+    for groupe in groupes.values():
+        valeurs = [n.note for n in groupe["notes"]]
+        groupe["moyenne"] = sum(valeurs) / len(valeurs)
+        groupe["nb_eleves"] = groupe["classe"].eleves.count() if groupe["classe"] else len(valeurs)
+
+    ordre = {p: i for i, p in enumerate(choices.PERIODES)}
+    return render(request, "core/mes_notes.html", {
+        "annee": annee,
+        "groupes": [groupes[cle] for cle in sorted(groupes, key=lambda c: (ordre.get(c[0], 9), c[1], c[2]))],
+        "nb_notes": len(notes),
+        "a_noter": bool(possibles),
     })
