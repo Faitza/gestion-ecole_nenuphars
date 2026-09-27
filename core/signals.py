@@ -3,7 +3,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from .models import Eleve, Employe, Parent, Preinscription, Professeur
+from .models import Eleve, Employe, Parent, PhotoActivite, Preinscription, Professeur
 from .photos import supprimer_fichier
 from . import roles
 
@@ -41,3 +41,9 @@ def dossier_supprime(sender, instance, **kwargs):
     """Photo et pièces jointes d'une préinscription supprimée."""
     fichiers = [instance.photo, instance.acte_naissance, instance.dernier_bulletin]
     transaction.on_commit(lambda: [supprimer_fichier(champ) for champ in fichiers])
+
+
+@receiver(post_delete, sender=PhotoActivite)
+def photo_activite_supprimee(sender, instance, **kwargs):
+    """Une photo retirée (ou une activité supprimée) est effacée du disque, avec sa vignette."""
+    transaction.on_commit(lambda: (supprimer_fichier(instance.image), supprimer_fichier(instance.vignette)))

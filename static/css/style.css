@@ -492,3 +492,16 @@ a.lien-icone { color: var(--primaire); }
 .liste-notifications li.non-lue { background: #f0fdfa; }
 .liste-notifications li { border-radius: 8px; }
 .liste-notifications .texte-notif { white-space: pre-line; }
+
+/* ── ACTIVITÉS ET CONCOURS ────────────────────────────────── */
+.grille-activites { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.carte-activite { display: flex; flex-direction: column; gap: 6px; background: white; border-radius: 12px; overflow: hidden;
+                  text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding-bottom: 14px; }
+.carte-activite img, .carte-activite .sans-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #fbe7ee; }
+.carte-activite .sans-photo { display: flex; align-items: center; justify-content: center; color: #c2416d; }
+.carte-activite .sans-photo .icone { width: 40px; height: 40px; }
+.carte-activite strong, .carte-activite .aide, .carte-activite .puce-categorie { margin: 0 14px; }
+.puce-categorie { align-self: flex-start; background: #fbe7ee; color: #a3345a; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; }
+.galerie-gestion { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.galerie-gestion figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.galerie-gestion img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }

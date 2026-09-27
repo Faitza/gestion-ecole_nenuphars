@@ -201,6 +201,10 @@ STATUTS_INCIDENT_CHOICES = _vers_choix(STATUTS_INCIDENT)
 MESURES_SANTE = ["Se repose à l'école", "Un parent doit venir à l'école", "Conduit(e) chez le médecin"]
 MESURES_SANTE_CHOICES = _vers_choix(MESURES_SANTE)
 
+# Activités de l'école montrées sur le site public, avec leurs photos
+CATEGORIES_ACTIVITE = ["Génies en herbe", "Concours", "Sortie", "Fête", "Sport", "Autre"]
+CATEGORIES_ACTIVITE_CHOICES = _vers_choix(CATEGORIES_ACTIVITE)
+
 # Notifications des parents
 NOTIF_ABSENCE = "Absence"
 NOTIF_RETARD = "Retard"

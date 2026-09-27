@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}{{ titre }}{% endblock %}
+{% block header_color %}#c2416d{% endblock %}
+{% block retour %}{% url 'core:activite_liste' %}{% endblock %}
+{% block header_title %}{% icone "trophee" %} {{ titre }}{% endblock %}
+{% block content %}
+<div class="colonnes">
+<div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for champ in form %}{% include "core/_champ.html" with field=champ %}{% endfor %}
+        <button type="submit" class="btn btn-transmettre">{% icone "enregistrer" %} Enregistrer</button>
+    </form>
+</div>
+{% if activite %}
+<div class="bloc">
+    <div class="actions-bar">
+        <h2>{% icone "galerie" %} Photos ({{ photos|length }})</h2>
+        {% if activite.publiee %}<a href="{% url 'site:activite' activite.pk %}" class="btn-sm btn-voir" target="_blank" rel="noopener">{% icone "ecole" %} Voir sur le site</a>{% endif %}
+    </div>
+    {% if photos %}
+    <div class="galerie-gestion">
+        {% for p in photos %}
+        <figure>
+            <img src="{% url 'site:photo_activite' p.pk 'vignette' %}" alt="Photo {{ forloop.counter }} de {{ activite.titre }}" loading="lazy">
+            <form method="post" action="{% url 'core:activite_photo_supprimer' p.pk %}" onsubmit="return confirm('Retirer cette photo ?')">
+                {% csrf_token %}
+                <button type="submit" class="btn-sm btn-delete">{% icone "supprimer" %} Retirer</button>
+            </form>
+        </figure>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="aide">Pas encore de photo. Ajoutez-en avec le formulaire.</p>
+    {% endif %}
+    <p class="aide">La première photo est celle qu'on voit sur la liste des activités du site.</p>
+    <p><a href="{% url 'core:activite_supprimer' activite.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer l'activité</a></p>
+</div>
+{% endif %}
+</div>
+{% endblock %}

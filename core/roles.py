@@ -89,6 +89,11 @@ ACCES = {
         "lire": {SECRETARIAT, DIRECTION_SECTION},
         "ecrire": {SECRETARIAT, DIRECTION_SECTION},
     },
+    # Concours, sorties et fêtes, avec leurs photos, sur le site public
+    "activites": {
+        "lire": {SECRETARIAT},
+        "ecrire": {SECRETARIAT},
+    },
     # Messages envoyés depuis la page Contact du site public
     "messages_site": {
         "lire": {SECRETARIAT},

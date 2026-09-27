@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Activités et concours{% endblock %}
+{% block header_color %}#c2416d{% endblock %}
+{% block header_title %}{% icone "trophee" %} ACTIVITÉS ET CONCOURS{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <p class="aide">Concours Génies en herbe, sorties, fêtes : elles paraissent sur la page « Activités » du site de l'école.</p>
+    {% if acces.activites.ecrire %}<a href="{% url 'core:activite_creer' %}" class="btn btn-add">{% icone "ajouter" %} Nouvelle activité</a>{% endif %}
+</div>
+<div class="grille-activites">
+    {% for a in activites %}
+    {% with couverture=a.photos.all.0 %}
+    <a href="{% url 'core:activite_modifier' a.pk %}" class="carte-activite">
+        {% if couverture %}<img src="{% url 'site:photo_activite' couverture.pk 'vignette' %}" alt="" loading="lazy">{% else %}<span class="sans-photo">{% icone "galerie" %}</span>{% endif %}
+        <span class="puce-categorie">{{ a.categorie }}</span>
+        <strong>{{ a.titre }}</strong>
+        <span class="aide">{{ a.date|date:"j F Y" }} · {{ a.photos.all|length }} photo{{ a.photos.all|length|pluralize }}{% if not a.publiee %} · pas sur le site{% endif %}</span>
+    </a>
+    {% endwith %}
+    {% empty %}
+    <div class="bloc"><p>Aucune activité pour le moment. Ajoutez le dernier concours Génies en herbe avec ses photos.</p></div>
+    {% endfor %}
+</div>
+{% endblock %}

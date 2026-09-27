@@ -24,6 +24,7 @@
         <a href="{% url 'site:accueil' %}" {% if nom == 'accueil' %}class="on" aria-current="page"{% endif %}>Accueil</a>
         <a href="{% url 'site:ecole' %}" {% if nom == 'ecole' %}class="on" aria-current="page"{% endif %}>L'école</a>
         <a href="{% url 'site:niveaux' %}" {% if nom == 'niveaux' %}class="on" aria-current="page"{% endif %}>Niveaux</a>
+        <a href="{% url 'site:activites' %}" {% if 'activite' in nom %}class="on" aria-current="page"{% endif %}>Activités</a>
         <a href="{% url 'site:admissions' %}" {% if nom == 'admissions' or 'preinscription' in nom %}class="on" aria-current="page"{% endif %}>Admissions</a>
         <a href="{% url 'site:contact' %}" {% if nom == 'contact' %}class="on" aria-current="page"{% endif %}>Contact</a>
     </nav>

@@ -3,8 +3,8 @@
 # la gestion de l'école est sous /gestion/.
 from django.urls import include, path
 from django.views.generic import RedirectView
-from . import (views, views_admissions, views_annonces, views_bulletins, views_fiches, views_notes, views_parents,
-               views_professeurs, views_vie_scolaire)
+from . import (views, views_activites, views_admissions, views_annonces, views_bulletins, views_fiches, views_notes,
+               views_parents, views_professeurs, views_vie_scolaire)
 
 app_name = "core"
 
@@ -99,6 +99,13 @@ gestion = [
     path("annonces/nouvelle/", views_annonces.annonce_creer, name="annonce_creer"),
     path("annonces/<int:pk>/modifier/", views_annonces.annonce_modifier, name="annonce_modifier"),
     path("annonces/<int:pk>/supprimer/", views_annonces.annonce_supprimer, name="annonce_supprimer"),
+
+    # Activités et concours (page « Activités » du site public)
+    path("activites/", views_activites.activite_liste, name="activite_liste"),
+    path("activites/nouvelle/", views_activites.activite_creer, name="activite_creer"),
+    path("activites/<int:pk>/modifier/", views_activites.activite_modifier, name="activite_modifier"),
+    path("activites/<int:pk>/supprimer/", views_activites.activite_supprimer, name="activite_supprimer"),
+    path("activites/photos/<int:pk>/supprimer/", views_activites.activite_photo_supprimer, name="activite_photo_supprimer"),
 
     # Notes
     path("notes/", views.note_liste, name="note_liste"),

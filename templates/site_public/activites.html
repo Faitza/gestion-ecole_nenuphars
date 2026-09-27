@@ -1,0 +1,25 @@
+{% extends "site_public/base.html" %}
+{% load icones %}
+{% block title %}Activités et concours{% endblock %}
+{% block description %}Concours Génies en herbe, sorties et fêtes des élèves de l'institution Les Nénuphars, en photos.{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">La vie de l'école</p>
+    <h1>Activités et <em>concours</em></h1>
+    <p class="chapo">Génies en herbe, sorties, fêtes : ce que vivent nos élèves en dehors des cours, en photos.</p>
+</section>
+
+<section class="bande">
+    {% if categories|length > 1 %}
+    <nav class="filtres" aria-label="Types d'activités">
+        <a href="{% url 'site:activites' %}" {% if not categorie %}class="on" aria-current="page"{% endif %}>Toutes</a>
+        {% for c in categories %}<a href="?type={{ c|urlencode }}" {% if c == categorie %}class="on" aria-current="page"{% endif %}>{{ c }}</a>{% endfor %}
+    </nav>
+    {% endif %}
+    <div class="activites">
+        {% for a in activites %}{% include "site_public/_activite.html" %}{% empty %}
+        <p class="aide">Les photos des prochains concours et activités paraîtront ici.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

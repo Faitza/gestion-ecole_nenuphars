@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from . import choices
-from .photos import chemin_photo, chemin_piece
+from .photos import chemin_activite, chemin_photo, chemin_piece, chemin_vignette
 from .telephone import normaliser_telephone
 
 
@@ -641,3 +641,45 @@ class Notification(models.Model):
                      choices.NOTIF_SANTE: "sante"}.get(self.categorie, "comportement")
             return f"{reverse('core:parent_enfant', args=[self.eleve_id])}#{ancre}"
         return reverse("core:parent_notifications")
+
+
+# ─────────────────────────────────────────────────────────────
+# ACTIVITÉS : concours (Génies en herbe...), sorties, fêtes, avec
+# leurs photos. Le secrétariat les publie sur le site public.
+# ─────────────────────────────────────────────────────────────
+class Activite(models.Model):
+    titre = models.CharField(max_length=150)
+    categorie = models.CharField("type d'activité", max_length=30, choices=choices.CATEGORIES_ACTIVITE_CHOICES,
+                                 default=choices.CATEGORIES_ACTIVITE[0])
+    date = models.DateField(default=timezone.localdate)
+    texte = models.TextField("ce qui s'est passé", blank=True,
+                             help_text="Par exemple : les classes en compétition, les gagnants, un mot de la direction.")
+    publiee = models.BooleanField("visible sur le site de l'école", default=True)
+    cree_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date", "-pk"]
+        verbose_name = "activité"
+
+    def __str__(self):
+        return self.titre
+
+    @property
+    def couverture(self):
+        """La première photo, montrée sur la liste des activités."""
+        return self.photos.first()
+
+
+class PhotoActivite(models.Model):
+    activite = models.ForeignKey(Activite, on_delete=models.CASCADE, related_name="photos")
+    image = models.ImageField(upload_to=chemin_activite)
+    vignette = models.ImageField(upload_to=chemin_vignette)
+    ajoutee_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["ajoutee_le", "pk"]
+        verbose_name = "photo d'activité"
+
+    def __str__(self):
+        return f"Photo de {self.activite}"

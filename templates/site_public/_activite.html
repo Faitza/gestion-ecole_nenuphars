@@ -1,0 +1,11 @@
+{% load icones texte %}{% with couverture=a.photos.all.0 nb=a.photos.all|length %}
+<a class="activite-carte" href="{% url 'site:activite' a.pk %}">
+    <span class="activite-image">
+        {% if couverture %}<img src="{% url 'site:photo_activite' couverture.pk 'vignette' %}" alt="" loading="lazy">{% else %}{% icone "trophee" %}{% endif %}
+        {% if nb > 1 %}<span class="nb-photos">{% icone "galerie" %} {{ nb }} photos</span>{% endif %}
+    </span>
+    <span class="lv">{{ a.categorie }} · {{ a.date|date:"j F Y" }}</span>
+    <h3>{{ a.titre|insecables }}</h3>
+    {% if a.texte %}<p>{{ a.texte|truncatewords:22 }}</p>{% endif %}
+</a>
+{% endwith %}
