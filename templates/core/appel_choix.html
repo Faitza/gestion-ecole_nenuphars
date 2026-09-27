@@ -23,7 +23,8 @@
     {% endfor %}
 </div>
 <div class="boutons">
-    <a href="{% url 'core:incident_nouveau' %}" class="btn btn-refuser">{% icone "incident" %} Signaler un incident</a>
+    {% if classes %}<a href="{% url 'core:incident_nouveau' %}" class="btn btn-refuser">{% icone "incident" %} Signaler un incident</a>
+    <a href="{% url 'core:sante_nouvelle' %}" class="btn btn-refuser">{% icone "sante" %} Élève malade</a>{% endif %}
     {% if vie_scolaire %}<a href="{% url 'core:vie_scolaire' %}" class="btn btn-secondaire">{% icone "vie-scolaire" %} Vie scolaire du jour</a>{% endif %}
 </div>
 {% endblock %}

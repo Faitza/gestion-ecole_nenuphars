@@ -140,10 +140,10 @@ def message_de_bienvenue(user):
         lignes.append(f"Aujourd'hui, c'est l'anniversaire de {liste}.")
     parent = getattr(user, "parent", None)
     if parent is not None:
-        from . import parents
-        nouveau = parents.phrase_des_nouveautes(parents.nouveautes(parent))
+        from . import notifications
+        nouveau = notifications.phrase(notifications.compte_par_categorie(parent))
         if nouveau:
-            lignes.append(f"Depuis votre dernière visite : {nouveau}.")
+            lignes.append(f"Nouveau pour vous : {nouveau}. Voyez le menu « Notifications ».")
     if user.doit_changer_mot_de_passe:
         lignes.append("Pour commencer, choisissez votre propre mot de passe.")
     return "\n".join(lignes)

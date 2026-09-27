@@ -6,12 +6,12 @@
 # en PDF depuis le navigateur) en un clic.
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from . import bulletins as calcul
-from . import choices
+from . import bulletins_fichiers, choices
 from .classes import dans_l_ordre
 from .models import Bulletin, Classe
 from .roles import acces_requis, filtrer, peut_donner_la_conduite, peut_valider_bulletins
@@ -108,21 +108,49 @@ def _bulletin_de(classe, eleve, periode, annee):
     return bulletin, calcul.apercu(calcul.calculer(classe, periode, annee)[eleve.pk])
 
 
-@acces_requis("bulletins")
-def bulletin_eleve(request, pk, eleve_pk):
+def telechargement(contenu, nom, extension):
+    """Réponse qui fait télécharger le fichier (PDF ou PNG) sous un nom lisible."""
+    reponse = HttpResponse(contenu, content_type="application/pdf" if extension == "pdf" else "image/png")
+    reponse["Content-Disposition"] = f'attachment; filename="{nom}"'
+    return reponse
+
+
+def fichier_du_bulletin(fiche, periode, annee, format):
+    """Le bulletin d'un élève en PDF ou en PNG, prêt à télécharger."""
+    if format not in ("pdf", "png"):
+        raise Http404
+    contenu = (bulletins_fichiers.pdf([fiche], periode, annee) if format == "pdf"
+               else bulletins_fichiers.png(fiche, periode, annee))
+    return telechargement(contenu, bulletins_fichiers.nom_de_fichier(periode, annee, format, eleve=fiche["eleve"]), format)
+
+
+def _fiche_eleve(request, pk, eleve_pk):
     classe = get_object_or_404(_classes(request.user), pk=pk)
     eleve = get_object_or_404(classe.eleves, pk=eleve_pk)
     periode, annee = _periode(request), choices.annee_scolaire_courante()
     bulletin, valeurs = _bulletin_de(classe, eleve, periode, annee)
+    return {"eleve": eleve, "classe": classe, "bulletin": bulletin, **valeurs}, periode, annee
+
+
+@acces_requis("bulletins")
+def bulletin_eleve(request, pk, eleve_pk):
+    fiche, periode, annee = _fiche_eleve(request, pk, eleve_pk)
+    suffixe = f"?periode={periode}"
     return render(request, "core/bulletin.html", {
-        "fiches": [{"eleve": eleve, "classe": classe, "bulletin": bulletin, **valeurs}],
-        "periode": periode, "annee": annee,
-        "retour": f"{reverse('core:bulletins_classe', args=[classe.pk])}?periode={periode}",
+        "fiches": [fiche], "periode": periode, "annee": annee,
+        "retour": f"{reverse('core:bulletins_classe', args=[pk])}{suffixe}",
+        "lien_pdf": f"{reverse('core:bulletin_eleve_fichier', args=[pk, eleve_pk, 'pdf'])}{suffixe}",
+        "lien_png": f"{reverse('core:bulletin_eleve_fichier', args=[pk, eleve_pk, 'png'])}{suffixe}",
     })
 
 
 @acces_requis("bulletins")
-def bulletins_imprimer(request, pk):
+def bulletin_eleve_fichier(request, pk, eleve_pk, format):
+    fiche, periode, annee = _fiche_eleve(request, pk, eleve_pk)
+    return fichier_du_bulletin(fiche, periode, annee, format)
+
+
+def _fiches_de_la_classe(request, pk):
     classe = get_object_or_404(_classes(request.user), pk=pk)
     periode, annee = _periode(request), choices.annee_scolaire_courante()
     resultats = calcul.calculer(classe, periode, annee)
@@ -134,7 +162,22 @@ def bulletins_imprimer(request, pk):
         fiches.append({"eleve": eleve, "classe": classe, "bulletin": bulletin, **valeurs})
     if not fiches:
         raise Http404
+    return classe, fiches, periode, annee
+
+
+@acces_requis("bulletins")
+def bulletins_imprimer(request, pk):
+    classe, fiches, periode, annee = _fiches_de_la_classe(request, pk)
     return render(request, "core/bulletin.html", {
         "fiches": fiches, "periode": periode, "annee": annee, "toute_la_classe": True,
         "retour": f"{reverse('core:bulletins_classe', args=[classe.pk])}?periode={periode}",
+        "lien_pdf": f"{reverse('core:bulletins_classe_pdf', args=[classe.pk])}?periode={periode}",
     })
+
+
+@acces_requis("bulletins")
+def bulletins_classe_pdf(request, pk):
+    """Tous les bulletins de la classe dans un seul PDF, une page par élève."""
+    classe, fiches, periode, annee = _fiches_de_la_classe(request, pk)
+    return telechargement(bulletins_fichiers.pdf(fiches, periode, annee),
+                          bulletins_fichiers.nom_de_fichier(periode, annee, "pdf", classe=classe), "pdf")

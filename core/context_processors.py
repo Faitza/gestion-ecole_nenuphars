@@ -7,7 +7,7 @@ def acces(request):
     user = getattr(request, "user", None)
     if user is None or not user.is_authenticated:
         return {}
-    from . import parents
+    from . import notifications
     from .views_vie_scolaire import fait_l_appel
 
     parent = roles.parent_de(user)
@@ -20,7 +20,7 @@ def acces(request):
         "utilise_la_gestion": roles.utilise_la_gestion(user),
         "est_professeur": roles.professeur_de(user) is not None,
         "est_parent": parent is not None,
-        # Pour le menu du parent : ce qui est nouveau depuis sa dernière visite
-        "nouveautes_parent": parents.nouveautes(parent) if parent is not None else None,
+        # Pour le menu du parent : le nombre de notifications pas encore lues
+        "notifications_non_lues": notifications.non_lues(parent).count() if parent is not None else 0,
         "fait_l_appel": fait_l_appel(user),
     }

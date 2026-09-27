@@ -4,6 +4,7 @@
 {% block header_title %}{% icone icone_titre|default:"modifier" %} {{ titre }}{% endblock %}
 {% block content %}
 <div class="form-card">
+    {% if intro %}<p class="intro-formulaire">{% icone "info" %} {{ intro }}</p>{% endif %}
     <p class="required-note">* Champs obligatoires</p>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}

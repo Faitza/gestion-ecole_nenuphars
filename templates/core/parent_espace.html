@@ -9,6 +9,18 @@
     <span>Année scolaire {{ annee }}</span>
 </div>
 
+{% if non_lues %}
+<div class="bloc notifications-recentes">
+    <div class="actions-bar">
+        <h2>{% icone "cloche" %} Nouveau pour vous</h2>
+        <a href="{% url 'core:parent_notifications' %}" class="btn-sm btn-voir">Toutes les notifications</a>
+    </div>
+    <ul class="liste-evenements">
+    {% for n in non_lues %}{% include "core/_notification.html" %}{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 {% if annonces %}
 <div class="bloc annonces-recentes">
     <div class="actions-bar">
@@ -54,7 +66,7 @@
         <div><strong>{{ total_paye|floatformat:0 }} HTG</strong><span>payés cette année</span></div>
     </div>
     <nav class="sommaire-enfant pas-imprime" aria-label="Rubriques">
-        <a href="#notes">Notes</a><a href="#bulletins">Bulletins</a><a href="#absences">Absences et retards</a><a href="#comportement">Comportement</a><a href="#paiements">Paiements</a>
+        <a href="#notes">Notes</a><a href="#bulletins">Bulletins</a><a href="#absences">Absences et retards</a><a href="#comportement">Comportement</a><a href="#sante">Santé</a><a href="#paiements">Paiements</a>
     </nav>
 </div>
 
@@ -85,7 +97,11 @@
     <div class="ligne-famille">
         <span><strong>{{ b.periode }}</strong>{% if b.nouveau %} <span class="puce-nouveau">Nouveau</span>{% endif %}<br>
             <span class="aide">Moyenne {% if b.moyenne is not None %}{{ b.moyenne|note }}{% else %}—{% endif %}{% if b.rang %} · rang {{ b.rang }} sur {{ b.effectif }}{% endif %}{% if b.conduite %} · conduite {{ b.conduite|lower }}{% endif %}</span></span>
-        <a href="{% url 'core:parent_bulletin' b.pk %}" class="btn-sm btn-voir">{% icone "bulletin" %} Voir le bulletin</a>
+        <span class="boutons-bulletin">
+            <a href="{% url 'core:parent_bulletin' b.pk %}" class="btn-sm btn-voir">{% icone "bulletin" %} Voir le bulletin</a>
+            <a href="{% url 'core:parent_bulletin_fichier' b.pk 'pdf' %}" class="btn-sm btn-voir" download>{% icone "pdf" %} PDF</a>
+            <a href="{% url 'core:parent_bulletin_fichier' b.pk 'png' %}" class="btn-sm btn-voir" download>{% icone "image" %} Image</a>
+        </span>
     </div>
     {% empty %}
     <p class="aide">Le bulletin du {{ trimestre|lower }} sera visible ici dès que la direction l'aura validé.</p>
@@ -125,6 +141,22 @@
     <p>Aucun incident cette année.</p>
     {% endif %}
     {% for b in bulletins %}{% if b.conduite %}<p class="aide">Conduite au {{ b.periode|lower }} : <strong>{{ b.conduite }}</strong></p>{% endif %}{% endfor %}
+</div>
+
+<h2 class="titre-section" id="sante">{% icone "sante" %} Santé</h2>
+<div class="bloc">
+    {% if sante %}
+    <ul class="liste-evenements">
+    {% for s in sante %}
+        <li><span class="pastille sante">{% icone "sante" %}</span>
+            <div><strong>Malade à l'école : {{ s.description }}</strong>{% if s.nouveau %} <span class="puce-nouveau">Nouveau</span>{% endif %}<br>
+                <span class="aide">Ce que fait l'école : {{ s.mesure }}</span></div>
+            <span class="quand">{{ s.cree_le|date:"D j M, G \h i"|capfirst }}</span></li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p>Rien à signaler cette année.</p>
+    {% endif %}
 </div>
 
 <h2 class="titre-section" id="paiements">{% icone "paiements" %} Paiements</h2>

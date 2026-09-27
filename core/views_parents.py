@@ -20,12 +20,13 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import bulletins as calcul_bulletins
-from . import choices, parents
+from . import choices, notifications, parents
 from . import notes as outils_notes
 from .forms import CodeParentForm, CompteExistantForm, MotDePasseParentForm
 from .models import Bulletin, Eleve, Note, Parent
 from .professeurs import nouveau_mot_de_passe
 from .roles import acces_requis, filtrer, parent_de, peut
+from .views_bulletins import fichier_du_bulletin
 
 SESSION = "inscription_parent"
 _CLE_MOT_DE_PASSE = "mot_de_passe_parent_{}"
@@ -162,9 +163,10 @@ def parent_espace(request, pk=None):
         bulletins = list(enfant.bulletins.filter(annee_scolaire=annee, valide=True).order_by("periode"))
         debut, fin = choices.dates_du_trimestre(choices.PERIODES[0], annee)[0], timezone.localdate()
         absences = list(enfant.absences.filter(date__range=(debut, fin)))
-        incidents = [i for i in enfant.incidents.filter(date__gte=debut) if i.visible_par_les_parents]
+        incidents = list(enfant.incidents.filter(date__gte=debut, informer_parents=True))
+        sante = list(enfant.alertes_sante.filter(cree_le__date__gte=debut))
         for objet, moment in [*((a, a.cree_le) for a in absences), *((i, i.mise_a_jour) for i in incidents),
-                              *((b, b.valide_le) for b in bulletins)]:
+                              *((b, b.valide_le) for b in bulletins), *((s, s.cree_le) for s in sante)]:
             objet.nouveau = _recent(moment, il_y_a_7_jours)
         debut_trimestre, fin_trimestre = choices.dates_du_trimestre(trimestre, annee)
         ce_trimestre = [a for a in absences if debut_trimestre <= a.date <= fin_trimestre]
@@ -174,13 +176,14 @@ def parent_espace(request, pk=None):
             "total_paye": sum((p.montant for p in paiements if p.statut == "Payé"), 0),
             "bulletins": bulletins,
             "bulletin_du_trimestre": next((b for b in bulletins if b.periode == trimestre), None),
-            "absences": absences, "incidents": incidents,
+            "absences": absences, "incidents": incidents, "sante": sante,
             "nb_absences": sum(1 for a in ce_trimestre if a.type == choices.ABSENCE),
             "nb_retards": sum(1 for a in ce_trimestre if a.type == choices.RETARD),
         })
-    # Tout ce qui est arrivé jusqu'ici est vu : le compteur du menu repart de zéro
-    parent.espace_vu_le = timezone.now()
-    Parent.objects.filter(pk=parent.pk).update(espace_vu_le=parent.espace_vu_le)
+    contexte["non_lues"] = list(notifications.non_lues(parent).select_related("eleve")[:5])
+    if enfant is not None:
+        # Ce que le parent voit sur cette page (absences, comportement, santé) n'est plus nouveau
+        notifications.marquer_lues(parent, eleve=enfant, bulletin__isnull=True)
     return render(request, "core/parent_espace.html", contexte)
 
 
@@ -190,27 +193,54 @@ def parent_annonces(request):
     if parent is None:
         return redirect("core:espace")
     annonces = list(parents.annonces_pour(parent))
+    nouvelles = set(notifications.non_lues(parent).filter(annonce__isnull=False).values_list("annonce", flat=True))
     for annonce in annonces:
-        annonce.nouvelle = parent.annonces_vues_le is None or annonce.publiee_le > parent.annonces_vues_le
-    parent.annonces_vues_le = timezone.now()
-    Parent.objects.filter(pk=parent.pk).update(annonces_vues_le=parent.annonces_vues_le)
+        annonce.nouvelle = annonce.pk in nouvelles
+    notifications.marquer_lues(parent, annonce__isnull=False)
     return render(request, "core/parent_annonces.html", {"annonces": annonces})
 
 
 @login_required
-def parent_bulletin(request, pk):
-    """Bulletin validé d'un de ses enfants, à lire, imprimer ou enregistrer en PDF."""
+def parent_notifications(request):
+    """Toutes les notifications du parent : les nouvelles en haut, puis celles déjà lues."""
+    parent = parent_de(request.user)
+    if parent is None:
+        return redirect("core:espace")
+    liste = list(parent.notifications.select_related("eleve")[:100])
+    notifications.marquer_lues(parent)
+    return render(request, "core/parent_notifications.html", {
+        "nouvelles": [n for n in liste if n.lue_le is None],
+        "lues": [n for n in liste if n.lue_le is not None],
+    })
+
+
+def _bulletin_du_parent(request, pk):
     parent = parent_de(request.user)
     if parent is None:
         raise Http404
     bulletin = get_object_or_404(Bulletin.objects.select_related("eleve", "classe", "classe__section", "valide_par"),
                                  pk=pk, valide=True, eleve__parents=parent)
+    return bulletin, {"eleve": bulletin.eleve, "classe": bulletin.classe, "bulletin": bulletin,
+                      **calcul_bulletins.apercu(bulletin)}
+
+
+@login_required
+def parent_bulletin(request, pk):
+    """Bulletin validé d'un de ses enfants, à lire, imprimer ou télécharger (PDF ou image)."""
+    bulletin, fiche = _bulletin_du_parent(request, pk)
+    notifications.marquer_lues(parent_de(request.user), bulletin=bulletin)
     return render(request, "core/bulletin.html", {
-        "fiches": [{"eleve": bulletin.eleve, "classe": bulletin.classe, "bulletin": bulletin,
-                    **calcul_bulletins.apercu(bulletin)}],
-        "periode": bulletin.periode, "annee": bulletin.annee_scolaire,
+        "fiches": [fiche], "periode": bulletin.periode, "annee": bulletin.annee_scolaire,
         "retour": reverse("core:parent_enfant", args=[bulletin.eleve_id]),
+        "lien_pdf": reverse("core:parent_bulletin_fichier", args=[bulletin.pk, "pdf"]),
+        "lien_png": reverse("core:parent_bulletin_fichier", args=[bulletin.pk, "png"]),
     })
+
+
+@login_required
+def parent_bulletin_fichier(request, pk, format):
+    bulletin, fiche = _bulletin_du_parent(request, pk)
+    return fichier_du_bulletin(fiche, bulletin.periode, bulletin.annee_scolaire, format)
 
 
 # ─────────────────────────── Secrétariat ───────────────────────────

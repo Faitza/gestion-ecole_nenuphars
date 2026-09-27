@@ -96,7 +96,11 @@ textarea.form-control { border: 1px solid var(--fond-gris); }
 .sidebar nav .logout { color: #fca5a5; margin-top: 20px; }
 
 .main-content { flex: 1; }
-.page-header { padding: 30px 40px; color: white; }
+.page-header { padding: 30px 40px; color: white; display: flex; align-items: center; gap: 16px; }
+.fleche-retour { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px;
+                 border-radius: 50%; background: rgba(255,255,255,0.18); color: white; }
+.fleche-retour:hover, .fleche-retour:focus-visible { background: rgba(255,255,255,0.32); }
+.fleche-retour .icone { width: 22px; height: 22px; }
 .page-header h1 { margin: 0; font-size: 26px; display: flex; align-items: center; gap: 12px; }
 .page-body { padding: 30px 40px; }
 
@@ -236,7 +240,8 @@ button.btn-sm { border: none; cursor: pointer; font-family: inherit; }
   .sidebar nav form { display: contents; }
   .sidebar nav a.active { border-bottom-color: var(--accent, white); }
   .sidebar nav .logout { margin-top: 0; width: auto; }
-  .page-header { padding: 16px; }
+  .page-header { padding: 16px; gap: 12px; }
+  .fleche-retour { width: 38px; height: 38px; }
   .page-header h1 { font-size: 19px; }
   .page-body { padding: 16px; }
   .bloc { padding: 16px; }
@@ -371,6 +376,8 @@ a.lien-icone { color: var(--primaire); }
 .ligne-famille { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--fond-gris-clair); font-size: 13px; }
 .ligne-famille:last-child { border-bottom: none; }
 .ligne-famille .btn-sm { margin-left: auto; }
+.ligne-famille .boutons-bulletin { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+.ligne-famille .boutons-bulletin .btn-sm { margin: 0; }
 .acces-parent h2 { display: flex; align-items: center; gap: 8px; }
 .periode-courte { display: none; }
 .table-parent .nowrap { white-space: nowrap; }
@@ -469,3 +476,19 @@ a.lien-icone { color: var(--primaire); }
   .bulletin { padding: 16px; }
   .bulletin-entete { flex-wrap: wrap; }
 }
+
+/* ── NOTIFICATIONS, SANTÉ, WHATSAPP ───────────────────────── */
+.btn-whatsapp { background: #1f8f4e; color: #fff; }
+.btn-whatsapp:hover { background: #17733e; }
+.intro-formulaire { display: flex; gap: 8px; align-items: flex-start; background: #eff6ff; color: #1e3a8a; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin: 0 0 12px; }
+.intro-formulaire .icone { flex: none; margin-top: 2px; }
+.etat-parents { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--texte-clair); margin: 14px 0; }
+.etat-parents.informes { color: #047857; font-weight: bold; }
+.etat-parents.a-prevenir { color: #b45309; font-weight: bold; }
+.form-card ul[id$="_mesure"], .form-card div[id$="_mesure"] { list-style: none; padding: 0; margin: 4px 0 14px; display: grid; gap: 8px; }
+.form-card [id$="_mesure"] label { display: flex; gap: 8px; align-items: center; font-weight: normal; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; }
+.pastille.sante { background: #fee2e2; color: #dc2626; }
+.pastille.notif { background: #e0f2fe; color: #0369a1; }
+.liste-notifications li.non-lue { background: #f0fdfa; }
+.liste-notifications li { border-radius: 8px; }
+.liste-notifications .texte-notif { white-space: pre-line; }

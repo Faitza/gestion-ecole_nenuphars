@@ -2,6 +2,7 @@
 {% load icones photos %}
 {% block title %}Incident · {{ incident.eleve }}{% endblock %}
 {% block header_color %}#7c3aed{% endblock %}
+{% block retour %}{% url 'core:vie_scolaire' %}{% endblock %}
 {% block header_title %}{% icone "incident" %} INCIDENT{% endblock %}
 {% block content %}
 <div class="colonnes">
@@ -23,12 +24,19 @@
         {% if incident.traite_par %}<dt>Traité par</dt><dd>{{ incident.traite_par.get_full_name|default:incident.traite_par.username }}</dd>{% endif %}
         <dt>Parent ou tuteur</dt><dd>{{ incident.eleve.nom_parent_tuteur|default:"—" }}{% if incident.eleve.telephone_parent %} · <a href="tel:{{ incident.eleve.telephone_parent|cut:' ' }}">{{ incident.eleve.telephone_parent }}</a>{% endif %}</dd>
     </dl>
-    {% if incident.convocation_le %}<a href="{% url 'core:incident_convocation' incident.pk %}" class="btn btn-secondaire">{% icone "imprimer" %} Imprimer la convocation</a>{% endif %}
+    <p class="etat-parents {% if incident.informer_parents %}{% if comptes_parents %}informes{% else %}a-prevenir{% endif %}{% endif %}">
+        {% if incident.informer_parents %}{% icone "cloche" %} Parents informés : {% if comptes_parents %}{{ comptes_parents }} compte{{ comptes_parents|pluralize }} parent{{ comptes_parents|pluralize }} {{ comptes_parents|pluralize:"a,ont" }} reçu une notification.{% else %}la famille n'a pas encore de compte parent, prévenez-la par téléphone ou WhatsApp.{% endif %}
+        {% else %}{% icone "info" %} Les parents ne sont pas informés de cet incident.{% endif %}
+    </p>
+    <div class="boutons">
+        {% if incident.convocation_le %}<a href="{% url 'core:incident_convocation' incident.pk %}" class="btn btn-secondaire">{% icone "imprimer" %} Imprimer la convocation</a>{% endif %}
+        {% if incident.informer_parents and whatsapp %}<a href="{{ whatsapp }}" class="btn btn-whatsapp" target="_blank" rel="noopener">{% icone "whatsapp" %} Prévenir aussi par WhatsApp</a>{% endif %}
+    </div>
 </div>
 {% if form %}
 <div class="bloc decision">
     <h2>{% icone "conduite" %} Suite donnée</h2>
-    <p class="aide">Une fois la suite enregistrée, les parents voient l'incident et la sanction dans leur espace.</p>
+    <p class="aide">Cochez « Informer les parents » pour qu'ils voient l'incident et la suite donnée dans leur espace, avec une notification.</p>
     <form method="post">
         {% csrf_token %}
         {% for champ in form %}{% include "core/_champ.html" with field=champ %}{% endfor %}

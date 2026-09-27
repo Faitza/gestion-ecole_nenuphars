@@ -52,7 +52,8 @@
             {% if valider %}<button type="submit" name="action" value="valider" class="btn btn-transmettre"
                     onclick="return confirm('Valider les bulletins du {{ periode }} ? Les parents les verront.')">{% icone "valider" %} Valider et publier</button>{% endif %}
         {% endif %}
-        {% if lignes %}<a href="{% url 'core:bulletins_imprimer' classe.pk %}?periode={{ periode|urlencode }}" class="btn btn-add">{% icone "imprimer" %} Imprimer tous les bulletins</a>{% endif %}
+        {% if lignes %}<a href="{% url 'core:bulletins_imprimer' classe.pk %}?periode={{ periode|urlencode }}" class="btn btn-add">{% icone "imprimer" %} Imprimer tous les bulletins</a>
+        <a href="{% url 'core:bulletins_classe_pdf' classe.pk %}?periode={{ periode|urlencode }}" class="btn btn-secondaire" download>{% icone "pdf" %} Télécharger la classe en PDF</a>{% endif %}
     </div>
 </form>
 {% if publies %}<p class="aide">Bulletins publiés : les notes, la conduite et les appréciations ne changent plus.{% if valider %} Pour corriger, retirez la publication, corrigez, puis validez de nouveau.{% endif %}</p>{% endif %}

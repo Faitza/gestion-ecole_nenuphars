@@ -78,6 +78,8 @@ gestion = [
     path("vie-scolaire/appel/", views_vie_scolaire.appel_choix, name="appel_choix"),
     path("vie-scolaire/appel/<int:pk>/", views_vie_scolaire.appel, name="appel"),
     path("vie-scolaire/absences/<int:pk>/justifier/", views_vie_scolaire.absence_justifier, name="absence_justifier"),
+    path("vie-scolaire/malade/", views_vie_scolaire.sante_nouvelle, name="sante_nouvelle"),
+    path("vie-scolaire/malade/<int:pk>/", views_vie_scolaire.sante_fiche, name="sante_fiche"),
     path("vie-scolaire/incidents/nouveau/", views_vie_scolaire.incident_nouveau, name="incident_nouveau"),
     path("vie-scolaire/incidents/<int:pk>/", views_vie_scolaire.incident_fiche, name="incident_fiche"),
     path("vie-scolaire/incidents/<int:pk>/convocation/", views_vie_scolaire.incident_convocation,
@@ -87,7 +89,10 @@ gestion = [
     path("bulletins/", views_bulletins.bulletins_liste, name="bulletins_liste"),
     path("bulletins/classes/<int:pk>/", views_bulletins.bulletins_classe, name="bulletins_classe"),
     path("bulletins/classes/<int:pk>/imprimer/", views_bulletins.bulletins_imprimer, name="bulletins_imprimer"),
+    path("bulletins/classes/<int:pk>/pdf/", views_bulletins.bulletins_classe_pdf, name="bulletins_classe_pdf"),
     path("bulletins/classes/<int:pk>/eleves/<int:eleve_pk>/", views_bulletins.bulletin_eleve, name="bulletin_eleve"),
+    path("bulletins/classes/<int:pk>/eleves/<int:eleve_pk>/<str:format>/", views_bulletins.bulletin_eleve_fichier,
+         name="bulletin_eleve_fichier"),
 
     # Annonces aux parents
     path("annonces/", views_annonces.annonce_liste, name="annonce_liste"),
@@ -115,7 +120,9 @@ urlpatterns = [
     path("inscription/mot-de-passe/", views_parents.inscription_mot_de_passe, name="inscription_mot_de_passe"),
     path("parents/", views_parents.parent_espace, name="parent_espace"),
     path("parents/enfants/<int:pk>/", views_parents.parent_espace, name="parent_enfant"),
+    path("parents/notifications/", views_parents.parent_notifications, name="parent_notifications"),
     path("parents/annonces/", views_parents.parent_annonces, name="parent_annonces"),
     path("parents/bulletins/<int:pk>/", views_parents.parent_bulletin, name="parent_bulletin"),
+    path("parents/bulletins/<int:pk>/<str:format>/", views_parents.parent_bulletin_fichier, name="parent_bulletin_fichier"),
     path("gestion/", include(gestion)),
 ]

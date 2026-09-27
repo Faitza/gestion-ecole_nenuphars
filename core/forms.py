@@ -2,8 +2,8 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.urls import reverse
-from .models import (Annonce, Classe, Creneau, Eleve, Employe, Incident, Note, Paiement, Preinscription, Professeur,
-                     Section, Utilisateur)
+from .models import (AlerteSante, Annonce, Classe, Creneau, Eleve, Employe, Incident, Note, Paiement, Preinscription,
+                     Professeur, Section, Utilisateur)
 from . import anniversaires, choices, photos, professeurs, roles
 from .classes import par_section
 from .telephone import normaliser_telephone
@@ -466,8 +466,9 @@ class IncidentTraitementForm(forms.ModelForm):
 
     class Meta:
         model = Incident
-        fields = ["sanction", "statut", "convocation_le"]
-        help_texts = {"convocation_le": "Laissez vide si les parents ne sont pas convoqués."}
+        fields = ["sanction", "statut", "convocation_le", "informer_parents"]
+        help_texts = {"convocation_le": "Laissez vide si les parents ne sont pas convoqués. "
+                                        "Une convocation informe toujours les parents."}
         widgets = {
             "sanction": forms.TextInput(attrs={"placeholder": "ex : retenue le samedi, avertissement"}),
             "convocation_le": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
@@ -479,8 +480,36 @@ class IncidentTraitementForm(forms.ModelForm):
         self.fields["statut"].choices = [(s, s) for s in choices.STATUTS_INCIDENT if s != choices.INCIDENT_SIGNALE]
         if self.initial.get("statut") == choices.INCIDENT_SIGNALE:
             self.initial["statut"] = choices.INCIDENT_EN_COURS
-        for champ in self.fields.values():
-            champ.widget.attrs.setdefault("class", "form-control")
+        for nom, champ in self.fields.items():
+            if nom != "informer_parents":
+                champ.widget.attrs.setdefault("class", "form-control")
+
+    def clean(self):
+        donnees = super().clean()
+        if donnees.get("convocation_le"):
+            donnees["informer_parents"] = True  # on ne convoque pas des parents sans les prévenir
+        return donnees
+
+
+class AlerteSanteForm(forms.ModelForm):
+    """Un élève tombé malade à l'école : ses parents reçoivent une notification tout de suite."""
+
+    class Meta:
+        model = AlerteSante
+        fields = ["eleve", "description", "mesure"]
+        labels = {"eleve": "Élève"}
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3, "placeholder": "ex : fièvre et mal de tête depuis la récréation"}),
+            "mesure": forms.RadioSelect,
+        }
+
+    def __init__(self, *args, eleves, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["eleve"].queryset = eleves
+        self.fields["eleve"].label_from_instance = lambda e: f"{e.nom} {e.prenom} · {e.classe or 'sans classe'}"
+        for nom, champ in self.fields.items():
+            if nom != "mesure":
+                champ.widget.attrs.setdefault("class", "form-control")
 
 
 # ─────────────────────────── Annonces ───────────────────────────

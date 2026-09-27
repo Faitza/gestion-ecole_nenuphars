@@ -121,8 +121,11 @@ def enregistrer_remarques(classe, periode, annee, remarques):
 @transaction.atomic
 def valider(classe, periode, annee, par):
     """Fige le bulletin de chaque élève de la classe et le publie aux parents."""
+    from . import notifications
+
     existants = brouillons(classe, periode, annee)
     maintenant = timezone.now()
+    publies = []
     for eleve_pk, r in calculer(classe, periode, annee).items():
         bulletin = existants.get(eleve_pk) or Bulletin(eleve_id=eleve_pk, periode=periode, annee_scolaire=annee)
         bulletin.classe = classe
@@ -131,11 +134,17 @@ def valider(classe, periode, annee, par):
         bulletin.absences, bulletin.retards = r["absences"], r["retards"]
         bulletin.valide, bulletin.valide_par, bulletin.valide_le = True, par, maintenant
         bulletin.save()
+        publies.append(bulletin)
+    notifications.pour_bulletins(publies)
 
 
 def retirer(classe, periode, annee):
     """Les bulletins ne sont plus visibles par les parents (pour une correction)."""
-    Bulletin.objects.filter(classe=classe, periode=periode, annee_scolaire=annee).update(valide=False)
+    from . import notifications
+
+    bulletins = Bulletin.objects.filter(classe=classe, periode=periode, annee_scolaire=annee)
+    notifications.retirer_bulletins(bulletins)
+    bulletins.update(valide=False)
 
 
 def apercu(bulletin_ou_calcul):

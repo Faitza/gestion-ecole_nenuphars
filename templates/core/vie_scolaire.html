@@ -10,7 +10,8 @@
     </form>
     <div class="boutons">
         {% if fait_l_appel %}<a href="{% url 'core:appel_choix' %}" class="btn btn-add">{% icone "appel" %} Faire l'appel</a>
-        <a href="{% url 'core:incident_nouveau' %}" class="btn btn-refuser">{% icone "incident" %} Signaler un incident</a>{% endif %}
+        <a href="{% url 'core:incident_nouveau' %}" class="btn btn-refuser">{% icone "incident" %} Signaler un incident</a>
+        <a href="{% url 'core:sante_nouvelle' %}" class="btn btn-refuser">{% icone "sante" %} Élève malade</a>{% endif %}
     </div>
 </div>
 <div class="chiffres chiffres-vie">
@@ -53,6 +54,19 @@
 </table>
 </div>
 
+{% if malades %}
+<h2 class="titre-section">{% icone "sante" %} Élèves malades le {{ jour|date:"j F" }}</h2>
+<div class="bloc">
+    <ul class="liste-evenements">
+    {% for m in malades %}
+        <li><span class="pastille sante">{% icone "sante" %}</span>
+            <div><a href="{% url 'core:sante_fiche' m.pk %}"><strong>{{ m.eleve.nom }} {{ m.eleve.prenom }}</strong> ({{ m.eleve.classe|default:"sans classe" }}) · {{ m.description|truncatechars:60 }}</a><br><span class="aide">{{ m.mesure }}</span></div>
+            <span class="quand">{{ m.cree_le|time:"G \h i" }}</span></li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 {% if convocations %}
 <h2 class="titre-section">{% icone "convocation" %} Parents convoqués</h2>
 <div class="bloc">
@@ -72,7 +86,7 @@
 </div>
 <div class="table-wrapper">
 <table>
-    <thead><tr><th>Date</th><th>Élève</th><th>Classe</th><th>Motif</th><th>Sanction</th><th>Statut</th></tr></thead>
+    <thead><tr><th>Date</th><th>Élève</th><th>Classe</th><th>Motif</th><th>Sanction</th><th>Parents</th><th>Statut</th></tr></thead>
     <tbody>
     {% for i in incidents %}
         <tr>
@@ -81,10 +95,11 @@
             <td>{{ i.eleve.classe|default:"—" }}</td>
             <td>{{ i.description|truncatechars:70 }}</td>
             <td>{{ i.sanction|default:"—" }}</td>
+            <td>{% if i.informer_parents %}Informés{% else %}—{% endif %}</td>
             <td><span class="etape incident-{{ i.statut|slugify }}">{{ i.statut }}</span></td>
         </tr>
     {% empty %}
-        <tr><td colspan="6">Aucun incident{% if not tous %} ouvert{% endif %}.</td></tr>
+        <tr><td colspan="7">Aucun incident{% if not tous %} ouvert{% endif %}.</td></tr>
     {% endfor %}
     </tbody>
 </table>

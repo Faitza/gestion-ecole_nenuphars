@@ -197,6 +197,22 @@ INCIDENT_CLOS = "Clos"
 STATUTS_INCIDENT = [INCIDENT_SIGNALE, INCIDENT_EN_COURS, INCIDENT_CLOS]
 STATUTS_INCIDENT_CHOICES = _vers_choix(STATUTS_INCIDENT)
 
+# Élève tombé malade à l'école : ce que fait l'école (les parents sont prévenus tout de suite)
+MESURES_SANTE = ["Se repose à l'école", "Un parent doit venir à l'école", "Conduit(e) chez le médecin"]
+MESURES_SANTE_CHOICES = _vers_choix(MESURES_SANTE)
+
+# Notifications des parents
+NOTIF_ABSENCE = "Absence"
+NOTIF_RETARD = "Retard"
+NOTIF_COMPORTEMENT = "Comportement"
+NOTIF_CONVOCATION = "Convocation"
+NOTIF_SANTE = "Santé"
+NOTIF_BULLETIN = "Bulletin"
+NOTIF_ANNONCE = "Annonce"
+CATEGORIES_NOTIFICATION = [NOTIF_ABSENCE, NOTIF_RETARD, NOTIF_COMPORTEMENT, NOTIF_CONVOCATION, NOTIF_SANTE,
+                           NOTIF_BULLETIN, NOTIF_ANNONCE]
+CATEGORIES_NOTIFICATION_CHOICES = _vers_choix(CATEGORIES_NOTIFICATION)
+
 # Appréciation de conduite du bulletin, donnée par le censeur (ou la direction de la section)
 CONDUITES = ["Excellente", "Très bonne", "Bonne", "Passable", "À améliorer"]
 CONDUITES_CHOICES = _vers_choix(CONDUITES)
