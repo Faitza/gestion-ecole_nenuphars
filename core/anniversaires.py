@@ -138,6 +138,12 @@ def message_de_bienvenue(user):
         noms = [f"{e.personne.prenom} {e.personne.nom}" for e in fetes]
         liste = noms[0] if len(noms) == 1 else ", ".join(noms[:-1]) + " et " + noms[-1]
         lignes.append(f"Aujourd'hui, c'est l'anniversaire de {liste}.")
+    parent = getattr(user, "parent", None)
+    if parent is not None:
+        from . import parents
+        nouveau = parents.phrase_des_nouveautes(parents.nouveautes(parent))
+        if nouveau:
+            lignes.append(f"Depuis votre dernière visite : {nouveau}.")
     if user.doit_changer_mot_de_passe:
         lignes.append("Pour commencer, choisissez votre propre mot de passe.")
     return "\n".join(lignes)

@@ -7,8 +7,8 @@ from datetime import timedelta
 from django.utils import timezone
 
 from core.models import (Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours,
-                         Preinscription, MessageContact)
-from core import choices, parents, professeurs
+                         Preinscription, MessageContact, Annonce, Absence, Incident, Bulletin)
+from core import bulletins, choices, parents, professeurs
 
 Utilisateur = get_user_model()
 
@@ -186,5 +186,41 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f"✓ Code parent de Jean Dupont : {famille.code_acces} (téléphone {famille.telephone}), "
                 "à essayer sur /inscription/"))
+
+        # 10) Vie scolaire du secondaire : un surveillant, un censeur, une absence, un retard, un incident
+        secondaire = sections.get(choices.SECTION_SECONDAIRE)
+        comptes_vie = {}
+        for identifiant, nom, prenom, poste in [("surveillant", "Wilner", "Jean", "Surveillant(e)"),
+                                                ("censeur", "Mérisier", "Frantz", "Censeur")]:
+            employe, _ = Employe.objects.get_or_create(nom=nom, prenom=prenom, defaults=dict(poste=poste, section=secondaire))
+            if employe.utilisateur is None and not Utilisateur.objects.filter(username=identifiant).exists():
+                employe.utilisateur = Utilisateur.objects.create_user(
+                    identifiant, password=f"{identifiant}123", first_name=prenom, last_name=nom)
+                employe.save()
+                self.stdout.write(self.style.SUCCESS(f"✓ Compte {poste.lower()} du secondaire créé ({identifiant} / {identifiant}123)"))
+            comptes_vie[identifiant] = employe.utilisateur
+        aujourd_hui = timezone.localdate()
+        Absence.objects.get_or_create(eleve=eleves["Martin"], date=aujourd_hui - timedelta(days=2), defaults=dict(
+            type=choices.RETARD, minutes_retard=10, signalee_par=comptes_vie["surveillant"]))
+        Absence.objects.get_or_create(eleve=eleves["Dupont"], date=aujourd_hui - timedelta(days=1), defaults=dict(
+            type=choices.ABSENCE, justifiee=True, motif="Maladie", signalee_par=comptes_vie["surveillant"]))
+        Incident.objects.get_or_create(eleve=eleves["Martin"], description="Téléphone utilisé en classe.", defaults=dict(
+            date=aujourd_hui - timedelta(days=1), signale_par=comptes_vie["surveillant"], traite_par=comptes_vie["censeur"],
+            statut=choices.INCIDENT_EN_COURS, sanction="Téléphone rendu aux parents"))
+        Incident.objects.get_or_create(eleve=eleves["Bernard"], description="Bousculade à la récréation.", defaults=dict(
+            signale_par=comptes_vie["surveillant"]))
+
+        # 11) Annonces aux parents, et bulletins du 1er trimestre de la 8ème AF validés
+        Annonce.objects.get_or_create(titre="Réunion des parents", defaults=dict(
+            texte="Réunion de tous les parents le samedi 11 octobre à 9 h, dans la cour de l'école.",
+            auteur=Utilisateur.objects.filter(username="secretaire").first()))
+        Annonce.objects.get_or_create(titre="Examens du 1er trimestre", section=secondaire, defaults=dict(
+            texte="Les examens du 1er trimestre du secondaire commencent le lundi 8 décembre."))
+        huitieme, periode = classes["8ème AF"], choices.PERIODES[0]
+        if not Bulletin.objects.filter(classe=huitieme, periode=periode, valide=True).exists():
+            bulletins.enregistrer_remarques(huitieme, periode, choices.annee_scolaire_courante(), {
+                eleves["Martin"].pk: {"conduite": "Bonne", "appreciation": "Bon début d'année, continuez."}})
+            bulletins.valider(huitieme, periode, choices.annee_scolaire_courante(), par=None)
+        self.stdout.write(self.style.SUCCESS("✓ Vie scolaire, 2 annonces et bulletins du 1er trimestre de la 8ème AF créés"))
 
         self.stdout.write(self.style.SUCCESS("\nBase de données remplie avec succès !"))

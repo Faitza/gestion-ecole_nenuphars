@@ -70,6 +70,27 @@
 </div>
 {% endif %}
 
+{% if vie_scolaire or bulletins_a_valider %}
+<div class="bloc alertes">
+    <div class="actions-bar">
+        <h2>{% icone "vie-scolaire" %} Vie scolaire et bulletins</h2>
+        {% if vie_scolaire %}<a href="{% url 'core:vie_scolaire' %}" class="btn-sm btn-edit">Vie scolaire du jour</a>{% endif %}
+    </div>
+    <ul class="liste-evenements">
+        {% if vie_scolaire %}
+        <li><span class="pastille vie">{% icone "appel" %}</span>
+            <div><a href="{% url 'core:vie_scolaire' %}"><strong>{{ vie_scolaire.absents }}</strong> absent{{ vie_scolaire.absents|pluralize }} et <strong>{{ vie_scolaire.retards }}</strong> retard{{ vie_scolaire.retards|pluralize }} aujourd'hui</a></div></li>
+        <li><span class="pastille vie">{% icone "incident" %}</span>
+            <div><a href="{% url 'core:vie_scolaire' %}"><strong>{{ vie_scolaire.a_traiter }}</strong> incident{{ vie_scolaire.a_traiter|pluralize }} à traiter</a></div></li>
+        {% endif %}
+        {% if bulletins_a_valider %}
+        <li><span class="pastille notes">{% icone "bulletin" %}</span>
+            <div><a href="{% url 'core:bulletins_liste' %}?periode={{ periode|urlencode }}"><strong>{{ bulletins_a_valider }}</strong> classe{{ bulletins_a_valider|pluralize }} prête{{ bulletins_a_valider|pluralize }} : bulletins du {{ periode|lower }} à valider</a></div></li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+
 {% if dernieres_notes is not None %}
 <div class="bloc alertes">
     <div class="actions-bar">

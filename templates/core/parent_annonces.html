@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Annonces{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "annonces" %} ANNONCES DE L'ÉCOLE{% endblock %}
+{% block content %}
+{% for a in annonces %}
+<article class="bloc annonce{% if a.nouvelle %} nouvelle{% endif %}">
+    <h2>{{ a.titre }}{% if a.nouvelle %} <span class="puce-nouveau">Nouveau</span>{% endif %}</h2>
+    <span class="aide">{{ a.publiee_le|date:"j F Y" }} · {{ a.destinataires }}</span>
+    <p class="texte-annonce">{{ a.texte|linebreaksbr }}</p>
+</article>
+{% empty %}
+<div class="bloc"><p>Aucune annonce pour le moment.</p></div>
+{% endfor %}
+<p><a href="{% url 'core:parent_espace' %}" class="lien-icone">{% icone "retour" %} Mes enfants</a></p>
+{% endblock %}

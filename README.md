@@ -24,6 +24,8 @@ la gestion (elle est sous `/gestion/`). Comptes d'essai (pour les essais seuleme
 - **secretaire / secretaire123** : la secrétaire ;
 - **direction / direction123** : la direction du primaire, pour accepter les préinscriptions ;
 - **prof / prof123** : un professeur du secondaire, pour la saisie des notes ;
+- **surveillant / surveillant123** : le surveillant du secondaire, pour l'appel du matin ;
+- **censeur / censeur123** : le censeur du secondaire, pour les absences, les incidents et la conduite ;
 - **parent / parent123** : le parent de Marie Martin, pour l'espace parent.
 
 `seed_data` affiche aussi un code d'accès pour la famille de Jean Dupont (téléphone
@@ -138,10 +140,48 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   passe. Il se connecte ensuite avec son téléphone. Si ce téléphone a déjà un compte (un
   professeur qui est aussi parent), ses enfants sont ajoutés à ce compte avec son mot de passe.
 - Après 10 essais ratés en 15 minutes, la page se bloque pour cette adresse.
-- L'espace parent (`/parents/`) montre, pour chaque enfant, les notes de l'année par matière
-  et par trimestre, la moyenne générale et les paiements. Un parent ne voit que ses enfants.
+- L'espace parent (`/parents/`) montre, pour chaque enfant, les annonces, les notes de l'année
+  par matière et par trimestre, les bulletins validés, les absences et retards, le comportement
+  et les paiements. Un parent ne voit que ses enfants.
 - Mot de passe oublié : le secrétariat donne un mot de passe provisoire depuis la fiche d'accès
   (seulement pour un compte qui ne sert qu'aux parents).
+
+## Vie scolaire : appel, absences, incidents
+
+- **Appel du matin** (menu « Appel du matin », fait pour le téléphone) : le surveillant choisit
+  une classe de sa section ; tout le monde est présent au départ, il touche R (retard, avec les
+  minutes) ou A (absent). Un professeur peut aussi faire l'appel de ses classes. On peut refaire
+  l'appel de la journée pour le corriger.
+- **Tableau de la vie scolaire** (menu « Vie scolaire ») : absents et retards du jour (ou d'un
+  autre jour), incidents ouverts, convocations à venir. Le censeur ou la direction de la section
+  justifie une absence avec son motif.
+- **Incidents** : un surveillant ou un professeur signale un incident. Le censeur ou la direction
+  de la section décide de la suite (sanction, statut, convocation des parents) ; la convocation
+  s'imprime depuis la fiche de l'incident.
+- **Ce que voient les parents** : les absences et retards tout de suite ; un incident seulement
+  quand le censeur l'a traité, avec la suite donnée et la date de convocation.
+
+## Bulletins trimestriels
+
+- Menu « Bulletins » : pour chaque classe et chaque trimestre, l'avancement de la saisie des notes.
+- Calcul (en attendant les règles de l'école, dans `core/bulletins.py`) : toutes les matières
+  comptent pareil, la moyenne générale est la moyenne des matières notées, deux élèves à égalité
+  ont le même rang, les absences et retards comptent du début à la fin du trimestre
+  (1er : septembre à décembre, 2e : janvier à mars, 3e : avril à août).
+- Le censeur donne la **conduite** de chaque élève ; la direction de la section écrit son
+  **appréciation** puis **valide** les bulletins de la classe. Les valeurs sont alors figées :
+  une note corrigée plus tard ne change pas un bulletin publié. « Retirer la publication »
+  permet de corriger puis de valider de nouveau.
+- Les parents voient un bulletin seulement quand il est validé. Tous les bulletins d'une classe
+  s'impriment (ou s'enregistrent en PDF depuis le navigateur) en un clic.
+
+## Annonces aux parents
+
+- Menu « Annonces » : le secrétariat et la directrice en chef écrivent à toute l'école, à une
+  section ou à une classe ; la direction d'une section, à sa section ou à l'une de ses classes.
+- Le parent voit les annonces qui concernent ses enfants dans son espace et dans son menu
+  « Annonces ». Le menu affiche le nombre de nouveautés depuis sa dernière visite (annonces,
+  absences, incidents traités, bulletins), et la fenêtre de bienvenue les rappelle.
 
 ## Icônes
 
@@ -157,7 +197,8 @@ site_public/              → site public : pages, préinscription, contact
     contenu.py            → textes et coordonnées de l'école, à compléter
 core/
     models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note,
-                            Creneau, Affectation, Cours, Preinscription, MessageContact, Parent
+                            Creneau, Affectation, Cours, Preinscription, MessageContact, Parent,
+                            Annonce, Appel, Absence, Incident, Bulletin
     choices.py            → nom de l'école, classes (Kinder → NSIV), sections, matières, postes, types de paiement
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
@@ -167,6 +208,10 @@ core/
     views_admissions.py   → suivi des préinscriptions et messages du site
     parents.py            → codes d'accès et création des comptes parents
     views_parents.py      → « Créer mon compte parent », espace parent, comptes parents du secrétariat
+    views_vie_scolaire.py → appel du matin, tableau du censeur, incidents et convocations
+    bulletins.py          → calcul, validation et publication des bulletins trimestriels
+    views_bulletins.py    → pages des bulletins (par classe, par élève, impression)
+    views_annonces.py     → annonces aux parents
     notes.py              → notes par classe, puis par matière
     photos.py             → réduction et rangement des photos
     anniversaires.py      → anniversaires et années à l'école du personnel
@@ -174,7 +219,7 @@ core/
     backends.py           → connexion avec le téléphone, l'e-mail ou le nom d'utilisateur
     forms.py              → formulaires et validation
     views.py              → connexion, espace de chacun, tableau de bord, gestion de chaque module
-    tests.py, tests_parents.py → tests automatiques (python manage.py test)
+    tests.py, tests_parents.py, tests_vie_scolaire.py → tests automatiques (python manage.py test)
     admin.py              → gestion des données dans /admin/
     management/commands/seed_data.py → crée les classes et des données d'exemple
 templates/core/           → les pages de la gestion
@@ -198,8 +243,13 @@ static/icones/icones.svg  → toutes les icônes du site
 - **Site public** : présentation de l'école, niveaux, admissions, contact et préinscription en
   ligne avec numéro de dossier.
 - **Préinscriptions** : suivi de chaque demande jusqu'à l'inscription de l'élève.
-- **Comptes parents** : code d'accès remis à l'inscription, espace parent avec les notes et
-  les paiements de ses enfants.
+- **Comptes parents** : code d'accès remis à l'inscription, espace parent avec les annonces, les
+  notes, les bulletins, les absences, le comportement et les paiements de ses enfants.
+- **Vie scolaire** : appel du matin sur téléphone, absences et retards, incidents, sanctions et
+  convocations des parents.
+- **Bulletins** : bulletin trimestriel par élève (moyenne, rang, absences, conduite, appréciation),
+  validé par la direction puis publié aux parents.
+- **Annonces** : messages aux parents de toute l'école, d'une section ou d'une classe.
 - **Élèves** : informations de l'élève, nom et téléphone du parent ou tuteur, classe
   (une seule classe par élève).
 - **Classes** : créer et modifier les classes (nom, section, cycle : Préscolaire, Fondamentale
@@ -214,7 +264,8 @@ static/icones/icones.svg  → toutes les icônes du site
 
 ## Prochaines étapes possibles
 
-- Ajouter un bulletin (relevé de notes) par élève et par trimestre.
+- Coefficients par matière et règles de passage de l'école dans le calcul des bulletins.
+- Prévenir les parents par SMS ou WhatsApp (il faut un fournisseur d'envoi).
 - Ajouter les actualités, le calendrier et la galerie au site public.
 - Montrer aux parents le solde à payer (il faut d'abord enregistrer les frais de chaque classe).
 - Exporter les listes d'élèves et de paiements en PDF ou en Excel.

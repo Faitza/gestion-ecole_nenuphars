@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Bulletins · {{ classe }}{% endblock %}
+{% block header_color %}#8b5cf6{% endblock %}
+{% block header_title %}{% icone "bulletin" %} BULLETINS · {{ classe.nom|upper }}{% endblock %}
+{% block content %}
+<nav class="onglets" aria-label="Trimestre">
+    {% for p in periodes %}<a href="?periode={{ p|urlencode }}" class="{% if p == periode %}actif{% endif %}">{{ p }}</a>{% endfor %}
+</nav>
+<div class="chiffres">
+    <div><strong>{{ avancement.effectif }}</strong><span>élèves</span></div>
+    <div><strong>{{ avancement.pourcentage }} %</strong><span>notes saisies ({{ avancement.saisies }} sur {{ avancement.attendues }})</span></div>
+    <div><strong>{{ avancement.etat }}</strong><span>{% if valide %}le {{ valide.valide_le|date:"d/m/Y" }}{% if valide.valide_par %} par {{ valide.valide_par.get_full_name|default:valide.valide_par.username }}{% endif %}{% else %}pas encore visibles par les parents{% endif %}</span></div>
+</div>
+{% if avancement.etat == "Notes manquantes" %}<p class="avertissement">{% icone "attention" %} Des notes manquent encore. Vous pouvez valider quand même : une note manquante n'entre pas dans la moyenne.</p>{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="periode" value="{{ periode }}">
+    <div class="table-wrapper">
+    <table class="table-bulletins">
+        <thead><tr><th>Rang</th><th>Élève</th><th>Moyenne</th><th>Abs.</th><th>Ret.</th><th>Conduite</th><th>Appréciation</th><th></th></tr></thead>
+        <tbody>
+        {% for l in lignes %}
+            <tr>
+                <td>{{ l.rang|default:"—" }}</td>
+                <td>{{ l.eleve.nom }} {{ l.eleve.prenom }}</td>
+                <td><strong>{% if l.moyenne is not None %}{{ l.moyenne|floatformat:"-2" }}{% else %}—{% endif %}</strong></td>
+                <td>{{ l.absences }}</td>
+                <td>{{ l.retards }}</td>
+                <td>{% if conduite %}
+                    <select name="c{{ l.eleve.pk }}" class="form-control">
+                        <option value="">—</option>
+                        {% for c in conduites %}<option value="{{ c }}"{% if l.bulletin.conduite == c %} selected{% endif %}>{{ c }}</option>{% endfor %}
+                    </select>
+                    {% else %}{{ l.bulletin.conduite|default:"—" }}{% endif %}</td>
+                <td>{% if valider and not publies %}<input type="text" name="a{{ l.eleve.pk }}" value="{{ l.bulletin.appreciation }}" maxlength="500" class="form-control" placeholder="ex : Bon trimestre, continuez.">{% else %}{{ l.bulletin.appreciation|default:"—" }}{% endif %}</td>
+                <td><a href="{% url 'core:bulletin_eleve' classe.pk l.eleve.pk %}?periode={{ periode|urlencode }}" class="btn-sm btn-voir" title="Voir le bulletin">{% icone "bulletin" %}</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="8">Aucun élève dans cette classe.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="boutons barre-bulletins">
+        {% if publies %}
+            {% if valider %}<button type="submit" name="action" value="retirer" class="btn btn-refuser"
+                    onclick="return confirm('Retirer la publication ? Les parents ne verront plus ces bulletins jusqu\'à la prochaine validation.')">{% icone "croix" %} Retirer la publication</button>{% endif %}
+        {% else %}
+            {% if conduite or valider %}<button type="submit" name="action" value="enregistrer" class="btn btn-secondaire">{% icone "enregistrer" %} Enregistrer</button>{% endif %}
+            {% if valider %}<button type="submit" name="action" value="valider" class="btn btn-transmettre"
+                    onclick="return confirm('Valider les bulletins du {{ periode }} ? Les parents les verront.')">{% icone "valider" %} Valider et publier</button>{% endif %}
+        {% endif %}
+        {% if lignes %}<a href="{% url 'core:bulletins_imprimer' classe.pk %}?periode={{ periode|urlencode }}" class="btn btn-add">{% icone "imprimer" %} Imprimer tous les bulletins</a>{% endif %}
+    </div>
+</form>
+{% if publies %}<p class="aide">Bulletins publiés : les notes, la conduite et les appréciations ne changent plus.{% if valider %} Pour corriger, retirez la publication, corrigez, puis validez de nouveau.{% endif %}</p>{% endif %}
+<p class="aide">La conduite est donnée par le censeur ou la direction de la section, l'appréciation par la direction. Absences et retards : du {{ periode|lower }} ({% if periode == "1er Trimestre" %}septembre à décembre{% elif periode == "2e Trimestre" %}janvier à mars{% else %}avril à août{% endif %}).</p>
+<p><a href="{% url 'core:bulletins_liste' %}?periode={{ periode|urlencode }}" class="lien-icone">{% icone "retour" %} Toutes les classes</a></p>
+{% endblock %}

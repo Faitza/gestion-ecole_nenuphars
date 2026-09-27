@@ -1,0 +1,92 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Vie scolaire{% endblock %}
+{% block header_color %}#7c3aed{% endblock %}
+{% block header_title %}{% icone "vie-scolaire" %} VIE SCOLAIRE{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <form method="get" class="filtres-liste boutons">
+        <input type="date" name="date" value="{{ jour|date:'Y-m-d' }}" max="{{ aujourd_hui|date:'Y-m-d' }}" class="form-control" onchange="this.form.submit()">
+    </form>
+    <div class="boutons">
+        {% if fait_l_appel %}<a href="{% url 'core:appel_choix' %}" class="btn btn-add">{% icone "appel" %} Faire l'appel</a>
+        <a href="{% url 'core:incident_nouveau' %}" class="btn btn-refuser">{% icone "incident" %} Signaler un incident</a>{% endif %}
+    </div>
+</div>
+<div class="chiffres chiffres-vie">
+    <div><strong>{{ nb_appels }} / {{ nb_classes }}</strong><span>appels faits</span></div>
+    <div><strong>{{ nb_absents }}</strong><span>absent{{ nb_absents|pluralize }}{% if nb_justifiees %}, dont {{ nb_justifiees }} justifié{{ nb_justifiees|pluralize }}{% endif %}</span></div>
+    <div><strong>{{ nb_retards }}</strong><span>retard{{ nb_retards|pluralize }}</span></div>
+    <div><strong>{{ nb_a_traiter }}</strong><span>incident{{ nb_a_traiter|pluralize }} à traiter</span></div>
+</div>
+
+<h2 class="titre-section">{% icone "appel" %} Absences et retards du {{ jour|date:"j F" }}</h2>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Élève</th><th>Classe</th><th>Type</th><th>Signalé par</th><th>Suite</th></tr></thead>
+    <tbody>
+    {% for a in absences %}
+        <tr>
+            <td>{{ a.eleve.nom }} {{ a.eleve.prenom }}</td>
+            <td>{{ a.eleve.classe|default:"—" }}</td>
+            <td>{{ a.type }}{% if a.minutes_retard %}, {{ a.minutes_retard }} min{% endif %}</td>
+            <td>{% if a.signalee_par %}{{ a.signalee_par.get_full_name|default:a.signalee_par.username }}{% else %}—{% endif %}<br><span class="aide">{{ a.cree_le|time:"G \h i" }}</span></td>
+            <td>
+                {% if a.peut_traiter %}
+                <form method="post" action="{% url 'core:absence_justifier' a.pk %}" class="justifier">
+                    {% csrf_token %}
+                    <input type="text" name="motif" value="{{ a.motif }}" placeholder="Motif" class="form-control" maxlength="200">
+                    {% if a.justifiee %}
+                        <button type="submit" name="justifiee" value="non" class="btn-sm btn-secondaire">Retirer la justification</button>
+                    {% else %}
+                        <button type="submit" name="justifiee" value="oui" class="btn-sm btn-accepter">{% icone "valider" %} Justifier</button>
+                    {% endif %}
+                </form>
+                {% endif %}
+                {% if a.justifiee %}<span class="etape etape-acceptee">Justifiée</span>{% elif not a.peut_traiter %}<span class="etape etape-chez-la-direction">Non justifiée</span>{% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">Aucune absence ni retard ce jour-là.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% if convocations %}
+<h2 class="titre-section">{% icone "convocation" %} Parents convoqués</h2>
+<div class="bloc">
+    <ul class="liste-evenements">
+    {% for i in convocations %}
+        <li><span class="pastille vie">{% icone "convocation" %}</span>
+            <div><a href="{% url 'core:incident_fiche' i.pk %}"><strong>{{ i.eleve.nom }} {{ i.eleve.prenom }}</strong> ({{ i.eleve.classe }}) · {{ i.sanction|default:i.description|truncatechars:60 }}</a></div>
+            <span class="quand">{{ i.convocation_le|date:"j M, G \h i" }}</span></li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="actions-bar titre-section">
+    <h2 class="titre-section">{% icone "incident" %} Incidents {% if not tous %}ouverts ({{ nb_ouverts }}){% endif %}</h2>
+    <a href="?date={{ jour|date:'Y-m-d' }}{% if not tous %}&amp;incidents=tous{% endif %}" class="btn-sm btn-voir">{% if tous %}Seulement les incidents ouverts{% else %}Voir aussi les incidents clos{% endif %}</a>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Date</th><th>Élève</th><th>Classe</th><th>Motif</th><th>Sanction</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for i in incidents %}
+        <tr>
+            <td>{{ i.date|date:"d/m" }}</td>
+            <td><a href="{% url 'core:incident_fiche' i.pk %}">{{ i.eleve.nom }} {{ i.eleve.prenom }}</a></td>
+            <td>{{ i.eleve.classe|default:"—" }}</td>
+            <td>{{ i.description|truncatechars:70 }}</td>
+            <td>{{ i.sanction|default:"—" }}</td>
+            <td><span class="etape incident-{{ i.statut|slugify }}">{{ i.statut }}</span></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6">Aucun incident{% if not tous %} ouvert{% endif %}.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

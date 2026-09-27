@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Affectation, Cours,
-                     Preinscription, MessageContact, Parent)
+                     Preinscription, MessageContact, Parent, Annonce, Appel, Absence, Incident, Bulletin)
 
 
 @admin.register(Utilisateur)
@@ -110,3 +110,38 @@ class ParentAdmin(admin.ModelAdmin):
     search_fields = ("nom", "telephone", "enfants__nom", "enfants__prenom")
     filter_horizontal = ("enfants",)
     readonly_fields = ("code_acces", "code_cree_le", "compte_cree_le")
+
+
+@admin.register(Annonce)
+class AnnonceAdmin(admin.ModelAdmin):
+    list_display = ("titre", "destinataires", "auteur", "publiee_le")
+    list_filter = ("section",)
+    search_fields = ("titre", "texte")
+
+
+@admin.register(Appel)
+class AppelAdmin(admin.ModelAdmin):
+    list_display = ("classe", "date", "fait_par", "fait_le")
+    list_filter = ("date", "classe")
+
+
+@admin.register(Absence)
+class AbsenceAdmin(admin.ModelAdmin):
+    list_display = ("eleve", "date", "type", "minutes_retard", "justifiee", "motif", "signalee_par")
+    list_filter = ("type", "justifiee", "date")
+    search_fields = ("eleve__nom", "eleve__prenom", "motif")
+
+
+@admin.register(Incident)
+class IncidentAdmin(admin.ModelAdmin):
+    list_display = ("eleve", "date", "statut", "sanction", "convocation_le", "signale_par", "traite_par")
+    list_filter = ("statut", "date")
+    search_fields = ("eleve__nom", "eleve__prenom", "description", "sanction")
+
+
+@admin.register(Bulletin)
+class BulletinAdmin(admin.ModelAdmin):
+    list_display = ("eleve", "classe", "periode", "annee_scolaire", "moyenne", "rang", "conduite", "valide")
+    list_filter = ("periode", "annee_scolaire", "valide", "classe")
+    search_fields = ("eleve__nom", "eleve__prenom")
+    readonly_fields = ("lignes", "moyenne", "rang", "effectif", "absences", "retards", "valide_par", "valide_le")

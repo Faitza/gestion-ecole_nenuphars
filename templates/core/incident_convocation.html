@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Convocation · {{ incident.eleve }}{% endblock %}
+{% block header_color %}#7c3aed{% endblock %}
+{% block header_title %}{% icone "convocation" %} CONVOCATION{% endblock %}
+{% block content %}
+<div class="fiche-acces lettre">
+    <h2>Institution Les Nénuphars</h2>
+    <p class="aide">Les Cayes, le {% now "j F Y" %}</p>
+    <p>Madame, Monsieur {{ incident.eleve.nom_parent_tuteur }},</p>
+    <p>Vous êtes prié(e) de vous présenter à l'école le <strong>{{ incident.convocation_le|date:"l j F Y à G \h i" }}</strong>,
+        au bureau de la vie scolaire, au sujet de votre enfant <strong>{{ incident.eleve.prenom }} {{ incident.eleve.nom }}</strong>{% if incident.eleve.classe %} ({{ incident.eleve.classe }}){% endif %}.</p>
+    <p><strong>Motif :</strong> {{ incident.description|linebreaksbr }}</p>
+    {% if incident.sanction %}<p><strong>Suite donnée :</strong> {{ incident.sanction }}</p>{% endif %}
+    <p>Merci de votre présence.</p>
+    <p class="signature">{{ incident.traite_par.get_full_name|default:"La vie scolaire" }}</p>
+</div>
+<div class="actions-bar pas-imprime">
+    <div class="boutons">
+        <button type="button" class="btn btn-add" onclick="window.print()">{% icone "imprimer" %} Imprimer</button>
+        <a href="{% url 'core:incident_fiche' incident.pk %}" class="btn btn-secondaire">{% icone "retour" %} Retour à l'incident</a>
+    </div>
+</div>
+{% endblock %}

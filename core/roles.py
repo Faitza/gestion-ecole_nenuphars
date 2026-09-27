@@ -73,6 +73,22 @@ ACCES = {
         "lire": {SECRETARIAT},
         "ecrire": {SECRETARIAT},
     },
+    # Vie scolaire : le surveillant fait l'appel et signale les incidents ; le
+    # censeur (ou la direction) justifie et sanctionne (voir peut_traiter_vie_scolaire)
+    "vie_scolaire": {
+        "lire": {SECRETARIAT, DIRECTION_SECTION, CENSEUR, SURVEILLANT},
+        "ecrire": {DIRECTION_SECTION, CENSEUR, SURVEILLANT},
+    },
+    # Bulletins : le censeur donne la conduite, la direction de la section valide
+    "bulletins": {
+        "lire": {SECRETARIAT, DIRECTION_SECTION, CENSEUR},
+        "ecrire": {DIRECTION_SECTION, CENSEUR},
+    },
+    # Annonces aux parents : toute l'école (secrétariat) ou sa section (direction)
+    "annonces": {
+        "lire": {SECRETARIAT, DIRECTION_SECTION},
+        "ecrire": {SECRETARIAT, DIRECTION_SECTION},
+    },
     # Messages envoyés depuis la page Contact du site public
     "messages_site": {
         "lire": {SECRETARIAT},
@@ -95,6 +111,8 @@ CHEMIN_SECTION = {
     "paiements": "eleve__classe__section",
     "notes": "eleve__classe__section",
     "preinscriptions": "classe_demandee__section",
+    "vie_scolaire": "eleve__classe__section",
+    "bulletins": "classe__section",
 }
 
 
@@ -169,6 +187,23 @@ def peut_valider_cours(user, section):
 def peut_decider_preinscription(user, preinscription):
     """La direction de la section demandée accepte ou refuse ; la directrice en chef aussi."""
     return peut_valider_cours(user, preinscription.section)
+
+
+def peut_traiter_vie_scolaire(user, section):
+    """Justifier une absence, décider d'une sanction, convoquer les parents :
+    le censeur ou la direction de la section, et la directrice en chef."""
+    if a_tout(user):
+        return True
+    return bool(roles_de(user) & {CENSEUR, DIRECTION_SECTION}) and section is not None and section_de(user) == section
+
+
+def peut_donner_la_conduite(user, section):
+    return peut_traiter_vie_scolaire(user, section)
+
+
+def peut_valider_bulletins(user, section):
+    """La direction de la section valide les bulletins de sa section ; la directrice en chef, tous."""
+    return peut_valider_cours(user, section)
 
 
 def acces_requis(module, ecriture=False):

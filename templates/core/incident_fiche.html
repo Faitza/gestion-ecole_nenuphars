@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}Incident · {{ incident.eleve }}{% endblock %}
+{% block header_color %}#7c3aed{% endblock %}
+{% block header_title %}{% icone "incident" %} INCIDENT{% endblock %}
+{% block content %}
+<div class="colonnes">
+<div class="bloc">
+    <div class="entete-fiche">
+        {% photo incident.eleve "moyenne" %}
+        <div>
+            <h2>{{ incident.eleve.prenom }} {{ incident.eleve.nom }}</h2>
+            <span class="aide">{{ incident.eleve.classe|default:"Sans classe" }} · {{ assiduite.absences }} absence{{ assiduite.absences|pluralize }} et {{ assiduite.retards }} retard{{ assiduite.retards|pluralize }} ce trimestre</span>
+        </div>
+    </div>
+    <dl class="infos">
+        <dt>Date</dt><dd>{{ incident.date|date:"l j F Y"|capfirst }}</dd>
+        <dt>Signalé par</dt><dd>{% if incident.signale_par %}{{ incident.signale_par.get_full_name|default:incident.signale_par.username }}{% else %}—{% endif %}</dd>
+        <dt>Ce qui s'est passé</dt><dd>{{ incident.description|linebreaksbr }}</dd>
+        <dt>Statut</dt><dd><span class="etape incident-{{ incident.statut|slugify }}">{{ incident.statut }}</span></dd>
+        <dt>Sanction</dt><dd>{{ incident.sanction|default:"—" }}</dd>
+        <dt>Parents convoqués</dt><dd>{% if incident.convocation_le %}{{ incident.convocation_le|date:"l j F Y à G \h i"|capfirst }}{% else %}Non{% endif %}</dd>
+        {% if incident.traite_par %}<dt>Traité par</dt><dd>{{ incident.traite_par.get_full_name|default:incident.traite_par.username }}</dd>{% endif %}
+        <dt>Parent ou tuteur</dt><dd>{{ incident.eleve.nom_parent_tuteur|default:"—" }}{% if incident.eleve.telephone_parent %} · <a href="tel:{{ incident.eleve.telephone_parent|cut:' ' }}">{{ incident.eleve.telephone_parent }}</a>{% endif %}</dd>
+    </dl>
+    {% if incident.convocation_le %}<a href="{% url 'core:incident_convocation' incident.pk %}" class="btn btn-secondaire">{% icone "imprimer" %} Imprimer la convocation</a>{% endif %}
+</div>
+{% if form %}
+<div class="bloc decision">
+    <h2>{% icone "conduite" %} Suite donnée</h2>
+    <p class="aide">Une fois la suite enregistrée, les parents voient l'incident et la sanction dans leur espace.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% for champ in form %}{% include "core/_champ.html" with field=champ %}{% endfor %}
+        <button type="submit" class="btn btn-transmettre">{% icone "enregistrer" %} Enregistrer</button>
+    </form>
+</div>
+{% endif %}
+</div>
+{% if autres %}
+<h2 class="titre-section">{% icone "incident" %} Autres incidents de {{ incident.eleve.prenom }}</h2>
+<div class="bloc"><ul class="liste-evenements">
+    {% for i in autres %}<li><span class="pastille vie">{% icone "incident" %}</span><div><a href="{% url 'core:incident_fiche' i.pk %}">{{ i.description|truncatechars:80 }}</a><br><span class="aide">{{ i.sanction|default:"sans sanction" }} · {{ i.statut }}</span></div><span class="quand">{{ i.date|date:"d/m/Y" }}</span></li>{% endfor %}
+</ul></div>
+{% endif %}
+<p><a href="{% url 'core:vie_scolaire' %}" class="lien-icone">{% icone "retour" %} Vie scolaire</a></p>
+{% endblock %}

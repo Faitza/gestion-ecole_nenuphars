@@ -3,7 +3,8 @@
 # la gestion de l'école est sous /gestion/.
 from django.urls import include, path
 from django.views.generic import RedirectView
-from . import views, views_admissions, views_fiches, views_notes, views_parents, views_professeurs
+from . import (views, views_admissions, views_annonces, views_bulletins, views_fiches, views_notes, views_parents,
+               views_professeurs, views_vie_scolaire)
 
 app_name = "core"
 
@@ -72,6 +73,28 @@ gestion = [
     path("messages/", views_admissions.message_liste, name="message_liste"),
     path("messages/<int:pk>/traite/", views_admissions.message_traite, name="message_traite"),
 
+    # Vie scolaire : appel du matin, absences et retards, incidents
+    path("vie-scolaire/", views_vie_scolaire.tableau, name="vie_scolaire"),
+    path("vie-scolaire/appel/", views_vie_scolaire.appel_choix, name="appel_choix"),
+    path("vie-scolaire/appel/<int:pk>/", views_vie_scolaire.appel, name="appel"),
+    path("vie-scolaire/absences/<int:pk>/justifier/", views_vie_scolaire.absence_justifier, name="absence_justifier"),
+    path("vie-scolaire/incidents/nouveau/", views_vie_scolaire.incident_nouveau, name="incident_nouveau"),
+    path("vie-scolaire/incidents/<int:pk>/", views_vie_scolaire.incident_fiche, name="incident_fiche"),
+    path("vie-scolaire/incidents/<int:pk>/convocation/", views_vie_scolaire.incident_convocation,
+         name="incident_convocation"),
+
+    # Bulletins trimestriels
+    path("bulletins/", views_bulletins.bulletins_liste, name="bulletins_liste"),
+    path("bulletins/classes/<int:pk>/", views_bulletins.bulletins_classe, name="bulletins_classe"),
+    path("bulletins/classes/<int:pk>/imprimer/", views_bulletins.bulletins_imprimer, name="bulletins_imprimer"),
+    path("bulletins/classes/<int:pk>/eleves/<int:eleve_pk>/", views_bulletins.bulletin_eleve, name="bulletin_eleve"),
+
+    # Annonces aux parents
+    path("annonces/", views_annonces.annonce_liste, name="annonce_liste"),
+    path("annonces/nouvelle/", views_annonces.annonce_creer, name="annonce_creer"),
+    path("annonces/<int:pk>/modifier/", views_annonces.annonce_modifier, name="annonce_modifier"),
+    path("annonces/<int:pk>/supprimer/", views_annonces.annonce_supprimer, name="annonce_supprimer"),
+
     # Notes
     path("notes/", views.note_liste, name="note_liste"),
     path("notes/saisie/", views_notes.saisie_notes, name="saisie_notes"),
@@ -92,5 +115,7 @@ urlpatterns = [
     path("inscription/mot-de-passe/", views_parents.inscription_mot_de_passe, name="inscription_mot_de_passe"),
     path("parents/", views_parents.parent_espace, name="parent_espace"),
     path("parents/enfants/<int:pk>/", views_parents.parent_espace, name="parent_enfant"),
+    path("parents/annonces/", views_parents.parent_annonces, name="parent_annonces"),
+    path("parents/bulletins/<int:pk>/", views_parents.parent_bulletin, name="parent_bulletin"),
     path("gestion/", include(gestion)),
 ]

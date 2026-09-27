@@ -111,3 +111,55 @@ def peut_reinitialiser(compte):
 
 def codes_a_remettre():
     return Parent.objects.filter(utilisateur__isnull=True, code_acces__isnull=False)
+
+
+# ─────────────────────────── Ce que voit le parent ───────────────────────────
+def annonces_pour(parent):
+    """Les annonces pour toute l'école, la section ou la classe de l'un de ses enfants."""
+    from django.db.models import Q
+    from .models import Annonce
+
+    enfants = list(parent.enfants.select_related("classe"))
+    classes = {e.classe_id for e in enfants if e.classe_id}
+    sections = {e.classe.section_id for e in enfants if e.classe_id and e.classe.section_id}
+    return Annonce.objects.filter(Q(section__isnull=True, classe__isnull=True) | Q(section__in=sections)
+                                  | Q(classe__in=classes)).select_related("section", "classe")
+
+
+def evenements_depuis(parent, depuis):
+    """Absences, incidents traités et bulletins publiés des enfants depuis `depuis` (tout si None)."""
+    from .models import Absence, Bulletin, Incident
+    from . import choices
+
+    absences = Absence.objects.filter(eleve__parents=parent)
+    incidents = Incident.objects.filter(eleve__parents=parent).exclude(statut=choices.INCIDENT_SIGNALE)
+    bulletins = Bulletin.objects.filter(eleve__parents=parent, valide=True)
+    if depuis is not None:
+        absences = absences.filter(cree_le__gt=depuis)
+        incidents = incidents.filter(mise_a_jour__gt=depuis)
+        bulletins = bulletins.filter(valide_le__gt=depuis)
+    return {"absences": absences.count(), "incidents": incidents.count(), "bulletins": bulletins.count()}
+
+
+def nouveautes(parent):
+    """Ce qui est arrivé depuis la dernière visite : {annonces, absences, incidents, bulletins, enfants, total}."""
+    annonces = annonces_pour(parent)
+    if parent.annonces_vues_le is not None:
+        annonces = annonces.filter(publiee_le__gt=parent.annonces_vues_le)
+    resultat = {"annonces": annonces.count(), **evenements_depuis(parent, parent.espace_vu_le)}
+    resultat["enfants"] = resultat["absences"] + resultat["incidents"] + resultat["bulletins"]
+    resultat["total"] = resultat["enfants"] + resultat["annonces"]
+    return resultat
+
+
+def phrase_des_nouveautes(n):
+    """« 1 annonce, 1 bulletin publié et 2 absences ou retards » (ou "" s'il n'y a rien)."""
+    morceaux = []
+    for cle, un, plusieurs in [("annonces", "annonce", "annonces"), ("bulletins", "bulletin publié", "bulletins publiés"),
+                               ("absences", "absence ou retard", "absences ou retards"),
+                               ("incidents", "suite donnée à un incident", "suites données à des incidents")]:
+        if n[cle]:
+            morceaux.append(f"{n[cle]} {un if n[cle] == 1 else plusieurs}")
+    if not morceaux:
+        return ""
+    return morceaux[0] if len(morceaux) == 1 else ", ".join(morceaux[:-1]) + " et " + morceaux[-1]

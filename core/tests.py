@@ -678,6 +678,14 @@ class NotesVisiblesTests(TestCase):
         self.assertTrue(parent.check_password("parent123"))
         self.assertEqual(roles.roles_de(parent), {roles.PARENT})
         self.assertEqual([str(e) for e in parent.parent.enfants.all()], ["Martin Marie"])
+        for identifiant, role in (("surveillant", roles.SURVEILLANT), ("censeur", roles.CENSEUR)):
+            compte = Utilisateur.objects.get(username=identifiant)
+            self.assertTrue(compte.check_password(f"{identifiant}123"))
+            self.assertEqual(roles.roles_de(compte), {role})
+            self.assertEqual(roles.section_de(compte).nom, choices.SECTION_SECONDAIRE)
+        from .models import Annonce, Bulletin
+        self.assertEqual(Annonce.objects.count(), 2)
+        self.assertTrue(Bulletin.objects.filter(eleve__nom="Martin", valide=True).exists())
 
 
 class PhotosEtFichesTests(TestCase):

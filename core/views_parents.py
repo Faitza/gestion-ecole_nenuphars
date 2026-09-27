@@ -2,8 +2,11 @@
 # Comptes parents (cahier des charges, section C). Le secrétariat remet à
 # chaque famille une fiche avec un code d'accès à usage unique. Sur
 # /inscription/, le parent entre ce code et son téléphone, choisit son mot de
-# passe, puis voit seulement ses enfants sur /parents/ (notes de l'année et
-# paiements).
+# passe, puis voit seulement ses enfants sur /parents/ : notes de l'année,
+# bulletins validés, absences et retards, incidents traités par le censeur,
+# paiements, et les annonces qui les concernent.
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -13,12 +16,14 @@ from django.db.models import Count, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from . import bulletins as calcul_bulletins
 from . import choices, parents
 from . import notes as outils_notes
 from .forms import CodeParentForm, CompteExistantForm, MotDePasseParentForm
-from .models import Eleve, Note, Parent
+from .models import Bulletin, Eleve, Note, Parent
 from .professeurs import nouveau_mot_de_passe
 from .roles import acces_requis, filtrer, parent_de, peut
 
@@ -111,10 +116,9 @@ def inscription_mot_de_passe(request):
 
 
 # ─────────────────────────── Espace parent ───────────────────────────
-def _bulletin(eleve):
+def _notes_de_l_annee(eleve, annee):
     """Notes de l'année de l'élève : une ligne par matière, une case par trimestre."""
-    notes = Note.objects.filter(eleve=eleve, annee_scolaire=choices.annee_scolaire_courante()) \
-        .select_related("eleve", "eleve__classe", "professeur")
+    notes = Note.objects.filter(eleve=eleve, annee_scolaire=annee).select_related("eleve", "eleve__classe", "professeur")
     lignes = []
     for groupe in outils_notes.grouper(notes):
         for matiere in groupe["matieres"]:
@@ -125,6 +129,10 @@ def _bulletin(eleve):
     moyennes = [outils_notes._moyenne([l["cellules"][i].note if l["cellules"][i] else None for l in lignes])
                 for i in range(len(choices.PERIODES))]
     return lignes, moyennes, outils_notes._moyenne([l["moyenne"] for l in lignes])
+
+
+def _recent(moment, il_y_a_7_jours):
+    return moment is not None and moment >= il_y_a_7_jours
 
 
 @login_required
@@ -141,17 +149,68 @@ def parent_espace(request, pk=None):
     elif enfants:
         enfant = enfants[0]
 
+    annee, trimestre = choices.annee_scolaire_courante(), choices.trimestre_du_jour()
+    il_y_a_7_jours = timezone.now() - timedelta(days=7)
+    annonces = list(parents.annonces_pour(parent)[:3])
+    for annonce in annonces:
+        annonce.nouvelle = _recent(annonce.publiee_le, il_y_a_7_jours)
     contexte = {"parent": parent, "enfants": enfants, "enfant": enfant, "periodes": choices.PERIODES,
-                "annee": choices.annee_scolaire_courante()}
+                "annee": annee, "trimestre": trimestre, "annonces": annonces}
     if enfant is not None:
-        lignes, moyennes, moyenne_generale = _bulletin(enfant)
+        lignes, moyennes, moyenne_generale = _notes_de_l_annee(enfant, annee)
         paiements = list(enfant.paiements.all())
+        bulletins = list(enfant.bulletins.filter(annee_scolaire=annee, valide=True).order_by("periode"))
+        debut, fin = choices.dates_du_trimestre(choices.PERIODES[0], annee)[0], timezone.localdate()
+        absences = list(enfant.absences.filter(date__range=(debut, fin)))
+        incidents = [i for i in enfant.incidents.filter(date__gte=debut) if i.visible_par_les_parents]
+        for objet, moment in [*((a, a.cree_le) for a in absences), *((i, i.mise_a_jour) for i in incidents),
+                              *((b, b.valide_le) for b in bulletins)]:
+            objet.nouveau = _recent(moment, il_y_a_7_jours)
+        debut_trimestre, fin_trimestre = choices.dates_du_trimestre(trimestre, annee)
+        ce_trimestre = [a for a in absences if debut_trimestre <= a.date <= fin_trimestre]
         contexte.update({
             "lignes": lignes, "moyennes": moyennes, "moyenne_generale": moyenne_generale,
             "paiements": paiements,
             "total_paye": sum((p.montant for p in paiements if p.statut == "Payé"), 0),
+            "bulletins": bulletins,
+            "bulletin_du_trimestre": next((b for b in bulletins if b.periode == trimestre), None),
+            "absences": absences, "incidents": incidents,
+            "nb_absences": sum(1 for a in ce_trimestre if a.type == choices.ABSENCE),
+            "nb_retards": sum(1 for a in ce_trimestre if a.type == choices.RETARD),
         })
+    # Tout ce qui est arrivé jusqu'ici est vu : le compteur du menu repart de zéro
+    parent.espace_vu_le = timezone.now()
+    Parent.objects.filter(pk=parent.pk).update(espace_vu_le=parent.espace_vu_le)
     return render(request, "core/parent_espace.html", contexte)
+
+
+@login_required
+def parent_annonces(request):
+    parent = parent_de(request.user)
+    if parent is None:
+        return redirect("core:espace")
+    annonces = list(parents.annonces_pour(parent))
+    for annonce in annonces:
+        annonce.nouvelle = parent.annonces_vues_le is None or annonce.publiee_le > parent.annonces_vues_le
+    parent.annonces_vues_le = timezone.now()
+    Parent.objects.filter(pk=parent.pk).update(annonces_vues_le=parent.annonces_vues_le)
+    return render(request, "core/parent_annonces.html", {"annonces": annonces})
+
+
+@login_required
+def parent_bulletin(request, pk):
+    """Bulletin validé d'un de ses enfants, à lire, imprimer ou enregistrer en PDF."""
+    parent = parent_de(request.user)
+    if parent is None:
+        raise Http404
+    bulletin = get_object_or_404(Bulletin.objects.select_related("eleve", "classe", "classe__section", "valide_par"),
+                                 pk=pk, valide=True, eleve__parents=parent)
+    return render(request, "core/bulletin.html", {
+        "fiches": [{"eleve": bulletin.eleve, "classe": bulletin.classe, "bulletin": bulletin,
+                    **calcul_bulletins.apercu(bulletin)}],
+        "periode": bulletin.periode, "annee": bulletin.annee_scolaire,
+        "retour": reverse("core:parent_enfant", args=[bulletin.eleve_id]),
+    })
 
 
 # ─────────────────────────── Secrétariat ───────────────────────────
