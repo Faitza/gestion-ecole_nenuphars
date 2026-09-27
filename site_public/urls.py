@@ -13,4 +13,7 @@ urlpatterns = [
     path("admissions/preinscription/", views.preinscription, name="preinscription"),
     path("admissions/preinscription/envoyee/", views.preinscription_envoyee, name="preinscription_envoyee"),
     path("contact/", views.contact, name="contact"),
+    path("activites/", views.activites, name="activites"),
+    path("activites/<int:pk>/", views.activite, name="activite"),
+    path("activites/photos/<int:pk>/<str:taille>/", views.photo_activite, name="photo_activite"),
 ]

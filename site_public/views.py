@@ -1,11 +1,12 @@
 # site_public/views.py
 # Pages publiques de l'école : ouvertes à tous, sans connexion.
 from django.contrib import messages
-from django.shortcuts import redirect, render
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from core import choices
+from core import choices, roles
 from core.classes import par_section
-from core.models import Classe, Employe, Preinscription
+from core.models import Activite, Classe, Employe, PhotoActivite, Preinscription
 
 from . import contenu
 from .forms import MessageContactForm, PreinscriptionPubliqueForm
@@ -31,6 +32,7 @@ def accueil(request):
         "nb_matieres": len([m for m in choices.MATIERES if m != "Autre"]),
         "nb_bulletins": len(choices.PERIODES),
         "annee": choices.annee_scolaire_courante(),
+        "activites": Activite.objects.filter(publiee=True).prefetch_related("photos")[:3],
     })
 
 
@@ -94,3 +96,44 @@ def contact(request):
             messages.success(request, "Merci, votre message a bien été envoyé. Le secrétariat vous répondra rapidement.")
             return redirect("site:contact")
     return render(request, "site_public/contact.html", {"form": form})
+
+
+# ─────────────────────────── Activités et concours ───────────────────────────
+def activites(request):
+    liste = Activite.objects.filter(publiee=True).prefetch_related("photos")
+    categorie = request.GET.get("type", "")
+    if categorie in choices.CATEGORIES_ACTIVITE:
+        liste = liste.filter(categorie=categorie)
+    else:
+        categorie = ""
+    presentes = set(Activite.objects.filter(publiee=True).values_list("categorie", flat=True))
+    return render(request, "site_public/activites.html", {
+        "activites": liste, "categorie": categorie,
+        "categories": [c for c in choices.CATEGORIES_ACTIVITE if c in presentes],
+    })
+
+
+def activite(request, pk):
+    activite = get_object_or_404(Activite.objects.filter(publiee=True), pk=pk)
+    return render(request, "site_public/activite.html", {
+        "activite": activite, "photos": activite.photos.all(),
+        "autres": Activite.objects.filter(publiee=True).exclude(pk=pk).prefetch_related("photos")[:3],
+    })
+
+
+def photo_activite(request, pk, taille):
+    """Les photos des activités publiées sont pour tout le monde ; les autres, pour le secrétariat seulement."""
+    if taille not in ("grande", "vignette"):
+        raise Http404
+    photo = get_object_or_404(PhotoActivite.objects.select_related("activite"), pk=pk)
+    publique = photo.activite.publiee
+    if not publique and not (request.user.is_authenticated and roles.peut(request.user, "activites")):
+        raise Http404
+    champ = photo.image if taille == "grande" else photo.vignette
+    try:
+        fichier = champ.open("rb")
+    except (FileNotFoundError, ValueError):
+        raise Http404
+    reponse = FileResponse(fichier, content_type="image/jpeg")
+    reponse["Cache-Control"] = "public, max-age=3600" if publique else "private, no-store"
+    return reponse

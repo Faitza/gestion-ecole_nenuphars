@@ -117,6 +117,44 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .frais dd { margin: 0; font-weight: 700; text-align: right; }
 .aide { color: var(--muted); font-size: 14px; }
 
+/* ── Activités et concours ───────────────────────────────── */
+.titre-bande { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.titre-bande .plus, .page-titre .kick a { font-weight: 700; font-size: 14px; color: var(--navy); display: inline-flex; gap: 6px; align-items: center; }
+.page-titre .kick a { color: inherit; font-size: inherit; }
+.texte-activite { font-size: 18px; max-width: 68ch; }
+.filtres { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.filtres a { padding: 6px 14px; border-radius: 99px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
+.filtres a.on { background: var(--lily); border-color: var(--lily); color: #fff; }
+.activites { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.activite-carte { display: flex; flex-direction: column; gap: 6px; color: var(--ink); text-decoration: none; }
+.activite-carte h3 { font-size: 19px; margin: 0; }
+.activite-carte p { margin: 0; color: var(--muted); font-size: 15px; }
+.activite-carte .lv { color: var(--lily); }
+.activite-carte:hover h3 { color: var(--lily); }
+.activite-image { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3;
+  border-radius: 12px; overflow: hidden; background: var(--lily-soft); color: var(--lily); margin-bottom: 4px; }
+.activite-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+.activite-carte:hover .activite-image img { transform: scale(1.03); }
+.activite-image > .icone { width: 48px; height: 48px; }
+.nb-photos { position: absolute; right: 10px; bottom: 10px; display: inline-flex; gap: 6px; align-items: center;
+  background: rgba(27,35,51,.75); color: #fff; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 99px; }
+.galerie { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.galerie a { display: block; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.galerie img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform .3s; }
+.galerie a:hover img { transform: scale(1.04); }
+.visionneuse { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; }
+.visionneuse::backdrop { background: rgba(10,14,24,.92); }
+.visionneuse[open] { display: flex; align-items: center; justify-content: center; }
+.visionneuse img { max-width: calc(100vw - 32px); max-height: calc(100vh - 90px); border-radius: 6px; }
+.visionneuse .legende { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; color: #dbe4fb; font-size: 14px; }
+.visionneuse button { position: absolute; display: flex; align-items: center; justify-content: center; width: 46px; height: 46px;
+  border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; cursor: pointer; }
+.visionneuse button:hover { background: rgba(255,255,255,.28); }
+.visionneuse button .icone { width: 22px; height: 22px; }
+.visionneuse .precedente { left: 14px; top: 50%; translate: 0 -50%; }
+.visionneuse .suivante { right: 14px; top: 50%; translate: 0 -50%; }
+.visionneuse .fermer { right: 14px; top: 14px; }
+
 /* ── Formulaires (préinscription, contact) ───────────────── */
 .split { display: grid; grid-template-columns: 300px 1fr; max-width: var(--largeur); margin: 32px auto 48px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
 .aside { background: var(--navy-soft); padding: 28px 24px; }
@@ -192,6 +230,8 @@ legend { display: flex; align-items: center; gap: 8px; font-family: var(--displa
   .actions .btn { width: 100%; justify-content: center; }
   .page-titre { padding-top: 28px; }
   .bande { padding: 24px 16px; }
+  .galerie { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .visionneuse .precedente, .visionneuse .suivante { top: auto; bottom: 8px; translate: none; }
 }
 
 @media print {

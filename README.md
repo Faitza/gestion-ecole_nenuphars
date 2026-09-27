@@ -108,7 +108,7 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
 
 ## Site public et préinscriptions
 
-- Pages ouvertes à tous : Accueil (`/`), L'école, Niveaux, Admissions et Contact. Les textes,
+- Pages ouvertes à tous : Accueil (`/`), L'école, Niveaux, Activités, Admissions et Contact. Les textes,
   l'adresse, les téléphones, WhatsApp, les horaires, les frais et les dates sont dans
   `site_public/contenu.py` : ce qui est vide n'est pas affiché.
 - Une famille remplit la préinscription sur son téléphone (avec, si elle veut, la photo de
@@ -124,6 +124,22 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   photos ne sont visibles que par ceux qui voient le dossier.
 - Les messages de la page Contact arrivent dans « Messages du site » (secrétariat).
 - Un champ caché aux visiteurs arrête les robots qui remplissent les formulaires.
+
+## Activités et concours
+
+- Menu « Activités » (secrétariat) : un concours Génies en herbe, une sortie, une fête... avec un
+  titre, une date, un texte et des photos. Sur le téléphone, on choisit plusieurs photos d'un coup
+  dans la galerie (10 Mo au plus chacune) ; elles sont remises dans le bon sens et réduites
+  (1 600 px, et une vignette de 600 px) pour rester légères.
+- Les activités cochées « Visible sur le site de l'école » paraissent sur la page « Activités »
+  du site public (`/activites/`) et les trois dernières sur l'accueil. On voit les photos en
+  grand et on passe de l'une à l'autre avec les flèches ou en glissant le doigt.
+- Les photos d'une activité décochée ne sont visibles que dans la gestion. Une photo retirée, ou
+  une activité supprimée, est effacée du disque.
+- Les photos sont dans `media/activites/`, qui n'est pas envoyé sur GitHub : ne mettez pas de
+  photos d'élèves dans le dépôt (il est public), ajoutez-les par le site.
+- En ligne, le serveur web doit accepter des envois assez gros pour plusieurs photos (par exemple
+  `client_max_body_size 50M;` avec nginx).
 
 ## Comptes parents
 
@@ -223,7 +239,8 @@ site_public/              → site public : pages, préinscription, contact
 core/
     models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note,
                             Creneau, Affectation, Cours, Preinscription, MessageContact, Parent,
-                            Annonce, Appel, Absence, Incident, AlerteSante, Bulletin, Notification
+                            Annonce, Appel, Absence, Incident, AlerteSante, Bulletin, Notification,
+                            Activite, PhotoActivite
     choices.py            → nom de l'école, classes (Kinder → NSIV), sections, matières, postes, types de paiement
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
@@ -239,10 +256,12 @@ core/
     views_bulletins.py    → pages des bulletins (par classe, par élève, impression, téléchargement)
     notifications.py      → notifications des parents et lien « Prévenir par WhatsApp »
     views_annonces.py     → annonces aux parents
+    views_activites.py    → activités et concours du site public, avec leurs photos
     notes.py              → notes par classe, puis par matière
     photos.py             → réduction et rangement des photos
     anniversaires.py      → anniversaires et années à l'école du personnel
     templatetags/icones.py → balise {% icone "nom" %}
+    templatetags/texte.py → espaces insécables avant « : ; ! ? » dans les titres
     backends.py           → connexion avec le téléphone, l'e-mail ou le nom d'utilisateur
     forms.py              → formulaires et validation
     views.py              → connexion, espace de chacun, tableau de bord, gestion de chaque module
@@ -267,8 +286,8 @@ static/icones/icones.svg  → toutes les icônes du site
 
 ## Fonctionnalités
 
-- **Site public** : présentation de l'école, niveaux, admissions, contact et préinscription en
-  ligne avec numéro de dossier.
+- **Site public** : présentation de l'école, niveaux, activités et concours en photos,
+  admissions, contact et préinscription en ligne avec numéro de dossier.
 - **Préinscriptions** : suivi de chaque demande jusqu'à l'inscription de l'élève.
 - **Comptes parents** : code d'accès remis à l'inscription, espace parent avec les annonces, les
   notes, les bulletins, les absences, le comportement, la santé et les paiements de ses enfants,
@@ -295,7 +314,7 @@ static/icones/icones.svg  → toutes les icônes du site
 - Coefficients par matière et règles de passage de l'école dans le calcul des bulletins.
 - Envoyer les notifications aussi par SMS ou WhatsApp automatiquement (il faut un fournisseur
   d'envoi, payant).
-- Ajouter les actualités, le calendrier et la galerie au site public.
+- Ajouter le calendrier de l'année au site public.
 - Montrer aux parents le solde à payer (il faut d'abord enregistrer les frais de chaque classe).
 - Exporter les listes d'élèves et de paiements en PDF ou en Excel.
 - Mettre le site en ligne (Render, Railway, PythonAnywhere).

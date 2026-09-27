@@ -1,0 +1,84 @@
+{% extends "site_public/base.html" %}
+{% load icones texte %}
+{% block title %}{{ activite.titre }}{% endblock %}
+{% block description %}{{ activite.categorie }} du {{ activite.date|date:"j F Y" }} à l'institution Les Nénuphars.{% if activite.texte %} {{ activite.texte|truncatewords:25 }}{% endif %}{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick"><a href="{% url 'site:activites' %}">Activités</a> · {{ activite.categorie }}</p>
+    <h1>{{ activite.titre|insecables }}</h1>
+    <p class="aide">{% icone "calendrier" %} {{ activite.date|date:"l j F Y" }}</p>
+    {% if activite.texte %}<div class="texte-activite">{{ activite.texte|linebreaks }}</div>{% endif %}
+</section>
+
+{% if photos %}
+<section class="bande">
+    <h2>Les photos <span class="aide">({{ photos|length }})</span></h2>
+    <ul class="galerie">
+        {% for p in photos %}
+        <li><a href="{% url 'site:photo_activite' p.pk 'grande' %}" class="galerie-lien" data-numero="{{ forloop.counter }}">
+            <img src="{% url 'site:photo_activite' p.pk 'vignette' %}" alt="Photo {{ forloop.counter }} : {{ activite.titre }}" loading="lazy">
+        </a></li>
+        {% endfor %}
+    </ul>
+</section>
+
+<dialog class="visionneuse" id="visionneuse" aria-label="Photo en grand">
+    <img alt="">
+    <p class="legende"></p>
+    <button type="button" class="precedente" aria-label="Photo précédente">{% icone "retour" %}</button>
+    <button type="button" class="suivante" aria-label="Photo suivante">{% icone "suivant" %}</button>
+    <button type="button" class="fermer" aria-label="Fermer">{% icone "croix" %}</button>
+</dialog>
+{% endif %}
+
+{% if autres %}
+<section class="bande">
+    <h2>Autres activités</h2>
+    <div class="activites">{% for a in autres %}{% include "site_public/_activite.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+
+<section class="bande appel">
+    <div><h2>Votre enfant parmi nous l'an prochain ?</h2><p>La préinscription se fait en ligne, depuis votre téléphone.</p></div>
+    <a class="btn btn-lily" href="{% url 'site:preinscription' %}">Préinscrire mon enfant {% icone "suivant" %}</a>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if photos %}
+<script>
+/* Visionneuse : les photos en grand, avec photo précédente / suivante (flèches, glisser du doigt) */
+(function () {
+    var d = document.getElementById("visionneuse");
+    var liens = Array.prototype.slice.call(document.querySelectorAll(".galerie-lien"));
+    if (!d || !d.showModal || !liens.length) return;
+    var img = d.querySelector("img"), legende = d.querySelector(".legende"), courant = 0;
+    function montrer(i) {
+        courant = (i + liens.length) % liens.length;
+        img.src = liens[courant].href;
+        img.alt = liens[courant].querySelector("img").alt;
+        legende.textContent = "Photo " + (courant + 1) + " sur " + liens.length;
+    }
+    liens.forEach(function (lien, i) {
+        lien.addEventListener("click", function (e) { e.preventDefault(); montrer(i); d.showModal(); });
+    });
+    d.querySelector(".precedente").addEventListener("click", function () { montrer(courant - 1); });
+    d.querySelector(".suivante").addEventListener("click", function () { montrer(courant + 1); });
+    d.querySelector(".fermer").addEventListener("click", function () { d.close(); });
+    d.addEventListener("click", function (e) { if (e.target === d) d.close(); });
+    d.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") montrer(courant - 1);
+        if (e.key === "ArrowRight") montrer(courant + 1);
+    });
+    var depart = null;
+    d.addEventListener("touchstart", function (e) { depart = e.touches[0].clientX; }, {passive: true});
+    d.addEventListener("touchend", function (e) {
+        if (depart === null) return;
+        var ecart = e.changedTouches[0].clientX - depart;
+        if (Math.abs(ecart) > 50) montrer(courant + (ecart < 0 ? 1 : -1));
+        depart = null;
+    });
+    if (liens.length < 2) { d.querySelector(".precedente").hidden = true; d.querySelector(".suivante").hidden = true; }
+})();
+</script>
+{% endif %}
+{% endblock %}

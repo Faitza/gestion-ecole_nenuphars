@@ -2,8 +2,8 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.urls import reverse
-from .models import (AlerteSante, Annonce, Classe, Creneau, Eleve, Employe, Incident, Note, Paiement, Preinscription,
-                     Professeur, Section, Utilisateur)
+from .models import (Activite, AlerteSante, Annonce, Classe, Creneau, Eleve, Employe, Incident, Note, Paiement,
+                     PhotoActivite, Preinscription, Professeur, Section, Utilisateur)
 from . import anniversaires, choices, photos, professeurs, roles
 from .classes import par_section
 from .telephone import normaliser_telephone
@@ -549,3 +549,53 @@ class AnnonceForm(forms.ModelForm):
         self.instance.section_id = int(pk) if genre == "section" else None
         self.instance.classe_id = int(pk) if genre == "classe" else None
         return super().save(commit)
+
+
+# ─────────────────────────── Activités et concours ───────────────────────────
+class PlusieursFichiersInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class PlusieursPhotosField(forms.FileField):
+    """Plusieurs photos d'un coup (on les choisit ensemble dans la galerie du téléphone)."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", PlusieursFichiersInput(attrs={"accept": "image/*", "multiple": True}))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        un = super().clean
+        if isinstance(data, (list, tuple)):
+            return [un(d, initial) for d in data if d]
+        return [un(data, initial)] if data else []
+
+
+class ActiviteForm(forms.ModelForm):
+    photos = PlusieursPhotosField(label="Ajouter des photos", required=False,
+                                  help_text="Vous pouvez en choisir plusieurs à la fois (10 Mo au plus chacune).")
+
+    class Meta:
+        model = Activite
+        fields = ["titre", "categorie", "date", "texte", "publiee"]
+        widgets = {
+            "titre": forms.TextInput(attrs={"placeholder": "ex : Génies en herbe : la 9ème AF gagne la finale"}),
+            "date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "texte": forms.Textarea(attrs={"rows": 5}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nom, champ in self.fields.items():
+            if nom != "publiee":
+                champ.widget.attrs.setdefault("class", "form-control")
+
+    def clean_photos(self):
+        """Chaque photo est remise dans le bon sens et réduite : (grande image, vignette)."""
+        return [photos.preparer_photo_activite(f) for f in self.cleaned_data["photos"]]
+
+    def save(self, commit=True):
+        activite = super().save(commit=commit)
+        if commit:
+            for grande, vignette in self.cleaned_data["photos"]:
+                PhotoActivite.objects.create(activite=activite, image=grande, vignette=vignette)
+        return activite

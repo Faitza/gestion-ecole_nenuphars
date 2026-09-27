@@ -7,7 +7,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 from core.models import (Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours,
-                         Preinscription, MessageContact, Annonce, Absence, AlerteSante, Incident, Bulletin)
+                         Preinscription, MessageContact, Annonce, Absence, AlerteSante, Incident, Bulletin, Activite)
 from core import bulletins, choices, notifications, parents, professeurs
 
 Utilisateur = get_user_model()
@@ -233,5 +233,13 @@ class Command(BaseCommand):
                 eleves["Martin"].pk: {"conduite": "Bonne", "appreciation": "Bon début d'année, continuez."}})
             bulletins.valider(huitieme, periode, choices.annee_scolaire_courante(), par=None)
         self.stdout.write(self.style.SUCCESS("✓ Vie scolaire, 2 annonces et bulletins du 1er trimestre de la 8ème AF créés"))
+
+        # 12) Une activité sur le site public (les photos s'ajoutent depuis la gestion)
+        Activite.objects.get_or_create(titre="Génies en herbe : finale entre la 7ème et la 8ème AF", defaults=dict(
+            categorie="Génies en herbe", date=timezone.localdate() - timedelta(days=10),
+            texte="Deux équipes de quatre élèves ont répondu aux questions de culture générale, de sciences "
+                  "et d'histoire d'Haïti devant toute l'école.\nBravo à tous les participants !",
+            cree_par=Utilisateur.objects.filter(username="secretaire").first()))
+        self.stdout.write(self.style.SUCCESS("✓ 1 activité Génies en herbe créée (sans photo)"))
 
         self.stdout.write(self.style.SUCCESS("\nBase de données remplie avec succès !"))

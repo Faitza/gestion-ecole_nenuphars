@@ -65,6 +65,32 @@ def preparer_document(fichier):
         raise ValidationError("Envoyez un PDF ou une photo du document.")
 
 
+TAILLE_MAX_ACTIVITE = 10 * 1024 * 1024   # photos de téléphone des activités
+COTE_ACTIVITE = 1600
+COTE_VIGNETTE = 600
+
+
+def chemin_activite(instance, nom_fichier):
+    return f"activites/{uuid.uuid4().hex}.jpg"
+
+
+def chemin_vignette(instance, nom_fichier):
+    return f"activites/vignettes/{uuid.uuid4().hex}.jpg"
+
+
+def preparer_photo_activite(fichier):
+    """Une photo d'activité pour le site : (grande image, vignette), toutes deux en JPEG."""
+    if fichier.size > TAILLE_MAX_ACTIVITE:
+        raise ValidationError(f"« {fichier.name} » est trop lourde (10 Mo au plus).")
+    try:
+        grande = _en_jpeg(fichier, COTE_ACTIVITE, "photo.jpg")
+        fichier.seek(0)
+        vignette = _en_jpeg(fichier, COTE_VIGNETTE, "vignette.jpg")
+    except ValidationError:
+        raise ValidationError(f"« {fichier.name} » n'est pas une photo lisible.")
+    return grande, vignette
+
+
 def supprimer_fichier(champ):
     """Efface le fichier d'une photo remplacée ou d'une fiche supprimée."""
     if champ and champ.name:

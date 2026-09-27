@@ -39,6 +39,16 @@
     </div>
 </section>
 
+{% if activites %}
+<section class="bande">
+    <div class="titre-bande">
+        <h2>Les dernières activités</h2>
+        <a class="plus" href="{% url 'site:activites' %}">Toutes les activités {% icone "suivant" %}</a>
+    </div>
+    <div class="activites">{% for a in activites %}{% include "site_public/_activite.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+
 <section class="bande appel">
     <div>
         <h2>Inscrire votre enfant en {{ annee }}</h2>
