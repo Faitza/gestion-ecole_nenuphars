@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Bulletin · {{ periode }}{% endblock %}
+{% block header_color %}#8b5cf6{% endblock %}
+{% block header_title %}{% icone "bulletin" %} BULLETIN · {{ periode|upper }}{% endblock %}
+{% block content %}
+<div class="actions-bar pas-imprime">
+    <div class="boutons">
+        <button type="button" class="btn btn-add" onclick="window.print()">{% icone "imprimer" %} Imprimer ou enregistrer en PDF</button>
+        <a href="{{ retour }}" class="btn btn-secondaire">{% icone "retour" %} Retour</a>
+    </div>
+</div>
+{% for f in fiches %}{% include "core/_bulletin.html" %}{% endfor %}
+{% endblock %}

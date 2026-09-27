@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Annonces aux parents{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "annonces" %} ANNONCES AUX PARENTS{% endblock %}
+{% block content %}
+<div class="actions-bar">
+    <p class="intro">Les parents voient les annonces de toute l'école, et celles de la section et de la classe de leurs enfants.</p>
+    {% if acces.annonces.ecrire %}<a href="{% url 'core:annonce_creer' %}" class="btn btn-add">{% icone "ajouter" %} Nouvelle annonce</a>{% endif %}
+</div>
+{% for a in annonces %}
+<article class="bloc annonce">
+    <div class="actions-bar">
+        <div>
+            <h2>{{ a.titre }}</h2>
+            <span class="aide">{{ a.destinataires }} · {{ a.publiee_le|date:"j F Y, G \h i" }}{% if a.auteur %} · {{ a.auteur.get_full_name|default:a.auteur.username }}{% endif %}</span>
+        </div>
+        {% if a.modifiable %}<div class="boutons">
+            <a href="{% url 'core:annonce_modifier' a.pk %}" class="btn-sm btn-edit">{% icone "modifier" %} Modifier</a>
+            <a href="{% url 'core:annonce_supprimer' a.pk %}" class="btn-sm btn-delete">{% icone "supprimer" %} Supprimer</a>
+        </div>{% endif %}
+    </div>
+    <p class="texte-annonce">{{ a.texte|linebreaksbr }}</p>
+</article>
+{% empty %}
+<div class="bloc"><p>Aucune annonce pour le moment.</p></div>
+{% endfor %}
+{% endblock %}

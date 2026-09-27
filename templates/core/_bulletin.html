@@ -1,0 +1,43 @@
+{% load icones notes %}
+<article class="bulletin">
+    <header class="bulletin-entete">
+        <div class="bulletin-logo">{% icone "logo" %}</div>
+        <div>
+            <h2>Institution Les Nénuphars</h2>
+            <p>Les Cayes, Haïti · Année scolaire {{ annee }}</p>
+        </div>
+        <div class="bulletin-titre">Bulletin<br><strong>{{ periode }}</strong></div>
+    </header>
+    <dl class="bulletin-eleve">
+        <dt>Élève</dt><dd>{{ f.eleve.nom|upper }} {{ f.eleve.prenom }}</dd>
+        <dt>Classe</dt><dd>{{ f.classe|default:"—" }}{% if f.classe.section %} · {{ f.classe.section }}{% endif %}</dd>
+    </dl>
+    <table class="table-bulletin">
+        <thead><tr><th>Matière</th><th>Note sur 100</th><th>Moyenne de la classe</th></tr></thead>
+        <tbody>
+        {% for l in f.lignes %}
+            <tr><td>{{ l.matiere }}{% if l.professeur %}<br><span class="aide">{{ l.professeur }}</span>{% endif %}</td>
+                <td><strong>{% if l.note is not None %}{{ l.note|note }}{% else %}—{% endif %}</strong></td>
+                <td>{% if l.moyenne_classe is not None %}{{ l.moyenne_classe|note }}{% else %}—{% endif %}</td></tr>
+        {% empty %}
+            <tr><td colspan="3">Pas de notes pour ce trimestre.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="bulletin-resultats">
+        <div><span>Moyenne générale</span><strong>{% if f.moyenne is not None %}{{ f.moyenne|note }} / 100{% else %}—{% endif %}</strong></div>
+        <div><span>Rang</span><strong>{% if f.rang %}{{ f.rang }}{% if f.rang == 1 %}er{% else %}e{% endif %} sur {{ f.effectif }}{% else %}—{% endif %}</strong></div>
+        <div><span>Absences</span><strong>{{ f.absences }}</strong></div>
+        <div><span>Retards</span><strong>{{ f.retards }}</strong></div>
+        <div><span>Conduite</span><strong>{{ f.bulletin.conduite|default:"—" }}</strong></div>
+    </div>
+    {% if f.bulletin.appreciation %}<p class="bulletin-appreciation"><strong>Appréciation :</strong> {{ f.bulletin.appreciation }}</p>{% endif %}
+    <footer class="bulletin-pied">
+        {% if f.bulletin.valide %}
+            <p>Validé par la direction{% if f.bulletin.valide_par %} ({{ f.bulletin.valide_par.get_full_name|default:f.bulletin.valide_par.username }}){% endif %} le {{ f.bulletin.valide_le|date:"j F Y" }}.</p>
+        {% else %}
+            <p class="brouillon">Aperçu : ce bulletin n'est pas encore validé, les parents ne le voient pas.</p>
+        {% endif %}
+        <div class="signatures"><span>La direction</span><span>Les parents</span></div>
+    </footer>
+</article>

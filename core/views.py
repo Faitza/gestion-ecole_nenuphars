@@ -5,11 +5,13 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Sum, Q
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 
-from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Preinscription, MessageContact
+from .models import (Absence, Classe, Eleve, Employe, Incident, MessageContact, Note, Paiement, Preinscription,
+                     Professeur)
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
-from . import anniversaires, choices, professeurs, roles, views_parents
+from . import anniversaires, bulletins, choices, professeurs, roles, views_parents
 from . import notes as notes_par_classe
 from .views_professeurs import espace_professeur
 
@@ -88,6 +90,21 @@ def dashboard(request):
     if peut(user, "messages_site"):
         context["nb_messages"] = MessageContact.objects.filter(traite=False).count()
     context["codes_parents"] = views_parents.resume_pour_le_tableau_de_bord(user)
+    # Vie scolaire du jour et bulletins prêts à valider
+    if peut(user, "vie_scolaire"):
+        du_jour = filtrer(user, "vie_scolaire", Absence.objects.filter(date=timezone.localdate()))
+        context["vie_scolaire"] = {
+            "absents": du_jour.filter(type=choices.ABSENCE).count(),
+            "retards": du_jour.filter(type=choices.RETARD).count(),
+            "a_traiter": filtrer(user, "vie_scolaire", Incident.objects.filter(statut=choices.INCIDENT_SIGNALE)).count(),
+        }
+    if peut(user, "bulletins"):
+        periode, annee = choices.trimestre_du_jour(), choices.annee_scolaire_courante()
+        classes = [c for c in filtrer(user, "bulletins", Classe.objects.select_related("section"), chemin="section")
+                   if roles.peut_valider_bulletins(user, c.section)]
+        context["bulletins_a_valider"] = sum(
+            1 for c in classes if bulletins.avancement(c, periode, annee)["etat"] == bulletins.ETAT_A_VALIDER)
+        context["periode"] = periode
     # Anniversaires et années à l'école du personnel que l'on peut voir, dans les 7 jours
     context["evenements"] = anniversaires.evenements(anniversaires.personnel_visible(user))
     context["jours_d_avance"] = anniversaires.JOURS_D_AVANCE

@@ -2,7 +2,8 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.urls import reverse
-from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Creneau, Preinscription, Utilisateur
+from .models import (Annonce, Classe, Creneau, Eleve, Employe, Incident, Note, Paiement, Preinscription, Professeur,
+                     Section, Utilisateur)
 from . import anniversaires, choices, photos, professeurs, roles
 from .classes import par_section
 from .telephone import normaliser_telephone
@@ -430,3 +431,92 @@ class CompteExistantForm(forms.Form):
         if not self.compte.check_password(mot_de_passe):
             raise forms.ValidationError("Mot de passe incorrect.")
         return mot_de_passe
+
+
+# ─────────────────────────── Vie scolaire ───────────────────────────
+class IncidentForm(forms.ModelForm):
+    """Signalement d'un incident par un surveillant, un professeur ou le censeur."""
+
+    class Meta:
+        model = Incident
+        fields = ["eleve", "date", "description"]
+        labels = {"eleve": "Élève"}
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "description": forms.Textarea(attrs={"rows": 4, "placeholder": "Ce qui s'est passé, où et quand."}),
+        }
+
+    def __init__(self, *args, eleves, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["eleve"].queryset = eleves
+        self.fields["eleve"].label_from_instance = lambda e: f"{e.nom} {e.prenom} · {e.classe or 'sans classe'}"
+        for champ in self.fields.values():
+            champ.widget.attrs.setdefault("class", "form-control")
+
+    def clean_date(self):
+        from django.utils import timezone
+        date = self.cleaned_data["date"]
+        if date > timezone.localdate():
+            raise forms.ValidationError("La date ne peut pas être dans le futur.")
+        return date
+
+
+class IncidentTraitementForm(forms.ModelForm):
+    """Le censeur décide de la suite : sanction, convocation des parents, clôture."""
+
+    class Meta:
+        model = Incident
+        fields = ["sanction", "statut", "convocation_le"]
+        help_texts = {"convocation_le": "Laissez vide si les parents ne sont pas convoqués."}
+        widgets = {
+            "sanction": forms.TextInput(attrs={"placeholder": "ex : retenue le samedi, avertissement"}),
+            "convocation_le": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # « Signalé » veut dire : pas encore traité. Le censeur passe à « En cours » ou « Clos ».
+        self.fields["statut"].choices = [(s, s) for s in choices.STATUTS_INCIDENT if s != choices.INCIDENT_SIGNALE]
+        if self.initial.get("statut") == choices.INCIDENT_SIGNALE:
+            self.initial["statut"] = choices.INCIDENT_EN_COURS
+        for champ in self.fields.values():
+            champ.widget.attrs.setdefault("class", "form-control")
+
+
+# ─────────────────────────── Annonces ───────────────────────────
+class AnnonceForm(forms.ModelForm):
+    pour = forms.ChoiceField(label="Pour qui ?")
+
+    class Meta:
+        model = Annonce
+        fields = ["titre", "texte"]
+        widgets = {"texte": forms.Textarea(attrs={"rows": 6})}
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields = {"pour": self.fields.pop("pour"), **self.fields}
+        options = []
+        if roles.portee(user, "annonces", ecriture=True) == "tout":
+            options.append(("ecole", "Tous les parents de l'école"))
+            sections = Section.objects.all()
+            classes = Classe.objects.select_related("section")
+        else:
+            section = roles.section_de(user)
+            sections = Section.objects.filter(pk=section.pk) if section else Section.objects.none()
+            classes = Classe.objects.filter(section=section).select_related("section") if section else Classe.objects.none()
+        options += [(f"section-{s.pk}", f"Parents de la section {s}") for s in sections]
+        for section, liste in par_section(classes):
+            options.append((f"Classes{f' · {section}' if section else ''}",
+                            [(f"classe-{c.pk}", f"Parents de {c}") for c in liste]))
+        self.fields["pour"].choices = options
+        if self.instance.pk:
+            self.initial["pour"] = (f"classe-{self.instance.classe_id}" if self.instance.classe_id
+                                    else f"section-{self.instance.section_id}" if self.instance.section_id else "ecole")
+        for champ in self.fields.values():
+            champ.widget.attrs.setdefault("class", "form-control")
+
+    def save(self, commit=True):
+        genre, _, pk = self.cleaned_data["pour"].partition("-")
+        self.instance.section_id = int(pk) if genre == "section" else None
+        self.instance.classe_id = int(pk) if genre == "classe" else None
+        return super().save(commit)

@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}Appel · {{ classe }}{% endblock %}
+{% block header_color %}#7c3aed{% endblock %}
+{% block header_title %}{% icone "appel" %} APPEL · {{ classe.nom|upper }}{% endblock %}
+{% block content %}
+<div class="salutation">
+    <h2>{{ jour|date:"l j F Y"|capfirst }}</h2>
+    <span>{% if appel_fait %}Déjà fait par {{ appel_fait.fait_par.get_full_name|default:appel_fait.fait_par.username }} à {{ appel_fait.fait_le|time:"G \h i" }} : vous pouvez corriger.{% else %}Tout le monde est présent au départ : touchez R ou A pour les autres.{% endif %}</span>
+</div>
+<form method="post" class="appel" id="appel">
+    {% csrf_token %}
+    <input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}">
+    <ul class="liste-appel">
+    {% for eleve, absence in lignes %}
+        <li class="ligne-appel">
+            <span class="eleve-avec-photo">{% photo eleve "petite" %} <span>{{ eleve.nom }} {{ eleve.prenom }}{% if absence.justifiee %}<br><small class="aide">justifié{% if absence.type == "Absence" %}e{% endif %}{% if absence.motif %} : {{ absence.motif }}{% endif %}</small>{% endif %}</span></span>
+            <span class="choix-appel" role="radiogroup" aria-label="{{ eleve.prenom }} {{ eleve.nom }}">
+                {% for statut in statuts %}
+                <label class="choix-{{ statut|slugify }}" title="{{ statut }}">
+                    <input type="radio" name="e{{ eleve.pk }}" value="{{ statut }}"{% if absence.type == statut or not absence and forloop.first %} checked{% endif %}>
+                    <span>{{ statut|slice:":1" }}</span>
+                </label>
+                {% endfor %}
+            </span>
+            <label class="minutes"{% if absence.type != "Retard" %} hidden{% endif %}>
+                <input type="number" name="m{{ eleve.pk }}" min="1" max="240" inputmode="numeric" value="{{ absence.minutes_retard|default_if_none:'' }}" placeholder="min"> min
+            </label>
+        </li>
+    {% empty %}
+        <li>Aucun élève dans cette classe.</li>
+    {% endfor %}
+    </ul>
+    <div class="barre-appel">
+        <span id="compte-appel"></span>
+        <button type="submit" class="btn btn-add">{% icone "envoyer" %} Enregistrer l'appel</button>
+    </div>
+</form>
+<p class="aide">P : présent · R : en retard · A : absent. L'appel est envoyé au censeur, et les parents voient l'absence ou le retard dans leur espace.</p>
+<p><a href="{% url 'core:appel_choix' %}" class="lien-icone">{% icone "retour" %} Autres classes</a></p>
+<script>
+(function () {
+    var form = document.getElementById("appel"), compte = document.getElementById("compte-appel");
+    function maj() {
+        var n = {"Présent": 0, "Retard": 0, "Absence": 0};
+        form.querySelectorAll(".ligne-appel").forEach(function (li) {
+            var choisi = li.querySelector("input[type=radio]:checked");
+            if (!choisi) return;
+            n[choisi.value]++;
+            var minutes = li.querySelector(".minutes");
+            if (minutes) minutes.hidden = choisi.value !== "Retard";
+        });
+        compte.textContent = n["Absence"] + " absent(s) · " + n["Retard"] + " retard(s) · " + n["Présent"] + " présent(s)";
+    }
+    form.addEventListener("change", maj);
+    maj();
+})();
+</script>
+{% endblock %}

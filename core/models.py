@@ -151,6 +151,9 @@ class Parent(models.Model):
     code_cree_le = models.DateTimeField(null=True, blank=True)
     compte_cree_le = models.DateTimeField("compte créé le", null=True, blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
+    # Dernière visite de l'espace parent et des annonces : ce qui est arrivé depuis est « Nouveau »
+    espace_vu_le = models.DateTimeField(null=True, blank=True, editable=False)
+    annonces_vues_le = models.DateTimeField(null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ["nom"]
@@ -461,3 +464,119 @@ class MessageContact(models.Model):
 
     def __str__(self):
         return f"{self.nom} · {self.recu_le:%d/%m/%Y}"
+
+
+# ─────────────────────────────────────────────────────────────
+# ANNONCES AUX PARENTS : pour toute l'école, une section ou une classe.
+# Publiées par le secrétariat, la directrice en chef ou la direction
+# d'une section (pour sa section).
+# ─────────────────────────────────────────────────────────────
+class Annonce(models.Model):
+    titre = models.CharField(max_length=150)
+    texte = models.TextField()
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="annonces")
+    classe = models.ForeignKey(Classe, on_delete=models.CASCADE, null=True, blank=True, related_name="annonces")
+    auteur = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    publiee_le = models.DateTimeField("publiée le", default=timezone.now)
+
+    class Meta:
+        ordering = ["-publiee_le"]
+
+    def __str__(self):
+        return self.titre
+
+    @property
+    def destinataires(self):
+        if self.classe_id:
+            return f"Parents de {self.classe}"
+        if self.section_id:
+            return f"Parents de la section {self.section}"
+        return "Tous les parents"
+
+
+# ─────────────────────────────────────────────────────────────
+# VIE SCOLAIRE : appel du matin, absences et retards, incidents
+# ─────────────────────────────────────────────────────────────
+class Appel(models.Model):
+    """L'appel du matin d'une classe a été fait (même si tout le monde était présent)."""
+    classe = models.ForeignKey(Classe, on_delete=models.CASCADE, related_name="appels")
+    date = models.DateField(default=timezone.localdate)
+    fait_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    fait_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date"]
+        constraints = [models.UniqueConstraint(fields=["classe", "date"], name="un_appel_par_classe_et_par_jour")]
+
+
+class Absence(models.Model):
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, related_name="absences")
+    date = models.DateField(default=timezone.localdate)
+    type = models.CharField(max_length=10, choices=choices.TYPES_ABSENCE_CHOICES, default=choices.ABSENCE)
+    minutes_retard = models.PositiveSmallIntegerField("minutes de retard", null=True, blank=True)
+    justifiee = models.BooleanField("justifiée", default=False)
+    motif = models.CharField(max_length=200, blank=True)
+    signalee_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    cree_le = models.DateTimeField(auto_now_add=True)
+    mise_a_jour = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "eleve__nom", "eleve__prenom"]
+        constraints = [models.UniqueConstraint(fields=["eleve", "date"], name="une_absence_par_eleve_et_par_jour")]
+
+    def __str__(self):
+        return f"{self.eleve} - {self.type} le {self.date:%d/%m/%Y}"
+
+
+class Incident(models.Model):
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, related_name="incidents")
+    date = models.DateField(default=timezone.localdate)
+    description = models.TextField("ce qui s'est passé")
+    signale_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    sanction = models.CharField("sanction ou suite donnée", max_length=200, blank=True)
+    statut = models.CharField(max_length=20, choices=choices.STATUTS_INCIDENT_CHOICES, default=choices.INCIDENT_SIGNALE)
+    convocation_le = models.DateTimeField("parents convoqués le", null=True, blank=True)
+    traite_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    cree_le = models.DateTimeField(auto_now_add=True)
+    mise_a_jour = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "-cree_le"]
+
+    def __str__(self):
+        return f"{self.eleve} - incident du {self.date:%d/%m/%Y}"
+
+    @property
+    def visible_par_les_parents(self):
+        """Les parents voient l'incident une fois traité par le censeur."""
+        return self.statut != choices.INCIDENT_SIGNALE
+
+
+# ─────────────────────────────────────────────────────────────
+# BULLETIN TRIMESTRIEL : calculé à partir des notes, validé par la
+# direction de la section. Les valeurs sont figées à la validation.
+# ─────────────────────────────────────────────────────────────
+class Bulletin(models.Model):
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, related_name="bulletins")
+    classe = models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, blank=True, related_name="bulletins")
+    annee_scolaire = models.CharField(max_length=20)
+    periode = models.CharField(max_length=20, choices=choices.PERIODES_CHOICES)
+    lignes = models.JSONField(default=list, blank=True, help_text="Notes de chaque matière au moment de la validation.")
+    moyenne = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    rang = models.PositiveSmallIntegerField(null=True, blank=True)
+    effectif = models.PositiveSmallIntegerField(null=True, blank=True)
+    absences = models.PositiveSmallIntegerField(default=0)
+    retards = models.PositiveSmallIntegerField(default=0)
+    conduite = models.CharField(max_length=20, choices=choices.CONDUITES_CHOICES, blank=True)
+    appreciation = models.TextField("appréciation", blank=True)
+    valide = models.BooleanField("validé", default=False)
+    valide_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    valide_le = models.DateTimeField("validé le", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-annee_scolaire", "periode", "eleve__nom"]
+        constraints = [models.UniqueConstraint(fields=["eleve", "annee_scolaire", "periode"],
+                                               name="un_bulletin_par_eleve_et_par_trimestre")]
+
+    def __str__(self):
+        return f"Bulletin {self.periode} {self.annee_scolaire} - {self.eleve}"

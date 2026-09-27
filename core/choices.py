@@ -139,6 +139,28 @@ def annee_scolaire_courante(aujourd_hui=None):
     return f"{debut}-{debut + 1}"
 
 
+def dates_du_trimestre(periode, annee_scolaire):
+    """(premier jour, dernier jour) d'un trimestre, pour compter absences et retards du bulletin.
+
+    1er trimestre : septembre à décembre ; 2e : janvier à mars ; 3e : avril à août.
+    """
+    from datetime import date
+    debut = int(annee_scolaire[:4])
+    return {
+        PERIODES[0]: (date(debut, 9, 1), date(debut, 12, 31)),
+        PERIODES[1]: (date(debut + 1, 1, 1), date(debut + 1, 3, 31)),
+        PERIODES[2]: (date(debut + 1, 4, 1), date(debut + 1, 8, 31)),
+    }[periode]
+
+
+def trimestre_du_jour(jour=None):
+    from datetime import date
+    jour = jour or date.today()
+    if jour.month >= 9:
+        return PERIODES[0]
+    return PERIODES[1] if jour.month <= 3 else PERIODES[2]
+
+
 def obtenir_annees_scolaires():
     """Génère une liste des 10 dernières années scolaires (ex: '2025-2026')."""
     from datetime import datetime
@@ -158,3 +180,23 @@ ETAPES_PREINSCRIPTION = [ETAPE_RECUE, ETAPE_CHEZ_LA_DIRECTION, ETAPE_ACCEPTEE, E
 ETAPES_PREINSCRIPTION_CHOICES = _vers_choix(ETAPES_PREINSCRIPTION)
 # Demandes pas encore terminées (ni refusées, ni inscrites)
 ETAPES_EN_COURS = [ETAPE_RECUE, ETAPE_CHEZ_LA_DIRECTION, ETAPE_ACCEPTEE]
+
+
+# ========================================
+# VIE SCOLAIRE : appel du matin, incidents, conduite
+# ========================================
+PRESENT = "Présent"
+RETARD = "Retard"
+ABSENCE = "Absence"
+TYPES_ABSENCE_CHOICES = [(ABSENCE, "Absence"), (RETARD, "Retard")]
+
+# Un incident signalé par un surveillant ou un professeur est traité par le censeur
+INCIDENT_SIGNALE = "Signalé"
+INCIDENT_EN_COURS = "En cours"
+INCIDENT_CLOS = "Clos"
+STATUTS_INCIDENT = [INCIDENT_SIGNALE, INCIDENT_EN_COURS, INCIDENT_CLOS]
+STATUTS_INCIDENT_CHOICES = _vers_choix(STATUTS_INCIDENT)
+
+# Appréciation de conduite du bulletin, donnée par le censeur (ou la direction de la section)
+CONDUITES = ["Excellente", "Très bonne", "Bonne", "Passable", "À améliorer"]
+CONDUITES_CHOICES = _vers_choix(CONDUITES)

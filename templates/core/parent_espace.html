@@ -9,6 +9,22 @@
     <span>Année scolaire {{ annee }}</span>
 </div>
 
+{% if annonces %}
+<div class="bloc annonces-recentes">
+    <div class="actions-bar">
+        <h2>{% icone "annonces" %} Annonces de l'école</h2>
+        <a href="{% url 'core:parent_annonces' %}" class="btn-sm btn-voir">Toutes les annonces</a>
+    </div>
+    <ul class="liste-evenements">
+    {% for a in annonces %}
+        <li><span class="pastille admissions">{% icone "annonces" %}</span>
+            <div><a href="{% url 'core:parent_annonces' %}"><strong>{{ a.titre }}</strong></a>{% if a.nouvelle %} <span class="puce-nouveau">Nouveau</span>{% endif %}<br><span class="aide">{{ a.texte|truncatechars:90 }}</span></div>
+            <span class="quand">{{ a.publiee_le|date:"j M" }}</span></li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 {% if not enfants %}
 <div class="bloc">
     <p>Aucun enfant n'est encore relié à votre compte. Adressez-vous au secrétariat de l'école.</p>
@@ -31,13 +47,18 @@
             <span class="aide">{% if enfant.classe %}{{ enfant.classe }}{% if enfant.classe.section %} · {{ enfant.classe.section }}{% endif %}{% else %}Classe à préciser{% endif %}</span>
         </div>
     </div>
-    <div class="chiffres">
+    <div class="chiffres chiffres-parent">
         <div><strong>{% if moyenne_generale is not None %}{{ moyenne_generale|floatformat:"-1" }}{% else %}—{% endif %}</strong><span>moyenne générale sur 100</span></div>
+        <div><strong>{{ nb_absences }} · {{ nb_retards }}</strong><span>absence{{ nb_absences|pluralize }} et retard{{ nb_retards|pluralize }} ce trimestre</span></div>
+        <div>{% if bulletin_du_trimestre %}<a href="{% url 'core:parent_bulletin' bulletin_du_trimestre.pk %}"><strong>Publié</strong></a>{% else %}<strong>En attente</strong>{% endif %}<span>bulletin du {{ trimestre|lower }}</span></div>
         <div><strong>{{ total_paye|floatformat:0 }} HTG</strong><span>payés cette année</span></div>
     </div>
+    <nav class="sommaire-enfant pas-imprime" aria-label="Rubriques">
+        <a href="#notes">Notes</a><a href="#bulletins">Bulletins</a><a href="#absences">Absences et retards</a><a href="#comportement">Comportement</a><a href="#paiements">Paiements</a>
+    </nav>
 </div>
 
-<h2 class="titre-section">{% icone "notes" %} Notes de l'année</h2>
+<h2 class="titre-section" id="notes">{% icone "notes" %} Notes de l'année</h2>
 {% if lignes %}
 <div class="table-wrapper">
 <table class="table-bulletin table-parent">
@@ -58,7 +79,55 @@
 <div class="bloc"><p>Pas encore de notes cette année. Elles apparaîtront ici dès que les professeurs les auront saisies.</p></div>
 {% endif %}
 
-<h2 class="titre-section">{% icone "paiements" %} Paiements</h2>
+<h2 class="titre-section" id="bulletins">{% icone "bulletin" %} Bulletins</h2>
+<div class="bloc">
+    {% for b in bulletins %}
+    <div class="ligne-famille">
+        <span><strong>{{ b.periode }}</strong>{% if b.nouveau %} <span class="puce-nouveau">Nouveau</span>{% endif %}<br>
+            <span class="aide">Moyenne {% if b.moyenne is not None %}{{ b.moyenne|note }}{% else %}—{% endif %}{% if b.rang %} · rang {{ b.rang }} sur {{ b.effectif }}{% endif %}{% if b.conduite %} · conduite {{ b.conduite|lower }}{% endif %}</span></span>
+        <a href="{% url 'core:parent_bulletin' b.pk %}" class="btn-sm btn-voir">{% icone "bulletin" %} Voir le bulletin</a>
+    </div>
+    {% empty %}
+    <p class="aide">Le bulletin du {{ trimestre|lower }} sera visible ici dès que la direction l'aura validé.</p>
+    {% endfor %}
+</div>
+
+<h2 class="titre-section" id="absences">{% icone "appel" %} Absences et retards</h2>
+<div class="bloc">
+    {% if absences %}
+    <ul class="liste-evenements">
+    {% for a in absences %}
+        <li><span class="pastille {% if a.type == 'Absence' %}absence{% else %}retard{% endif %}">{% if a.type == "Absence" %}{% icone "croix" %}{% else %}{% icone "horloge" %}{% endif %}</span>
+            <div><strong>{{ a.type }}{% if a.minutes_retard %} de {{ a.minutes_retard }} min{% endif %}</strong>{% if a.nouveau %} <span class="puce-nouveau">Nouveau</span>{% endif %}<br>
+                <span class="aide">{% if a.justifiee %}Justifiée{% if a.motif %} : {{ a.motif }}{% endif %}{% else %}Non justifiée{% endif %}</span></div>
+            <span class="quand">{{ a.date|date:"D j M"|capfirst }}</span></li>
+    {% endfor %}
+    </ul>
+    <p class="aide">Pour justifier une absence, adressez-vous à la vie scolaire de l'école.</p>
+    {% else %}
+    <p>Aucune absence ni retard cette année.</p>
+    {% endif %}
+</div>
+
+<h2 class="titre-section" id="comportement">{% icone "conduite" %} Comportement</h2>
+<div class="bloc">
+    {% if incidents %}
+    <ul class="liste-evenements">
+    {% for i in incidents %}
+        <li class="incident-parent"><span class="pastille absence">{% icone "incident" %}</span>
+            <div><strong>{{ i.description|linebreaksbr }}</strong>{% if i.nouveau %} <span class="puce-nouveau">Nouveau</span>{% endif %}
+                {% if i.sanction %}<br><span class="aide">Suite donnée : {{ i.sanction }}</span>{% endif %}
+                {% if i.convocation_le %}<br><span class="convocation">{% icone "convocation" %} Vous êtes convoqué(e) le {{ i.convocation_le|date:"l j F à G \h i" }}</span>{% endif %}</div>
+            <span class="quand">{{ i.date|date:"j M" }}</span></li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p>Aucun incident cette année.</p>
+    {% endif %}
+    {% for b in bulletins %}{% if b.conduite %}<p class="aide">Conduite au {{ b.periode|lower }} : <strong>{{ b.conduite }}</strong></p>{% endif %}{% endfor %}
+</div>
+
+<h2 class="titre-section" id="paiements">{% icone "paiements" %} Paiements</h2>
 {% if paiements %}
 <div class="table-wrapper">
 <table class="table-parent">

@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Appel du matin{% endblock %}
+{% block header_color %}#7c3aed{% endblock %}
+{% block header_title %}{% icone "appel" %} APPEL DU MATIN{% endblock %}
+{% block content %}
+<div class="salutation">
+    <h2>{{ jour|date:"l j F Y"|capfirst }}</h2>
+    <span>{{ nb_faits }} appel{{ nb_faits|pluralize }} fait{{ nb_faits|pluralize }} sur {{ classes|length }} classe{{ classes|length|pluralize }}</span>
+</div>
+<div class="grille-classes">
+    {% for c in classes %}
+    <a href="{% url 'core:appel' c.pk %}" class="carte-classe{% if c.appel %} faite{% endif %}">
+        <strong>{{ c.nom }}</strong>
+        {% if c.appel %}
+            <span>{% icone "valider" %} Fait à {{ c.appel.fait_le|time:"G \h i" }}{% if c.nb_absents_retards %} · {{ c.nb_absents_retards }} absent{{ c.nb_absents_retards|pluralize }} ou en retard{% endif %}</span>
+        {% else %}
+            <span>À faire</span>
+        {% endif %}
+    </a>
+    {% empty %}
+    <p>Aucune classe pour vous.</p>
+    {% endfor %}
+</div>
+<div class="boutons">
+    <a href="{% url 'core:incident_nouveau' %}" class="btn btn-refuser">{% icone "incident" %} Signaler un incident</a>
+    {% if vie_scolaire %}<a href="{% url 'core:vie_scolaire' %}" class="btn btn-secondaire">{% icone "vie-scolaire" %} Vie scolaire du jour</a>{% endif %}
+</div>
+{% endblock %}

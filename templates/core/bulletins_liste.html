@@ -1,0 +1,31 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Bulletins{% endblock %}
+{% block header_color %}#8b5cf6{% endblock %}
+{% block header_title %}{% icone "bulletin" %} BULLETINS{% endblock %}
+{% block content %}
+<p class="intro">Année {{ annee }}. Quand toutes les notes d'une classe sont saisies, la direction de la section valide ses bulletins : les parents les voient alors dans leur espace.</p>
+<nav class="onglets" aria-label="Trimestre">
+    {% for p in periodes %}<a href="?periode={{ p|urlencode }}" class="{% if p == periode %}actif{% endif %}">{{ p }}</a>{% endfor %}
+</nav>
+{% if a_valider %}<p class="ok">{% icone "valider" %} {{ a_valider }} classe{{ a_valider|pluralize }} prête{{ a_valider|pluralize }} : vous pouvez valider leurs bulletins.</p>{% endif %}
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Classe</th><th>Élèves</th><th>Notes saisies</th><th>Bulletins</th><th></th></tr></thead>
+    <tbody>
+    {% for c in classes %}
+        <tr>
+            <td><strong>{{ c.nom }}</strong>{% if c.section %}<br><span class="aide">{{ c.section }}</span>{% endif %}</td>
+            <td>{{ c.avancement.effectif }}</td>
+            <td><div class="jauge" title="{{ c.avancement.saisies }} sur {{ c.avancement.attendues }}"><span style="width:{{ c.avancement.pourcentage }}%"></span></div>
+                <span class="aide">{{ c.avancement.pourcentage }} % · {{ c.avancement.matieres }} matière{{ c.avancement.matieres|pluralize }}</span></td>
+            <td><span class="etape bulletin-{{ c.avancement.etat|slugify }}">{{ c.avancement.etat }}</span></td>
+            <td><a href="{% url 'core:bulletins_classe' c.pk %}?periode={{ periode|urlencode }}" class="btn-sm {% if c.peut_valider and c.avancement.etat == 'À valider' %}btn-transmettre{% else %}btn-voir{% endif %}">{% if c.peut_valider and c.avancement.etat == "À valider" %}{% icone "valider" %} Valider{% else %}{% icone "bulletin" %} Voir{% endif %}</a></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">Aucune classe.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}
