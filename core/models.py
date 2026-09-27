@@ -152,8 +152,6 @@ class Parent(models.Model):
     compte_cree_le = models.DateTimeField("compte créé le", null=True, blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
     # Dernière visite de l'espace parent et des annonces : ce qui est arrivé depuis est « Nouveau »
-    espace_vu_le = models.DateTimeField(null=True, blank=True, editable=False)
-    annonces_vues_le = models.DateTimeField(null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ["nom"]
@@ -536,6 +534,9 @@ class Incident(models.Model):
     sanction = models.CharField("sanction ou suite donnée", max_length=200, blank=True)
     statut = models.CharField(max_length=20, choices=choices.STATUTS_INCIDENT_CHOICES, default=choices.INCIDENT_SIGNALE)
     convocation_le = models.DateTimeField("parents convoqués le", null=True, blank=True)
+    informer_parents = models.BooleanField(
+        "informer les parents", default=False,
+        help_text="Les parents voient l'incident et la suite donnée dans leur espace, et reçoivent une notification.")
     traite_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     cree_le = models.DateTimeField(auto_now_add=True)
     mise_a_jour = models.DateTimeField(auto_now=True)
@@ -548,8 +549,26 @@ class Incident(models.Model):
 
     @property
     def visible_par_les_parents(self):
-        """Les parents voient l'incident une fois traité par le censeur."""
-        return self.statut != choices.INCIDENT_SIGNALE
+        """Le censeur (ou la direction) décide d'informer les parents, ou non."""
+        return self.informer_parents
+
+
+class AlerteSante(models.Model):
+    """Un élève tombé malade à l'école : ses parents sont prévenus tout de suite."""
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, related_name="alertes_sante", verbose_name="élève")
+    description = models.TextField("ce qu'il ou elle a")
+    mesure = models.CharField("ce que fait l'école", max_length=60, choices=choices.MESURES_SANTE_CHOICES,
+                              default=choices.MESURES_SANTE[0])
+    signale_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    cree_le = models.DateTimeField(default=timezone.now, editable=False)
+
+    class Meta:
+        ordering = ["-cree_le"]
+        verbose_name = "élève malade"
+        verbose_name_plural = "élèves malades"
+
+    def __str__(self):
+        return f"{self.eleve} - malade le {timezone.localtime(self.cree_le):%d/%m/%Y}"
 
 
 # ─────────────────────────────────────────────────────────────
@@ -580,3 +599,45 @@ class Bulletin(models.Model):
 
     def __str__(self):
         return f"Bulletin {self.periode} {self.annee_scolaire} - {self.eleve}"
+
+
+# ─────────────────────────────────────────────────────────────
+# NOTIFICATIONS DES PARENTS : absence ou retard, comportement,
+# convocation, santé, bulletin publié, annonce. Chaque notification
+# est liée à ce qui l'a créée : si on corrige l'appel ou si on retire
+# un bulletin, elle disparaît avec.
+# ─────────────────────────────────────────────────────────────
+class Notification(models.Model):
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name="notifications")
+    eleve = models.ForeignKey(Eleve, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    categorie = models.CharField(max_length=20, choices=choices.CATEGORIES_NOTIFICATION_CHOICES)
+    titre = models.CharField(max_length=200)
+    texte = models.TextField(blank=True)
+    absence = models.ForeignKey("Absence", on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    incident = models.ForeignKey(Incident, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    alerte_sante = models.ForeignKey(AlerteSante, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    bulletin = models.ForeignKey("Bulletin", on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    annonce = models.ForeignKey("Annonce", on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    cree_le = models.DateTimeField(default=timezone.now)
+    lue_le = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-cree_le", "-pk"]
+        indexes = [models.Index(fields=["parent", "lue_le"])]
+
+    def __str__(self):
+        return f"{self.parent} - {self.titre}"
+
+    @property
+    def lien(self):
+        """La page où le parent voit le détail."""
+        from django.urls import reverse
+        if self.bulletin_id:
+            return reverse("core:parent_bulletin", args=[self.bulletin_id])
+        if self.annonce_id:
+            return f"{reverse('core:parent_annonces')}#annonce-{self.annonce_id}"
+        if self.eleve_id:
+            ancre = {choices.NOTIF_ABSENCE: "absences", choices.NOTIF_RETARD: "absences",
+                     choices.NOTIF_SANTE: "sante"}.get(self.categorie, "comportement")
+            return f"{reverse('core:parent_enfant', args=[self.eleve_id])}#{ancre}"
+        return reverse("core:parent_notifications")

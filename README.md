@@ -156,10 +156,16 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   autre jour), incidents ouverts, convocations à venir. Le censeur ou la direction de la section
   justifie une absence avec son motif.
 - **Incidents** : un surveillant ou un professeur signale un incident. Le censeur ou la direction
-  de la section décide de la suite (sanction, statut, convocation des parents) ; la convocation
-  s'imprime depuis la fiche de l'incident.
+  de la section décide de la suite (sanction, statut, convocation des parents) et coche
+  **« Informer les parents »** s'il veut que la famille le sache. Une convocation informe toujours
+  les parents ; elle s'imprime depuis la fiche de l'incident.
+- **Élève malade** (bouton sur l'appel du matin et la vie scolaire) : le surveillant, le professeur
+  ou le censeur indique ce que l'élève a et ce que fait l'école (il se repose, un parent doit
+  venir, il est conduit chez le médecin). Les parents reçoivent une notification tout de suite, et
+  la page propose d'appeler la famille ou de la prévenir par WhatsApp.
 - **Ce que voient les parents** : les absences et retards tout de suite ; un incident seulement
-  quand le censeur l'a traité, avec la suite donnée et la date de convocation.
+  si le censeur a coché « Informer les parents », avec la suite donnée et la date de convocation ;
+  les alertes santé.
 
 ## Bulletins trimestriels
 
@@ -172,16 +178,35 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
   **appréciation** puis **valide** les bulletins de la classe. Les valeurs sont alors figées :
   une note corrigée plus tard ne change pas un bulletin publié. « Retirer la publication »
   permet de corriger puis de valider de nouveau.
-- Les parents voient un bulletin seulement quand il est validé. Tous les bulletins d'une classe
-  s'impriment (ou s'enregistrent en PDF depuis le navigateur) en un clic.
+- Les parents voient un bulletin seulement quand il est validé. Ils peuvent l'imprimer ou le
+  **télécharger en PDF ou en image (PNG)**, pratique à envoyer par WhatsApp.
+- L'école imprime tous les bulletins d'une classe en un clic, télécharge la classe dans un seul PDF
+  (une page par élève), ou le bulletin d'un élève en PDF ou en PNG. Les fichiers sont faits par le
+  serveur (`core/bulletins_fichiers.py`, avec ReportLab et pypdfium2).
 
 ## Annonces aux parents
 
 - Menu « Annonces » : le secrétariat et la directrice en chef écrivent à toute l'école, à une
   section ou à une classe ; la direction d'une section, à sa section ou à l'une de ses classes.
 - Le parent voit les annonces qui concernent ses enfants dans son espace et dans son menu
-  « Annonces ». Le menu affiche le nombre de nouveautés depuis sa dernière visite (annonces,
-  absences, incidents traités, bulletins), et la fenêtre de bienvenue les rappelle.
+  « Annonces ».
+
+## Notifications des parents
+
+- Le parent reçoit une notification pour : une absence ou un retard à l'appel, un incident dont
+  le censeur veut l'informer, une convocation, un élève malade, un bulletin publié, une annonce.
+- Le menu « Notifications » affiche le nombre de nouvelles ; la fenêtre de bienvenue les résume à
+  la connexion, et l'espace parent les montre en haut (« Nouveau pour vous »).
+- Une notification suit ce qui l'a créée : si l'appel est corrigé ou un bulletin retiré, elle
+  disparaît ; si une absence est justifiée, elle est mise à jour.
+- Les notifications restent sur le site. Pour un message urgent, les pages de l'incident et de
+  l'élève malade ont un bouton « Prévenir aussi par WhatsApp » (le message est déjà écrit) et
+  « Appeler la famille ».
+
+## Navigation
+
+- Chaque page a une **flèche de retour** en haut à gauche : elle ramène à la page d'avant dans
+  l'application (sans revenir sur un formulaire déjà enregistré), ou à l'accueil de chacun.
 
 ## Icônes
 
@@ -198,7 +223,7 @@ site_public/              → site public : pages, préinscription, contact
 core/
     models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note,
                             Creneau, Affectation, Cours, Preinscription, MessageContact, Parent,
-                            Annonce, Appel, Absence, Incident, Bulletin
+                            Annonce, Appel, Absence, Incident, AlerteSante, Bulletin, Notification
     choices.py            → nom de l'école, classes (Kinder → NSIV), sections, matières, postes, types de paiement
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
@@ -210,7 +235,9 @@ core/
     views_parents.py      → « Créer mon compte parent », espace parent, comptes parents du secrétariat
     views_vie_scolaire.py → appel du matin, tableau du censeur, incidents et convocations
     bulletins.py          → calcul, validation et publication des bulletins trimestriels
-    views_bulletins.py    → pages des bulletins (par classe, par élève, impression)
+    bulletins_fichiers.py → bulletins à télécharger en PDF et en image (PNG)
+    views_bulletins.py    → pages des bulletins (par classe, par élève, impression, téléchargement)
+    notifications.py      → notifications des parents et lien « Prévenir par WhatsApp »
     views_annonces.py     → annonces aux parents
     notes.py              → notes par classe, puis par matière
     photos.py             → réduction et rangement des photos
@@ -219,7 +246,7 @@ core/
     backends.py           → connexion avec le téléphone, l'e-mail ou le nom d'utilisateur
     forms.py              → formulaires et validation
     views.py              → connexion, espace de chacun, tableau de bord, gestion de chaque module
-    tests.py, tests_parents.py, tests_vie_scolaire.py → tests automatiques (python manage.py test)
+    tests*.py             → tests automatiques (python manage.py test)
     admin.py              → gestion des données dans /admin/
     management/commands/seed_data.py → crée les classes et des données d'exemple
 templates/core/           → les pages de la gestion
@@ -244,11 +271,12 @@ static/icones/icones.svg  → toutes les icônes du site
   ligne avec numéro de dossier.
 - **Préinscriptions** : suivi de chaque demande jusqu'à l'inscription de l'élève.
 - **Comptes parents** : code d'accès remis à l'inscription, espace parent avec les annonces, les
-  notes, les bulletins, les absences, le comportement et les paiements de ses enfants.
-- **Vie scolaire** : appel du matin sur téléphone, absences et retards, incidents, sanctions et
-  convocations des parents.
+  notes, les bulletins, les absences, le comportement, la santé et les paiements de ses enfants,
+  et des notifications.
+- **Vie scolaire** : appel du matin sur téléphone, absences et retards, incidents, sanctions,
+  convocations des parents, élève malade.
 - **Bulletins** : bulletin trimestriel par élève (moyenne, rang, absences, conduite, appréciation),
-  validé par la direction puis publié aux parents.
+  validé par la direction puis publié aux parents, à imprimer ou télécharger en PDF et en image.
 - **Annonces** : messages aux parents de toute l'école, d'une section ou d'une classe.
 - **Élèves** : informations de l'élève, nom et téléphone du parent ou tuteur, classe
   (une seule classe par élève).
@@ -265,7 +293,8 @@ static/icones/icones.svg  → toutes les icônes du site
 ## Prochaines étapes possibles
 
 - Coefficients par matière et règles de passage de l'école dans le calcul des bulletins.
-- Prévenir les parents par SMS ou WhatsApp (il faut un fournisseur d'envoi).
+- Envoyer les notifications aussi par SMS ou WhatsApp automatiquement (il faut un fournisseur
+  d'envoi, payant).
 - Ajouter les actualités, le calendrier et la galerie au site public.
 - Montrer aux parents le solde à payer (il faut d'abord enregistrer les frais de chaque classe).
 - Exporter les listes d'élèves et de paiements en PDF ou en Excel.

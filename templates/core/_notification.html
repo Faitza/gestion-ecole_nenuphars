@@ -1,0 +1,7 @@
+{% load icones %}
+<li class="{% if not n.lue_le %}non-lue{% endif %}">
+    <span class="pastille {% if n.categorie == 'Santé' or n.categorie == 'Comportement' or n.categorie == 'Convocation' or n.categorie == 'Absence' %}sante{% elif n.categorie == 'Retard' %}retard{% else %}notif{% endif %}">{% if n.categorie == "Santé" %}{% icone "sante" %}{% elif n.categorie == "Comportement" %}{% icone "incident" %}{% elif n.categorie == "Convocation" %}{% icone "convocation" %}{% elif n.categorie == "Absence" %}{% icone "croix" %}{% elif n.categorie == "Retard" %}{% icone "horloge" %}{% elif n.categorie == "Bulletin" %}{% icone "bulletin" %}{% else %}{% icone "annonces" %}{% endif %}</span>
+    <div><a href="{{ n.lien }}"><strong>{{ n.titre }}</strong></a>{% if not n.lue_le %} <span class="puce-nouveau">Nouveau</span>{% endif %}
+        {% if n.texte %}<br><span class="aide texte-notif">{{ n.texte|truncatechars:220 }}</span>{% endif %}</div>
+    <span class="quand">{{ n.cree_le|date:"j M, G \h i" }}</span>
+</li>

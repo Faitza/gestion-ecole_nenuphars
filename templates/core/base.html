@@ -19,8 +19,9 @@
         <nav>
             {% with nom=request.resolver_match.url_name %}
             {% if not utilise_la_gestion %}{% if est_professeur or not est_parent %}<a href="{% url 'core:espace' %}" class="{% if nom == 'espace' %}active{% endif %}">{% icone "maison" %} Mon espace</a>{% endif %}{% endif %}
-            {% if est_parent %}<a href="{% url 'core:parent_espace' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_espace' or nom == 'parent_enfant' or nom == 'parent_bulletin' %}active{% endif %}">{% icone "espace-parent" %} Mes enfants{% if nouveautes_parent.enfants %} <span class="compteur" title="Nouveau depuis votre dernière visite">{{ nouveautes_parent.enfants }}</span>{% endif %}</a>
-            <a href="{% url 'core:parent_annonces' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_annonces' %}active{% endif %}">{% icone "annonces" %} Annonces{% if nouveautes_parent.annonces %} <span class="compteur" title="Nouvelles annonces">{{ nouveautes_parent.annonces }}</span>{% endif %}</a>{% endif %}
+            {% if est_parent %}<a href="{% url 'core:parent_espace' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_espace' or nom == 'parent_enfant' or nom == 'parent_bulletin' %}active{% endif %}">{% icone "espace-parent" %} Mes enfants</a>
+            <a href="{% url 'core:parent_notifications' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_notifications' %}active{% endif %}">{% icone "cloche" %} Notifications{% if notifications_non_lues %} <span class="compteur" title="Notifications pas encore lues">{{ notifications_non_lues }}</span>{% endif %}</a>
+            <a href="{% url 'core:parent_annonces' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_annonces' %}active{% endif %}">{% icone "annonces" %} Annonces</a>{% endif %}
             {% if fait_l_appel %}<a href="{% url 'core:appel_choix' %}" style="--accent:#7c3aed" class="{% if nom == 'appel_choix' or nom == 'appel' %}active{% endif %}">{% icone "appel" %} Appel du matin</a>{% endif %}
             {% if est_professeur %}<a href="{% url 'core:saisie_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'saisie_notes' %}active{% endif %}">{% icone "saisie" %} Saisie des notes</a>
             <a href="{% url 'core:mes_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'mes_notes' %}active{% endif %}">{% icone "notes" %} Mes notes</a>{% endif %}
@@ -40,7 +41,7 @@
             <a href="{% url 'site:accueil' %}">{% icone "ecole" %} Site de l'école</a>
             <a href="{% url 'core:mot_de_passe' %}" class="{% if nom == 'mot_de_passe' %}active{% endif %}">{% icone "cle" %} Mot de passe</a>
             {% endwith %}
-            <form method="post" action="{% url 'core:logout' %}">
+            <form method="post" action="{% url 'core:logout' %}" onsubmit="try { sessionStorage.removeItem('nenuphars-pages'); } catch (e) {}">
                 {% csrf_token %}
                 <button type="submit" class="logout">{% icone "deconnexion" %} Déconnexion</button>
             </form>
@@ -49,6 +50,10 @@
 
     <main class="main-content">
         <div class="page-header" style="background:{% block header_color %}var(--primaire){% endblock %};">
+            {% with nom=request.resolver_match.url_name %}{% if nom != "dashboard" and nom != "espace" and nom != "parent_espace" %}
+            {# Flèche de retour : la page d'avant dans l'application, sinon la page d'accueil de chacun #}
+            <a href="{% block retour %}{% url 'core:espace' %}{% endblock %}" class="fleche-retour" id="fleche-retour" title="Retour" aria-label="Retour">{% icone "retour" %}</a>
+            {% endif %}{% endwith %}
             <h1>{% block header_title %}{% endblock %}</h1>
         </div>
         <div class="page-body">
@@ -76,6 +81,37 @@
     (function () {
         var d = document.getElementById("bienvenue");
         if (d && d.showModal) { d.showModal(); } else if (d) { d.setAttribute("open", ""); }
+    })();
+    // Flèche de retour : on garde les pages visitées dans cet onglet. Une page rechargée après un
+    // enregistrement ne compte qu'une fois, un formulaire bien enregistré n'est pas proposé de
+    // nouveau, et le bouton « retour » du navigateur est suivi aussi.
+    (function () {
+        var cle = "nenuphars-pages", ici = location.pathname + location.search, pile = [], envoi = null;
+        try {
+            pile = JSON.parse(sessionStorage.getItem(cle)) || [];
+            envoi = sessionStorage.getItem(cle + "-envoi");
+            sessionStorage.removeItem(cle + "-envoi");
+        } catch (e) { return; }
+        if (envoi && envoi !== ici && pile[pile.length - 1] === envoi) { pile.pop(); }
+        document.addEventListener("submit", function (e) {
+            if ((e.target.getAttribute("method") || "").toLowerCase() === "post") {
+                try { sessionStorage.setItem(cle + "-envoi", ici); } catch (err) {}
+            }
+        }, true);
+        if (pile[pile.length - 1] !== ici) {
+            if (pile[pile.length - 2] === ici) { pile.pop(); } else { pile.push(ici); }
+        }
+        pile = pile.slice(-30);
+        try { sessionStorage.setItem(cle, JSON.stringify(pile)); } catch (e) { return; }
+        var fleche = document.getElementById("fleche-retour");
+        if (!fleche) { return; }
+        fleche.addEventListener("click", function (e) {
+            if (pile.length < 2) { return; }
+            e.preventDefault();
+            pile.pop();
+            try { sessionStorage.setItem(cle, JSON.stringify(pile)); } catch (err) {}
+            location.href = pile[pile.length - 1];
+        });
     })();
 </script>
 </body>

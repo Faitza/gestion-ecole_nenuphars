@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from . import anniversaires, bulletins, choices, parents
+from . import anniversaires, bulletins, choices, notifications, parents
 from .models import (Absence, Annonce, Appel, Bulletin, Classe, Eleve, Employe, Incident, Note, Parent, Professeur,
                      Section, Utilisateur)
 
@@ -272,29 +272,32 @@ class AnnoncesTests(AvecUneEcole):
                                                          "titre": "Examens du secondaire", "texte": "Le 8 décembre."})
 
         # Le parent de Naïka (7ème AF, secondaire) voit l'école et le secondaire, pas la 6ème
+        self.assertEqual(notifications.compte_par_categorie(self.famille), {choices.NOTIF_ANNONCE: 2})
         self.client.force_login(self.parent)
-        self.assertEqual(parents.nouveautes(self.famille)["annonces"], 2)
         page = self.client.get(reverse("core:parent_annonces"))
         self.assertContains(page, "Réunion des parents")
         self.assertContains(page, "Examens du secondaire")
         self.assertNotContains(page, "Sortie au musée")
         self.assertContains(page, "Nouveau")
-        self.assertEqual(parents.nouveautes(Parent.objects.get(pk=self.famille.pk))["annonces"], 0)
+        self.assertEqual(notifications.non_lues(self.famille).count(), 0)
+        # La famille de la 6ème AF a reçu la sortie au musée et la réunion, pas les examens du secondaire
+        autre = Parent.objects.get(enfants=self.anne)
+        self.assertEqual(sorted(autre.notifications.values_list("titre", flat=True)), ["Réunion des parents", "Sortie au musée"])
 
-    def test_nouveautes_du_parent(self):
-        Parent.objects.filter(pk=self.famille.pk).update(espace_vu_le=timezone.now(), annonces_vues_le=timezone.now())
+    def test_notifications_du_parent(self):
         Annonce.objects.create(titre="Fête de l'école", texte="Le 18 mai.")
-        Absence.objects.create(eleve=self.naika, type=choices.RETARD, minutes_retard=5)
-        Incident.objects.create(eleve=self.naika, description="Bavardages.")  # pas encore traité : ne compte pas
-        famille = Parent.objects.get(pk=self.famille.pk)
-        nouveau = parents.nouveautes(famille)
-        self.assertEqual((nouveau["annonces"], nouveau["absences"], nouveau["incidents"]), (1, 1, 0))
-        self.assertIn("1 annonce et 1 absence ou retard", anniversaires.message_de_bienvenue(self.parent))
+        notifications.pour_annonce(Annonce.objects.get(titre="Fête de l'école"))
+        notifications.pour_absence(Absence.objects.create(eleve=self.naika, type=choices.RETARD, minutes_retard=5))
+        incident = Incident.objects.create(eleve=self.naika, description="Bavardages.")
+        notifications.pour_incident(incident)  # le censeur n'a pas coché « Informer les parents »
+        self.assertEqual(notifications.compte_par_categorie(self.famille),
+                         {choices.NOTIF_ANNONCE: 1, choices.NOTIF_RETARD: 1})
+        self.assertIn("Nouveau pour vous : 1 retard et 1 annonce", anniversaires.message_de_bienvenue(self.parent))
 
         self.client.force_login(self.parent)
         menu = self.client.get(reverse("core:parent_annonces"))
-        self.assertContains(menu, '<span class="compteur" title="Nouveau depuis votre dernière visite">1</span>')
+        self.assertContains(menu, '<span class="compteur" title="Notifications pas encore lues">1</span>')
         espace = self.client.get(reverse("core:parent_espace"))
         self.assertContains(espace, "Retard de 5 min")
         self.assertNotContains(espace, "Bavardages")
-        self.assertEqual(parents.nouveautes(Parent.objects.get(pk=self.famille.pk))["total"], 0)
+        self.assertEqual(notifications.non_lues(self.famille).count(), 0)

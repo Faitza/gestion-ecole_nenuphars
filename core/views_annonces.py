@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
+from . import notifications
 from .forms import AnnonceForm
 from .models import Annonce
 from .roles import acces_requis, portee, section_de
@@ -42,6 +43,7 @@ def annonce_creer(request):
         annonce = form.save(commit=False)
         annonce.auteur = request.user
         annonce.save()
+        notifications.pour_annonce(annonce)
         messages.success(request, f"Annonce publiée. {annonce.destinataires} la voient dans leur espace.")
         return redirect("core:annonce_liste")
     return render(request, "core/generic_form.html", {"form": form, "titre": "Nouvelle annonce", "icone_titre": "annonces"})
@@ -52,7 +54,7 @@ def annonce_modifier(request, pk):
     annonce = get_object_or_404(visibles(request.user, ecriture=True), pk=pk)
     form = AnnonceForm(request.POST or None, instance=annonce, user=request.user)
     if form.is_valid():
-        form.save()
+        notifications.pour_annonce(form.save())
         messages.success(request, "Annonce modifiée.")
         return redirect("core:annonce_liste")
     return render(request, "core/generic_form.html", {"form": form, "titre": "Modifier l'annonce", "icone_titre": "annonces"})

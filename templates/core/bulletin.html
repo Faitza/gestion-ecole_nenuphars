@@ -2,11 +2,14 @@
 {% load icones %}
 {% block title %}Bulletin · {{ periode }}{% endblock %}
 {% block header_color %}#8b5cf6{% endblock %}
+{% block retour %}{{ retour }}{% endblock %}
 {% block header_title %}{% icone "bulletin" %} BULLETIN · {{ periode|upper }}{% endblock %}
 {% block content %}
 <div class="actions-bar pas-imprime">
     <div class="boutons">
-        <button type="button" class="btn btn-add" onclick="window.print()">{% icone "imprimer" %} Imprimer ou enregistrer en PDF</button>
+        <button type="button" class="btn btn-add" onclick="window.print()">{% icone "imprimer" %} Imprimer</button>
+        {% if lien_pdf %}<a href="{{ lien_pdf }}" class="btn btn-transmettre" download>{% icone "pdf" %} {% if toute_la_classe %}Télécharger toute la classe en PDF{% else %}Télécharger en PDF{% endif %}</a>{% endif %}
+        {% if lien_png %}<a href="{{ lien_png }}" class="btn btn-secondaire" download>{% icone "image" %} Télécharger en image (PNG)</a>{% endif %}
         <a href="{{ retour }}" class="btn btn-secondaire">{% icone "retour" %} Retour</a>
     </div>
 </div>

@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% load icones photos %}
+{% block title %}Élève malade · {{ alerte.eleve }}{% endblock %}
+{% block header_color %}#dc2626{% endblock %}
+{% block header_title %}{% icone "sante" %} ÉLÈVE MALADE{% endblock %}
+{% block content %}
+<div class="bloc">
+    <div class="entete-fiche">
+        {% photo alerte.eleve "moyenne" %}
+        <div>
+            <h2>{{ alerte.eleve.prenom }} {{ alerte.eleve.nom }}</h2>
+            <span class="aide">{{ alerte.eleve.classe|default:"Sans classe" }}</span>
+        </div>
+    </div>
+    <dl class="infos">
+        <dt>Signalé le</dt><dd>{{ alerte.cree_le|date:"l j F Y à G \h i"|capfirst }}{% if alerte.signale_par %} par {{ alerte.signale_par.get_full_name|default:alerte.signale_par.username }}{% endif %}</dd>
+        <dt>Ce qu'il ou elle a</dt><dd>{{ alerte.description|linebreaksbr }}</dd>
+        <dt>Ce que fait l'école</dt><dd><strong>{{ alerte.mesure }}</strong></dd>
+        <dt>Parent ou tuteur</dt><dd>{{ alerte.eleve.nom_parent_tuteur|default:"—" }}{% if alerte.eleve.telephone_parent %} · <a href="tel:{{ alerte.eleve.telephone_parent|cut:' ' }}">{{ alerte.eleve.telephone_parent }}</a>{% endif %}</dd>
+    </dl>
+    <p class="etat-parents {% if comptes_parents %}informes{% else %}a-prevenir{% endif %}">{% icone "cloche" %}
+        {% if comptes_parents %}{{ comptes_parents }} compte{{ comptes_parents|pluralize }} parent{{ comptes_parents|pluralize }} {{ comptes_parents|pluralize:"a,ont" }} reçu une notification.
+        {% else %}La famille n'a pas encore de compte parent : appelez-la ou prévenez-la par WhatsApp.{% endif %}
+    </p>
+    <div class="boutons">
+        {% if alerte.eleve.telephone_parent %}<a href="tel:{{ alerte.eleve.telephone_parent|cut:' ' }}" class="btn btn-add">{% icone "telephone" %} Appeler la famille</a>{% endif %}
+        {% if whatsapp %}<a href="{{ whatsapp }}" class="btn btn-whatsapp" target="_blank" rel="noopener">{% icone "whatsapp" %} Prévenir aussi par WhatsApp</a>{% endif %}
+    </div>
+</div>
+{% if acces.vie_scolaire.lire %}<p><a href="{% url 'core:vie_scolaire' %}" class="lien-icone">{% icone "retour" %} Vie scolaire</a></p>
+{% else %}<p><a href="{% url 'core:appel_choix' %}" class="lien-icone">{% icone "retour" %} Appel du matin</a></p>{% endif %}
+{% endblock %}

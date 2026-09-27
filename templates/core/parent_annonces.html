@@ -5,7 +5,7 @@
 {% block header_title %}{% icone "annonces" %} ANNONCES DE L'ÉCOLE{% endblock %}
 {% block content %}
 {% for a in annonces %}
-<article class="bloc annonce{% if a.nouvelle %} nouvelle{% endif %}">
+<article class="bloc annonce{% if a.nouvelle %} nouvelle{% endif %}" id="annonce-{{ a.pk }}">
     <h2>{{ a.titre }}{% if a.nouvelle %} <span class="puce-nouveau">Nouveau</span>{% endif %}</h2>
     <span class="aide">{{ a.publiee_le|date:"j F Y" }} · {{ a.destinataires }}</span>
     <p class="texte-annonce">{{ a.texte|linebreaksbr }}</p>

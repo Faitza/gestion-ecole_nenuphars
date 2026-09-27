@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Affectation, Cours,
-                     Preinscription, MessageContact, Parent, Annonce, Appel, Absence, Incident, Bulletin)
+                     Preinscription, MessageContact, Parent, Annonce, Appel, Absence, Incident, Bulletin, AlerteSante, Notification)
 
 
 @admin.register(Utilisateur)
@@ -134,8 +134,9 @@ class AbsenceAdmin(admin.ModelAdmin):
 
 @admin.register(Incident)
 class IncidentAdmin(admin.ModelAdmin):
-    list_display = ("eleve", "date", "statut", "sanction", "convocation_le", "signale_par", "traite_par")
-    list_filter = ("statut", "date")
+    list_display = ("eleve", "date", "statut", "sanction", "informer_parents", "convocation_le", "signale_par",
+                    "traite_par")
+    list_filter = ("statut", "informer_parents", "date")
     search_fields = ("eleve__nom", "eleve__prenom", "description", "sanction")
 
 
@@ -145,3 +146,17 @@ class BulletinAdmin(admin.ModelAdmin):
     list_filter = ("periode", "annee_scolaire", "valide", "classe")
     search_fields = ("eleve__nom", "eleve__prenom")
     readonly_fields = ("lignes", "moyenne", "rang", "effectif", "absences", "retards", "valide_par", "valide_le")
+
+
+@admin.register(AlerteSante)
+class AlerteSanteAdmin(admin.ModelAdmin):
+    list_display = ("eleve", "cree_le", "mesure", "signale_par")
+    list_filter = ("mesure",)
+    search_fields = ("eleve__nom", "eleve__prenom", "description")
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("parent", "categorie", "titre", "cree_le", "lue_le")
+    list_filter = ("categorie",)
+    search_fields = ("parent__nom", "titre")

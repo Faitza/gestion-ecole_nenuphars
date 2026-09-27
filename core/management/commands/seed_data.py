@@ -7,8 +7,8 @@ from datetime import timedelta
 from django.utils import timezone
 
 from core.models import (Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours,
-                         Preinscription, MessageContact, Annonce, Absence, Incident, Bulletin)
-from core import bulletins, choices, parents, professeurs
+                         Preinscription, MessageContact, Annonce, Absence, AlerteSante, Incident, Bulletin)
+from core import bulletins, choices, notifications, parents, professeurs
 
 Utilisateur = get_user_model()
 
@@ -200,22 +200,33 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"✓ Compte {poste.lower()} du secondaire créé ({identifiant} / {identifiant}123)"))
             comptes_vie[identifiant] = employe.utilisateur
         aujourd_hui = timezone.localdate()
-        Absence.objects.get_or_create(eleve=eleves["Martin"], date=aujourd_hui - timedelta(days=2), defaults=dict(
-            type=choices.RETARD, minutes_retard=10, signalee_par=comptes_vie["surveillant"]))
-        Absence.objects.get_or_create(eleve=eleves["Dupont"], date=aujourd_hui - timedelta(days=1), defaults=dict(
-            type=choices.ABSENCE, justifiee=True, motif="Maladie", signalee_par=comptes_vie["surveillant"]))
-        Incident.objects.get_or_create(eleve=eleves["Martin"], description="Téléphone utilisé en classe.", defaults=dict(
-            date=aujourd_hui - timedelta(days=1), signale_par=comptes_vie["surveillant"], traite_par=comptes_vie["censeur"],
-            statut=choices.INCIDENT_EN_COURS, sanction="Téléphone rendu aux parents"))
+        retard, _ = Absence.objects.get_or_create(
+            eleve=eleves["Martin"], date=aujourd_hui - timedelta(days=2),
+            defaults=dict(type=choices.RETARD, minutes_retard=10, signalee_par=comptes_vie["surveillant"]))
+        absence, _ = Absence.objects.get_or_create(
+            eleve=eleves["Dupont"], date=aujourd_hui - timedelta(days=1),
+            defaults=dict(type=choices.ABSENCE, justifiee=True, motif="Maladie", signalee_par=comptes_vie["surveillant"]))
+        telephone, _ = Incident.objects.get_or_create(
+            eleve=eleves["Martin"], description="Téléphone utilisé en classe.", defaults=dict(
+                date=aujourd_hui - timedelta(days=1), signale_par=comptes_vie["surveillant"],
+                traite_par=comptes_vie["censeur"], statut=choices.INCIDENT_EN_COURS,
+                sanction="Téléphone rendu aux parents", informer_parents=True))
         Incident.objects.get_or_create(eleve=eleves["Bernard"], description="Bousculade à la récréation.", defaults=dict(
             signale_par=comptes_vie["surveillant"]))
+        malade, _ = AlerteSante.objects.get_or_create(eleve=eleves["Martin"], description="Mal de tête après la récréation.",
+                                                      defaults=dict(signale_par=comptes_vie["surveillant"]))
+        for objet, envoyer in [(retard, notifications.pour_absence), (absence, notifications.pour_absence),
+                               (telephone, notifications.pour_incident), (malade, notifications.pour_alerte_sante)]:
+            envoyer(objet)
 
         # 11) Annonces aux parents, et bulletins du 1er trimestre de la 8ème AF validés
-        Annonce.objects.get_or_create(titre="Réunion des parents", defaults=dict(
+        reunion, _ = Annonce.objects.get_or_create(titre="Réunion des parents", defaults=dict(
             texte="Réunion de tous les parents le samedi 11 octobre à 9 h, dans la cour de l'école.",
             auteur=Utilisateur.objects.filter(username="secretaire").first()))
-        Annonce.objects.get_or_create(titre="Examens du 1er trimestre", section=secondaire, defaults=dict(
+        examens, _ = Annonce.objects.get_or_create(titre="Examens du 1er trimestre", section=secondaire, defaults=dict(
             texte="Les examens du 1er trimestre du secondaire commencent le lundi 8 décembre."))
+        for annonce in (reunion, examens):
+            notifications.pour_annonce(annonce)
         huitieme, periode = classes["8ème AF"], choices.PERIODES[0]
         if not Bulletin.objects.filter(classe=huitieme, periode=periode, valide=True).exists():
             bulletins.enregistrer_remarques(huitieme, periode, choices.annee_scolaire_courante(), {

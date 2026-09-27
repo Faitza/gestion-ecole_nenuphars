@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Notifications{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "cloche" %} NOTIFICATIONS{% endblock %}
+{% block content %}
+{% if nouvelles %}
+<h2 class="titre-section">Nouvelles ({{ nouvelles|length }})</h2>
+<div class="bloc"><ul class="liste-evenements liste-notifications">
+    {% for n in nouvelles %}{% include "core/_notification.html" %}{% endfor %}
+</ul></div>
+{% endif %}
+<h2 class="titre-section">{% if nouvelles %}Déjà lues{% else %}Vos notifications{% endif %}</h2>
+<div class="bloc">
+    {% if lues %}
+    <ul class="liste-evenements liste-notifications">
+        {% for n in lues %}{% include "core/_notification.html" %}{% endfor %}
+    </ul>
+    {% elif not nouvelles %}
+    <p>Aucune notification pour le moment. Vous en recevrez ici pour les absences et les retards, le comportement,
+       la santé de vos enfants, les bulletins et les annonces de l'école.</p>
+    {% else %}
+    <p class="aide">Rien d'autre.</p>
+    {% endif %}
+</div>
+<p><a href="{% url 'core:parent_espace' %}" class="lien-icone">{% icone "retour" %} Mes enfants</a></p>
+{% endblock %}
