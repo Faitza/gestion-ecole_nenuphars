@@ -1,0 +1,51 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Accès parent · {{ parent.nom }}{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "cle" %} ACCÈS PARENT{% endblock %}
+{% block content %}
+<div class="fiche-acces">
+    <h2>Institution Les Nénuphars</h2>
+    <p><strong>{{ parent.nom }}</strong><br>
+        {% for e in enfants %}{{ e.prenom }} {{ e.nom }}{% if e.classe %} ({{ e.classe }}){% endif %}{% if not forloop.last %}, {% endif %}{% empty %}Aucun enfant relié{% endfor %}</p>
+    {% if parent.utilisateur_id %}
+        <dl>
+            <dt>Adresse du site</dt><dd>{{ adresse_connexion }}</dd>
+            <dt>Identifiant</dt><dd>votre téléphone : {{ parent.telephone }}</dd>
+            {% if mot_de_passe %}<dt>Mot de passe provisoire</dt><dd class="mot-de-passe">{{ mot_de_passe }}</dd>{% endif %}
+        </dl>
+        {% if mot_de_passe %}
+            <p>À la connexion, le site vous demandera de choisir votre propre mot de passe.</p>
+        {% else %}
+            <p class="aide pas-imprime">Compte créé le {{ parent.compte_cree_le|date:"d/m/Y" }}. Le parent se connecte avec son téléphone et son mot de passe.</p>
+        {% endif %}
+    {% else %}
+        <p>Pour voir les notes et les paiements de vos enfants, créez votre compte parent :</p>
+        <dl>
+            <dt>Adresse</dt><dd>{{ adresse_inscription }}</dd>
+            <dt>Code d'accès</dt><dd class="mot-de-passe">{{ parent.code_acces }}</dd>
+            <dt>Téléphone</dt><dd>{{ parent.telephone }}</dd>
+        </dl>
+        <p>Entrez ce code et ce téléphone, puis choisissez votre mot de passe. Le code ne sert qu'une fois. Gardez cette fiche en lieu sûr.</p>
+    {% endif %}
+</div>
+<div class="actions-bar pas-imprime">
+    <div class="boutons">
+        {% if not parent.utilisateur_id or mot_de_passe %}<button type="button" class="btn btn-add" onclick="window.print()">{% icone "imprimer" %} Imprimer la fiche</button>{% endif %}
+        {% if acces.parents.ecrire %}
+            {% if not parent.utilisateur_id %}
+            <form method="post" action="{% url 'core:parent_nouveau_code' parent.pk %}" class="en-ligne"
+                  onsubmit="return confirm('Créer un nouveau code ? L\'ancien ne fonctionnera plus.')">
+                {% csrf_token %}<button type="submit" class="btn btn-secondaire">{% icone "cle" %} Nouveau code</button>
+            </form>
+            {% elif peut_reinitialiser %}
+            <form method="post" action="{% url 'core:parent_nouveau_mot_de_passe' parent.pk %}" class="en-ligne"
+                  onsubmit="return confirm('Donner un mot de passe provisoire à ce parent ? Son mot de passe actuel ne fonctionnera plus.')">
+                {% csrf_token %}<button type="submit" class="btn btn-secondaire">{% icone "cadenas" %} Nouveau mot de passe</button>
+            </form>
+            {% endif %}
+        {% endif %}
+        <a href="{% url 'core:parent_liste' %}" class="btn btn-secondaire">{% icone "retour" %} Comptes parents</a>
+    </div>
+</div>
+{% endblock %}

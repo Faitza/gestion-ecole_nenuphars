@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from core.models import (Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Cours,
                          Preinscription, MessageContact)
-from core import choices, professeurs
+from core import choices, parents, professeurs
 
 Utilisateur = get_user_model()
 
@@ -172,5 +172,19 @@ class Command(BaseCommand):
             telephone="3712 4455", message="Bonjour, quelle est la date de la réunion des parents ?",
         ))
         self.stdout.write(self.style.SUCCESS(f"✓ {len(preinscriptions_data)} préinscriptions et 1 message du site créés"))
+
+        # 9) Familles : un compte parent déjà créé (Martin) et un code à remettre (Dupont)
+        for eleve in eleves.values():
+            parents.parent_de_l_eleve(eleve)
+        famille = eleves["Martin"].parents.first()
+        if famille.utilisateur is None and not Utilisateur.objects.filter(username="parent").exists():
+            compte = Utilisateur.objects.create_user("parent", password="parent123", first_name="Paul", last_name="Martin")
+            parents.relier(famille, compte)
+            self.stdout.write(self.style.SUCCESS("✓ Compte parent créé (parent / parent123), enfant : Marie Martin"))
+        famille = eleves["Dupont"].parents.first()
+        if famille.code_acces:
+            self.stdout.write(self.style.SUCCESS(
+                f"✓ Code parent de Jean Dupont : {famille.code_acces} (téléphone {famille.telephone}), "
+                "à essayer sur /inscription/"))
 
         self.stdout.write(self.style.SUCCESS("\nBase de données remplie avec succès !"))

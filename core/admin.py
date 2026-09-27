@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note, Creneau, Affectation, Cours,
-                     Preinscription, MessageContact)
+                     Preinscription, MessageContact, Parent)
 
 
 @admin.register(Utilisateur)
@@ -102,3 +102,11 @@ class MessageContactAdmin(admin.ModelAdmin):
     list_display = ("nom", "telephone", "email", "recu_le", "traite")
     list_filter = ("traite",)
     search_fields = ("nom", "telephone", "email", "message")
+
+
+@admin.register(Parent)
+class ParentAdmin(admin.ModelAdmin):
+    list_display = ("nom", "telephone", "code_acces", "utilisateur", "compte_cree_le")
+    search_fields = ("nom", "telephone", "enfants__nom", "enfants__prenom")
+    filter_horizontal = ("enfants",)
+    readonly_fields = ("code_acces", "code_cree_le", "compte_cree_le")

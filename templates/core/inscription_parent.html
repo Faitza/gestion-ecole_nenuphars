@@ -1,0 +1,90 @@
+{% load static icones %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Créer mon compte parent - Institution Les Nénuphars</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-left">
+        <div class="login-logo">{% icone "famille" %}</div>
+        <h1>INSTITUTION</h1>
+        <h2>LES NÉNUPHARS</h2>
+        <hr>
+        <p class="login-message"><strong>Pourquoi un code ?</strong><br>
+            Seuls les parents d'un élève doivent voir ses notes et ses paiements.
+            Le secrétariat remet un code d'accès à chaque famille à l'inscription.</p>
+        <ul>
+            <li>{% icone "cle" %} Un code par famille, utilisable une seule fois</li>
+            <li>{% icone "eleves" %} Tous vos enfants dans le même compte</li>
+            <li>{% icone "info" %} Code perdu ? Le secrétariat en crée un nouveau</li>
+        </ul>
+    </div>
+    <div class="login-right">
+        <div class="login-box">
+            <h1>Créer mon compte parent</h1>
+            <ol class="parcours">
+                <li{% if etape == 1 %} class="actuelle"{% endif %}>Code</li>
+                <li{% if etape == 2 %} class="actuelle"{% endif %}>Mot de passe</li>
+            </ol>
+
+            {% if bloque %}
+                <p class="login-erreur">{% icone "attention" %} Trop d'essais. Réessayez dans 15 minutes, ou adressez-vous au secrétariat.</p>
+            {% elif form.non_field_errors %}
+                <p class="login-erreur">{% icone "attention" %} {{ form.non_field_errors|striptags }}</p>
+            {% endif %}
+
+            {% if etape == 1 %}
+            <p class="subtitle">Entrez le code écrit sur la fiche remise par l'école, et le téléphone que vous avez donné à l'inscription.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <label for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+                <div class="champ-icone">
+                    <span>{% icone "cle" %}</span>
+                    {{ form.code }}
+                </div>
+                {% for e in form.code.errors %}<p class="erreur">{{ e }}</p>{% endfor %}
+                <label for="{{ form.telephone.id_for_label }}">{{ form.telephone.label }}</label>
+                <div class="champ-icone">
+                    <span>{% icone "telephone" %}</span>
+                    {{ form.telephone }}
+                </div>
+                {% for e in form.telephone.errors %}<p class="erreur">{{ e }}</p>{% endfor %}
+                <button type="submit" class="btn-primary btn-connexion"{% if bloque %} disabled{% endif %}>CONTINUER</button>
+            </form>
+
+            {% else %}
+            <p class="code-valide">{% icone "valider" %}
+                <span>Code valide. {% if enfants %}Ce code correspond à
+                {% for e in enfants %}<strong>{{ e.prenom }} {{ e.nom }}</strong>{% if e.classe %} ({{ e.classe }}){% endif %}{% if not forloop.last %}{% if forloop.revcounter == 2 %} et {% else %}, {% endif %}{% endif %}{% endfor %}.{% endif %}</span>
+            </p>
+            {% if compte_existant %}
+                <p class="subtitle">Ce téléphone a déjà un compte à l'école (par exemple un compte professeur). Entrez le mot de passe de ce compte : vos enfants y seront ajoutés.</p>
+            {% else %}
+                <p class="subtitle">Choisissez votre mot de passe. Pour vous connecter ensuite, votre identifiant sera votre téléphone : <strong>{{ parent.telephone }}</strong>.</p>
+            {% endif %}
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for champ in form %}
+                <label for="{{ champ.id_for_label }}">{{ champ.label }}</label>
+                <div class="champ-icone">
+                    <span>{% icone "cadenas" %}</span>
+                    {{ champ }}
+                </div>
+                {% for e in champ.errors %}<p class="erreur">{{ e }}</p>{% endfor %}
+                {% endfor %}
+                <button type="submit" class="btn-primary btn-connexion"{% if bloque %} disabled{% endif %}>{% if compte_existant %}AJOUTER MES ENFANTS{% else %}CRÉER MON COMPTE{% endif %}</button>
+            </form>
+            <p class="login-lien"><a href="{% url 'core:inscription' %}">Ce n'est pas ma famille : recommencer</a></p>
+            {% endif %}
+
+            <p class="login-hint">Déjà un compte ? <a href="{% url 'core:login' %}">Se connecter</a></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

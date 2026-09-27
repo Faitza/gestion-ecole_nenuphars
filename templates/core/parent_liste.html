@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+{% load icones %}
+{% block title %}Comptes parents{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "famille" %} COMPTES PARENTS{% endblock %}
+{% block content %}
+<p class="intro">Chaque famille reçoit à l'inscription de son enfant une fiche avec un code d'accès. Avec ce code et son téléphone, le parent crée son compte et voit les notes et les paiements de ses enfants.</p>
+<nav class="onglets" aria-label="Statut">
+    {% for valeur, libelle, nombre in onglets %}
+    <a href="?statut={{ valeur }}" class="{% if valeur == filtre %}actif{% endif %}">{{ libelle }} <span>{{ nombre }}</span></a>
+    {% endfor %}
+</nav>
+<div class="actions-bar">
+    <p class="aide">Pour une nouvelle famille : ouvrez la fiche de l'élève, puis « Créer l'accès parent ».</p>
+    <form method="get" class="recherche">
+        <input type="hidden" name="statut" value="{{ filtre }}">
+        {% icone "rechercher" %}
+        <input type="text" name="q" value="{{ q }}" class="search-input" placeholder="Parent, enfant, téléphone ou code...">
+    </form>
+</div>
+<div class="table-wrapper">
+<table>
+    <thead><tr><th>Famille</th><th>Enfants</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+        {% for f in familles %}
+        <tr>
+            <td>{{ f.nom }}<br><span class="aide">{{ f.telephone }}</span></td>
+            <td>{% for e in f.enfants.all %}{% if acces.eleves.lire %}<a href="{% url 'core:eleve_fiche' e.pk %}">{{ e.prenom }} {{ e.nom }}</a>{% else %}{{ e.prenom }} {{ e.nom }}{% endif %}{% if e.classe %} <span class="aide">({{ e.classe }})</span>{% endif %}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+            <td>{% if f.utilisateur_id %}<span class="etape etape-acceptee">Compte actif</span>{% else %}<span class="etape etape-chez-la-direction">Code à remettre</span>{% endif %}</td>
+            <td><a href="{% url 'core:parent_acces' f.pk %}" class="btn-sm btn-voir">{% icone "cle" %} Fiche d'accès</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="4">Aucune famille{% if filtre or q %} trouvée{% endif %}.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

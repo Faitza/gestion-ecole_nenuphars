@@ -674,6 +674,10 @@ class NotesVisiblesTests(TestCase):
         direction = Utilisateur.objects.get(username="direction")
         self.assertEqual(roles.roles_de(direction), {roles.DIRECTION_SECTION})
         self.assertEqual(roles.section_de(direction).nom, choices.SECTION_PRIMAIRE)
+        parent = Utilisateur.objects.get(username="parent")
+        self.assertTrue(parent.check_password("parent123"))
+        self.assertEqual(roles.roles_de(parent), {roles.PARENT})
+        self.assertEqual([str(e) for e in parent.parent.enfants.all()], ["Martin Marie"])
 
 
 class PhotosEtFichesTests(TestCase):

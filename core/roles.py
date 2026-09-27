@@ -68,6 +68,11 @@ ACCES = {
         "lire": {SECRETARIAT, DIRECTION_SECTION},
         "ecrire": {SECRETARIAT},
     },
+    # Comptes parents : codes d'accès remis aux familles
+    "parents": {
+        "lire": {SECRETARIAT},
+        "ecrire": {SECRETARIAT},
+    },
     # Messages envoyés depuis la page Contact du site public
     "messages_site": {
         "lire": {SECRETARIAT},
@@ -121,6 +126,11 @@ def peut(user, module, ecriture=False):
 
 def voit_salaires(user):
     return a_tout(user) or CAISSE in roles_de(user)
+
+
+def parent_de(user):
+    """Fiche parent liée au compte, ou None."""
+    return getattr(user, "parent", None) if user.is_authenticated else None
 
 
 def professeur_de(user):
