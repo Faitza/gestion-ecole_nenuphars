@@ -1,0 +1,79 @@
+{% extends "core/base.html" %}
+{% load icones photos notes %}
+{% block title %}Mes enfants{% endblock %}
+{% block header_color %}#0f766e{% endblock %}
+{% block header_title %}{% icone "espace-parent" %} ESPACE PARENT{% endblock %}
+{% block content %}
+<div class="salutation">
+    <h2>Bonjour {{ request.user.first_name|default:parent.nom }}</h2>
+    <span>Année scolaire {{ annee }}</span>
+</div>
+
+{% if not enfants %}
+<div class="bloc">
+    <p>Aucun enfant n'est encore relié à votre compte. Adressez-vous au secrétariat de l'école.</p>
+</div>
+{% else %}
+
+{% if enfants|length > 1 %}
+<nav class="onglets onglets-enfants" aria-label="Mes enfants">
+    {% for e in enfants %}
+    <a href="{% url 'core:parent_enfant' e.pk %}" class="{% if e.pk == enfant.pk %}actif{% endif %}"{% if e.pk == enfant.pk %} aria-current="page"{% endif %}>{% photo e "petite" %} {{ e.prenom }}{% if e.classe %} · {{ e.classe }}{% endif %}</a>
+    {% endfor %}
+</nav>
+{% endif %}
+
+<div class="bloc">
+    <div class="entete-fiche">
+        {% photo enfant "moyenne" %}
+        <div>
+            <h2>{{ enfant.prenom }} {{ enfant.nom }}</h2>
+            <span class="aide">{% if enfant.classe %}{{ enfant.classe }}{% if enfant.classe.section %} · {{ enfant.classe.section }}{% endif %}{% else %}Classe à préciser{% endif %}</span>
+        </div>
+    </div>
+    <div class="chiffres">
+        <div><strong>{% if moyenne_generale is not None %}{{ moyenne_generale|floatformat:"-1" }}{% else %}—{% endif %}</strong><span>moyenne générale sur 100</span></div>
+        <div><strong>{{ total_paye|floatformat:0 }} HTG</strong><span>payés cette année</span></div>
+    </div>
+</div>
+
+<h2 class="titre-section">{% icone "notes" %} Notes de l'année</h2>
+{% if lignes %}
+<div class="table-wrapper">
+<table class="table-bulletin table-parent">
+    <thead><tr><th>Matière</th>{% for p in periodes %}<th><span class="periode-longue">{{ p }}</span><span class="periode-courte" title="{{ p }}">T{{ forloop.counter }}</span></th>{% endfor %}<th>Moyenne</th></tr></thead>
+    <tbody>
+    {% for l in lignes %}
+        <tr>
+            <td>{{ l.matiere }}{% if l.professeurs %}<br><span class="aide">{{ l.professeurs|join:", " }}</span>{% endif %}</td>
+            {% for n in l.cellules %}<td>{% if n %}{{ n.note|note }}{% else %}<span class="vide">—</span>{% endif %}</td>{% endfor %}
+            <td><strong>{% if l.moyenne is not None %}{{ l.moyenne|floatformat:"-2" }}{% else %}—{% endif %}</strong></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr><th>Moyenne du trimestre</th>{% for moy in moyennes %}<th>{% if moy is not None %}{{ moy|floatformat:"-2" }}{% else %}—{% endif %}</th>{% endfor %}<th>{% if moyenne_generale is not None %}{{ moyenne_generale|floatformat:"-2" }}{% endif %}</th></tr></tfoot>
+</table>
+</div>
+{% else %}
+<div class="bloc"><p>Pas encore de notes cette année. Elles apparaîtront ici dès que les professeurs les auront saisies.</p></div>
+{% endif %}
+
+<h2 class="titre-section">{% icone "paiements" %} Paiements</h2>
+{% if paiements %}
+<div class="table-wrapper">
+<table class="table-parent">
+    <thead><tr><th>Date</th><th>Paiement</th><th class="col-mode">Mode</th><th>Montant</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for p in paiements %}
+        <tr><td>{{ p.date_paiement|date:"d/m/Y" }}</td><td>{{ p.type_paiement }}</td><td class="col-mode">{{ p.methode_paiement }}</td>
+            <td class="nowrap">{{ p.montant|floatformat:0 }} HTG</td><td>{{ p.statut }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="bloc"><p>Aucun paiement enregistré pour {{ enfant.prenom }}.</p></div>
+{% endif %}
+<p class="aide">Une erreur dans une note ou un paiement ? Adressez-vous au secrétariat de l'école.</p>
+{% endif %}
+{% endblock %}

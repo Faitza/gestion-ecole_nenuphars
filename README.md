@@ -23,7 +23,11 @@ la gestion (elle est sous `/gestion/`). Comptes d'essai (pour les essais seuleme
 - **admin / admin123** : compte administrateur ;
 - **secretaire / secretaire123** : la secrétaire ;
 - **direction / direction123** : la direction du primaire, pour accepter les préinscriptions ;
-- **prof / prof123** : un professeur du secondaire, pour la saisie des notes.
+- **prof / prof123** : un professeur du secondaire, pour la saisie des notes ;
+- **parent / parent123** : le parent de Marie Martin, pour l'espace parent.
+
+`seed_data` affiche aussi un code d'accès pour la famille de Jean Dupont (téléphone
+509-3456-7890), à essayer sur http://127.0.0.1:8000/inscription/.
 
 **Attention :** `seed_data` ne fonctionne qu'avec `DJANGO_DEBUG=1`. En production, créez le
 compte de la directrice en chef avec `python manage.py createsuperuser`.
@@ -119,6 +123,26 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
 - Les messages de la page Contact arrivent dans « Messages du site » (secrétariat).
 - Un champ caché aux visiteurs arrête les robots qui remplissent les formulaires.
 
+## Comptes parents
+
+- Il n'y a pas d'inscription libre : sans code, personne ne voit les données d'un élève.
+- Quand le secrétariat clique sur « Inscrire l'élève », la famille est retrouvée par son
+  téléphone (ou créée) et reçoit un **code d'accès** à usage unique, par exemple `NEN-4K7P-29`.
+  Frères et sœurs avec le même téléphone : une seule famille, un seul code. Pour un élève déjà
+  inscrit, le bouton « Créer l'accès parent » est sur sa fiche.
+- La « fiche d'accès » (menu « Comptes parents », ou fiche de l'élève) s'imprime et se remet à la
+  famille : l'adresse de la page, le code et le téléphone. Code perdu : « Nouveau code »
+  (l'ancien ne sert plus).
+- Le parent va sur `/inscription/` (lien « Nouveau parent ? » sur la page de connexion et en bas
+  du site), entre le code et son téléphone, voit les noms de ses enfants et choisit son mot de
+  passe. Il se connecte ensuite avec son téléphone. Si ce téléphone a déjà un compte (un
+  professeur qui est aussi parent), ses enfants sont ajoutés à ce compte avec son mot de passe.
+- Après 10 essais ratés en 15 minutes, la page se bloque pour cette adresse.
+- L'espace parent (`/parents/`) montre, pour chaque enfant, les notes de l'année par matière
+  et par trimestre, la moyenne générale et les paiements. Un parent ne voit que ses enfants.
+- Mot de passe oublié : le secrétariat donne un mot de passe provisoire depuis la fiche d'accès
+  (seulement pour un compte qui ne sert qu'aux parents).
+
 ## Icônes
 
 Les icônes viennent de [Bootstrap Icons](https://icons.getbootstrap.com) (licence MIT) et sont
@@ -133,7 +157,7 @@ site_public/              → site public : pages, préinscription, contact
     contenu.py            → textes et coordonnées de l'école, à compléter
 core/
     models.py             → Utilisateur, Section, Classe, Eleve, Professeur, Employe, Paiement, Note,
-                            Creneau, Affectation, Cours, Preinscription, MessageContact
+                            Creneau, Affectation, Cours, Preinscription, MessageContact, Parent
     choices.py            → nom de l'école, classes (Kinder → NSIV), sections, matières, postes, types de paiement
     roles.py              → les rôles et les droits de chacun
     professeurs.py        → règles d'inscription des professeurs (Kindergarten, primaire, secondaire)
@@ -141,6 +165,8 @@ core/
     views_notes.py        → saisie des notes par les professeurs, « Mes notes »
     views_fiches.py       → fiches d'un élève, d'une classe, d'un employé, et photos protégées
     views_admissions.py   → suivi des préinscriptions et messages du site
+    parents.py            → codes d'accès et création des comptes parents
+    views_parents.py      → « Créer mon compte parent », espace parent, comptes parents du secrétariat
     notes.py              → notes par classe, puis par matière
     photos.py             → réduction et rangement des photos
     anniversaires.py      → anniversaires et années à l'école du personnel
@@ -148,7 +174,7 @@ core/
     backends.py           → connexion avec le téléphone, l'e-mail ou le nom d'utilisateur
     forms.py              → formulaires et validation
     views.py              → connexion, espace de chacun, tableau de bord, gestion de chaque module
-    tests.py              → tests automatiques (python manage.py test)
+    tests.py, tests_parents.py → tests automatiques (python manage.py test)
     admin.py              → gestion des données dans /admin/
     management/commands/seed_data.py → crée les classes et des données d'exemple
 templates/core/           → les pages de la gestion
@@ -172,6 +198,8 @@ static/icones/icones.svg  → toutes les icônes du site
 - **Site public** : présentation de l'école, niveaux, admissions, contact et préinscription en
   ligne avec numéro de dossier.
 - **Préinscriptions** : suivi de chaque demande jusqu'à l'inscription de l'élève.
+- **Comptes parents** : code d'accès remis à l'inscription, espace parent avec les notes et
+  les paiements de ses enfants.
 - **Élèves** : informations de l'élève, nom et téléphone du parent ou tuteur, classe
   (une seule classe par élève).
 - **Classes** : créer et modifier les classes (nom, section, cycle : Préscolaire, Fondamentale
@@ -188,6 +216,6 @@ static/icones/icones.svg  → toutes les icônes du site
 
 - Ajouter un bulletin (relevé de notes) par élève et par trimestre.
 - Ajouter les actualités, le calendrier et la galerie au site public.
-- Remettre un code d'accès aux parents à l'inscription, pour leur espace.
+- Montrer aux parents le solde à payer (il faut d'abord enregistrer les frais de chaque classe).
 - Exporter les listes d'élèves et de paiements en PDF ou en Excel.
 - Mettre le site en ligne (Render, Railway, PythonAnywhere).

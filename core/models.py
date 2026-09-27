@@ -131,6 +131,48 @@ class Eleve(AvecPhoto):
 
 
 # ─────────────────────────────────────────────────────────────
+# PARENT (ou tuteur). Une famille = un numéro de téléphone. Le
+# secrétariat remet un code d'accès à usage unique ; avec ce code et
+# ce téléphone, le parent crée son compte et voit seulement ses enfants.
+# ─────────────────────────────────────────────────────────────
+class Parent(models.Model):
+    nom = models.CharField("nom complet", max_length=150)
+    telephone = models.CharField("téléphone", max_length=30)
+    telephone_normalise = models.CharField(max_length=20, unique=True, editable=False)
+    email = models.EmailField("e-mail", blank=True)
+    adresse = models.CharField(max_length=250, blank=True)
+    enfants = models.ManyToManyField(Eleve, related_name="parents", blank=True)
+    utilisateur = models.OneToOneField(
+        Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="parent",
+        help_text="Compte créé par le parent avec son code d'accès.",
+    )
+    code_acces = models.CharField("code d'accès", max_length=12, unique=True, null=True, blank=True,
+                                  help_text="Remis par le secrétariat ; il ne sert qu'une fois.")
+    code_cree_le = models.DateTimeField(null=True, blank=True)
+    compte_cree_le = models.DateTimeField("compte créé le", null=True, blank=True)
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["nom"]
+
+    def __str__(self):
+        return self.nom
+
+    def clean(self):
+        # Dans /admin/ : un numéro complet, et une seule famille par numéro
+        from django.core.exceptions import ValidationError
+        numero = normaliser_telephone(self.telephone)
+        if len(numero) < 8:
+            raise ValidationError({"telephone": "Numéro de téléphone incomplet."})
+        if Parent.objects.filter(telephone_normalise=numero).exclude(pk=self.pk).exists():
+            raise ValidationError({"telephone": "Une autre famille a déjà ce numéro."})
+
+    def save(self, *args, **kwargs):
+        self.telephone_normalise = normaliser_telephone(self.telephone)
+        super().save(*args, **kwargs)
+
+
+# ─────────────────────────────────────────────────────────────
 # PROFESSEUR
 # ─────────────────────────────────────────────────────────────
 class Professeur(AgeEtAnciennete, AvecPhoto):

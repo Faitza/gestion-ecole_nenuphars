@@ -41,7 +41,7 @@
     {% endif %}
 </div>
 
-{% if admissions or nb_messages %}
+{% if admissions or nb_messages or codes_parents %}
 <div class="bloc alertes">
     <div class="actions-bar">
         <h2>{% icone "preinscriptions" %} Admissions</h2>
@@ -58,6 +58,12 @@
         <li>
             <span class="pastille admissions">{% icone "messages" %}</span>
             <div><a href="{% url 'core:message_liste' %}"><strong>{{ nb_messages }}</strong> message{{ nb_messages|pluralize }} du site à traiter</a></div>
+        </li>
+        {% endif %}
+        {% if codes_parents is not None %}
+        <li>
+            <span class="pastille admissions">{% icone "famille" %}</span>
+            <div><a href="{% url 'core:parent_liste' %}?statut=code"><strong>{{ codes_parents }}</strong> code{{ codes_parents|pluralize }} parent{{ codes_parents|pluralize }} pas encore utilisé{{ codes_parents|pluralize }}</a></div>
         </li>
         {% endif %}
     </ul>

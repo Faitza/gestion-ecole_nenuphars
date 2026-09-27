@@ -3,7 +3,7 @@
 # la gestion de l'école est sous /gestion/.
 from django.urls import include, path
 from django.views.generic import RedirectView
-from . import views, views_admissions, views_fiches, views_notes, views_professeurs
+from . import views, views_admissions, views_fiches, views_notes, views_parents, views_professeurs
 
 app_name = "core"
 
@@ -16,6 +16,7 @@ gestion = [
     path("eleves/<int:pk>/", views_fiches.eleve_fiche, name="eleve_fiche"),
     path("eleves/<int:pk>/modifier/", views.eleve_modifier, name="eleve_modifier"),
     path("eleves/<int:pk>/supprimer/", views.eleve_supprimer, name="eleve_supprimer"),
+    path("eleves/<int:pk>/acces-parent/", views_parents.eleve_acces_parent, name="eleve_acces_parent"),
 
     # Classes
     path("classes/", views.classe_liste, name="classe_liste"),
@@ -61,6 +62,13 @@ gestion = [
     path("preinscriptions/<int:pk>/etape/", views_admissions.preinscription_etape, name="preinscription_etape"),
     path("preinscriptions/<int:pk>/supprimer/", views_admissions.preinscription_supprimer, name="preinscription_supprimer"),
     path("preinscriptions/<int:pk>/pieces/<str:champ>/", views_admissions.piece, name="piece"),
+    # Comptes parents : codes d'accès remis aux familles
+    path("parents/", views_parents.parent_liste, name="parent_liste"),
+    path("parents/<int:pk>/acces/", views_parents.parent_acces, name="parent_acces"),
+    path("parents/<int:pk>/nouveau-code/", views_parents.parent_nouveau_code, name="parent_nouveau_code"),
+    path("parents/<int:pk>/nouveau-mot-de-passe/", views_parents.parent_nouveau_mot_de_passe,
+         name="parent_nouveau_mot_de_passe"),
+
     path("messages/", views_admissions.message_liste, name="message_liste"),
     path("messages/<int:pk>/traite/", views_admissions.message_traite, name="message_traite"),
 
@@ -79,5 +87,10 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("mot-de-passe/", views.MotDePasseView.as_view(), name="mot_de_passe"),
     path("espace/", views.espace, name="espace"),
+    # Parents : création du compte avec le code de l'école, puis leur espace
+    path("inscription/", views_parents.inscription, name="inscription"),
+    path("inscription/mot-de-passe/", views_parents.inscription_mot_de_passe, name="inscription_mot_de_passe"),
+    path("parents/", views_parents.parent_espace, name="parent_espace"),
+    path("parents/enfants/<int:pk>/", views_parents.parent_espace, name="parent_enfant"),
     path("gestion/", include(gestion)),
 ]

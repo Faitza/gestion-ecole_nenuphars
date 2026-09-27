@@ -24,6 +24,26 @@
         {% endif %}
     </div>
 </div>
+{% if familles is not None %}
+<div class="bloc acces-parent">
+    <h2>{% icone "famille" %} Accès parent</h2>
+    {% for f in familles %}
+    <div class="ligne-famille">
+        <span><strong>{{ f.nom }}</strong> · {{ f.telephone }}</span>
+        {% if f.utilisateur_id %}<span class="etape etape-acceptee">Compte actif</span>{% else %}<span class="etape etape-chez-la-direction">Code {{ f.code_acces }} à remettre</span>{% endif %}
+        <a href="{% url 'core:parent_acces' f.pk %}" class="btn-sm btn-voir">{% icone "cle" %} Fiche d'accès</a>
+    </div>
+    {% empty %}
+    <p class="aide">La famille n'a pas encore de code pour créer son compte parent.</p>
+    {% if acces.parents.ecrire %}
+    <form method="post" action="{% url 'core:eleve_acces_parent' eleve.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-transmettre">{% icone "cle" %} Créer l'accès parent</button>
+    </form>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
 {% if classes_notes is not None %}
     <h2 class="titre-section">{% icone "notes" %} Notes</h2>
     {% include "core/_notes_par_classe.html" with ouvrir=True periodes=periodes texte_vide="Pas encore de notes pour cet élève." %}

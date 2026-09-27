@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.urls import reverse
-from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Creneau, Preinscription
+from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Creneau, Preinscription, Utilisateur
 from . import anniversaires, choices, photos, professeurs, roles
 from .classes import par_section
 from .telephone import normaliser_telephone
@@ -363,3 +363,70 @@ class PreinscriptionGestionForm(PreinscriptionForm):
         super().__init__(*args, **kwargs)
         for champ in self.fields.values():
             champ.widget.attrs.setdefault("class", "form-control")
+
+
+
+# ─────────────────────────── Comptes parents ───────────────────────────
+class CodeParentForm(forms.Form):
+    code = forms.CharField(label="Code d'accès remis par l'école", max_length=20, widget=forms.TextInput(attrs={
+        "class": "form-control", "placeholder": "NEN-XXXX-XX", "autocomplete": "off", "autocapitalize": "characters",
+        "autofocus": True,
+    }))
+    telephone = forms.CharField(label="Téléphone donné à l'inscription", max_length=30, widget=forms.TextInput(attrs={
+        "class": "form-control", "placeholder": "ex : 3712 3456", "inputmode": "tel", "autocomplete": "tel",
+    }))
+
+    def clean(self):
+        from . import parents
+        donnees = super().clean()
+        self.parent = parents.trouver(donnees.get("code"), donnees.get("telephone"))
+        if self.errors:
+            return donnees
+        if self.parent is None:
+            raise forms.ValidationError(
+                "Ce code et ce téléphone ne vont pas ensemble, ou le code a déjà servi. "
+                "Vérifiez-les, ou demandez un nouveau code au secrétariat.")
+        return donnees
+
+
+class MotDePasseParentForm(forms.Form):
+    """Premier mot de passe du parent, avec les règles de mot de passe du site."""
+    mot_de_passe1 = forms.CharField(label="Choisissez un mot de passe", strip=False, widget=forms.PasswordInput(attrs={
+        "class": "form-control", "autocomplete": "new-password", "autofocus": True}))
+    mot_de_passe2 = forms.CharField(label="Confirmez le mot de passe", strip=False, widget=forms.PasswordInput(attrs={
+        "class": "form-control", "autocomplete": "new-password"}))
+
+    def __init__(self, *args, parent, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parent = parent
+
+    def clean(self):
+        from django.contrib.auth import password_validation
+        donnees = super().clean()
+        mdp1, mdp2 = donnees.get("mot_de_passe1"), donnees.get("mot_de_passe2")
+        if mdp1 and mdp2 and mdp1 != mdp2:
+            self.add_error("mot_de_passe2", "Les deux mots de passe ne sont pas les mêmes.")
+        elif mdp1:
+            prenom, _, nom = self.parent.nom.partition(" ")
+            futur = Utilisateur(username=self.parent.telephone_normalise, first_name=prenom, last_name=nom)
+            try:
+                password_validation.validate_password(mdp1, futur)
+            except forms.ValidationError as erreur:
+                self.add_error("mot_de_passe1", erreur)
+        return donnees
+
+
+class CompteExistantForm(forms.Form):
+    """Le téléphone a déjà un compte (un professeur qui est aussi parent) : son mot de passe suffit."""
+    mot_de_passe = forms.CharField(label="Mot de passe de votre compte", strip=False, widget=forms.PasswordInput(attrs={
+        "class": "form-control", "autocomplete": "current-password", "autofocus": True}))
+
+    def __init__(self, *args, compte, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.compte = compte
+
+    def clean_mot_de_passe(self):
+        mot_de_passe = self.cleaned_data["mot_de_passe"]
+        if not self.compte.check_password(mot_de_passe):
+            raise forms.ValidationError("Mot de passe incorrect.")
+        return mot_de_passe

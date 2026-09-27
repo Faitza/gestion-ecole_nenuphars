@@ -18,12 +18,14 @@
         </div>
         <nav>
             {% with nom=request.resolver_match.url_name %}
-            {% if not utilise_la_gestion %}<a href="{% url 'core:espace' %}" class="{% if nom == 'espace' %}active{% endif %}">{% icone "maison" %} Mon espace</a>{% endif %}
+            {% if not utilise_la_gestion %}{% if est_professeur or not est_parent %}<a href="{% url 'core:espace' %}" class="{% if nom == 'espace' %}active{% endif %}">{% icone "maison" %} Mon espace</a>{% endif %}{% endif %}
+            {% if est_parent %}<a href="{% url 'core:parent_espace' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_espace' or nom == 'parent_enfant' %}active{% endif %}">{% icone "espace-parent" %} Mes enfants</a>{% endif %}
             {% if est_professeur %}<a href="{% url 'core:saisie_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'saisie_notes' %}active{% endif %}">{% icone "saisie" %} Saisie des notes</a>
             <a href="{% url 'core:mes_notes' %}" style="--accent:#8b5cf6" class="{% if nom == 'mes_notes' %}active{% endif %}">{% icone "notes" %} Mes notes</a>{% endif %}
             {% if utilise_la_gestion %}<a href="{% url 'core:dashboard' %}" class="{% if nom == 'dashboard' %}active{% endif %}">{% icone "tableau-de-bord" %} Tableau de bord</a>{% endif %}
             {% if acces.eleves.lire %}<a href="{% url 'core:eleve_liste' %}" style="--accent:#3b82f6" class="{% if 'eleve' in nom %}active{% endif %}">{% icone "eleves" %} Élèves</a>{% endif %}
             {% if acces.preinscriptions.lire %}<a href="{% url 'core:preinscription_liste' %}" style="--accent:#14b8a6" class="{% if 'preinscription' in nom %}active{% endif %}">{% icone "preinscriptions" %} Préinscriptions</a>{% endif %}
+            {% if acces.parents.lire %}<a href="{% url 'core:parent_liste' %}" style="--accent:#14b8a6" class="{% if nom == 'parent_liste' or nom == 'parent_acces' %}active{% endif %}">{% icone "famille" %} Comptes parents</a>{% endif %}
             {% if acces.messages_site.lire %}<a href="{% url 'core:message_liste' %}" style="--accent:#14b8a6" class="{% if 'message_' in nom %}active{% endif %}">{% icone "messages" %} Messages du site</a>{% endif %}
             {% if acces.classes.lire %}<a href="{% url 'core:classe_liste' %}" style="--accent:#06b6d4" class="{% if 'classe' in nom %}active{% endif %}">{% icone "classes" %} Classes</a>{% endif %}
             {% if acces.paiements.lire %}<a href="{% url 'core:paiement_liste' %}" style="--accent:#10b981" class="{% if 'paiement' in nom %}active{% endif %}">{% icone "paiements" %} Paiements</a>{% endif %}

@@ -7,17 +7,20 @@ from django.shortcuts import get_object_or_404, render
 from . import choices
 from . import notes as outils_notes
 from .models import Classe, Cours, Eleve, Employe, Note, Preinscription, Professeur
-from .roles import acces_requis, filtrer, peut, professeur_de
+from .roles import acces_requis, filtrer, parent_de, peut, professeur_de
 
 
 # ─────────────────────────── Photos ───────────────────────────
 def _photo_visible(user, objet):
     """Qui peut voir une photo : ceux qui voient la fiche, la personne elle-même,
-    et le professeur pour les élèves de ses classes."""
+    le parent pour ses enfants et le professeur pour les élèves de ses classes."""
     if isinstance(objet, Preinscription):
         return filtrer(user, "preinscriptions", Preinscription.objects.filter(pk=objet.pk)).exists()
     if isinstance(objet, Eleve):
         if filtrer(user, "eleves", Eleve.objects.filter(pk=objet.pk)).exists():
+            return True
+        parent = parent_de(user)
+        if parent is not None and parent.enfants.filter(pk=objet.pk).exists():
             return True
         professeur = professeur_de(user)
         return professeur is not None and objet.classe_id is not None \
@@ -54,6 +57,8 @@ def photo(request, modele, pk):
 def eleve_fiche(request, pk):
     eleve = get_object_or_404(filtrer(request.user, "eleves", Eleve.objects.select_related("classe", "classe__section")), pk=pk)
     contexte = {"eleve": eleve, "periodes": choices.PERIODES}
+    if peut(request.user, "parents"):
+        contexte["familles"] = eleve.parents.select_related("utilisateur")
     if peut(request.user, "notes"):
         notes = filtrer(request.user, "notes", Note.objects.filter(eleve=eleve).select_related("eleve", "eleve__classe", "professeur"))
         contexte["classes_notes"] = outils_notes.grouper(notes)

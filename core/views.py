@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 from .models import Eleve, Professeur, Employe, Paiement, Note, Classe, Preinscription, MessageContact
 from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementForm, NoteForm, ClasseForm, MotDePasseForm
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
-from . import anniversaires, choices, professeurs
+from . import anniversaires, choices, professeurs, roles, views_parents
 from . import notes as notes_par_classe
 from .views_professeurs import espace_professeur
 
@@ -53,6 +53,8 @@ def espace(request):
     professeur = getattr(request.user, "professeur", None)
     if professeur is not None:
         return espace_professeur(request, professeur)
+    if roles.parent_de(request.user) is not None:
+        return redirect("core:parent_espace")
     return render(request, "core/espace_a_venir.html", {"roles": sorted(roles_de(request.user))})
 
 
@@ -85,6 +87,7 @@ def dashboard(request):
         ]
     if peut(user, "messages_site"):
         context["nb_messages"] = MessageContact.objects.filter(traite=False).count()
+    context["codes_parents"] = views_parents.resume_pour_le_tableau_de_bord(user)
     # Anniversaires et années à l'école du personnel que l'on peut voir, dans les 7 jours
     context["evenements"] = anniversaires.evenements(anniversaires.personnel_visible(user))
     context["jours_d_avance"] = anniversaires.JOURS_D_AVANCE

@@ -357,3 +357,26 @@ a.lien-icone { color: var(--primaire); }
 .message-site .coordonnees { display: flex; flex-wrap: wrap; gap: 16px; margin: 0 0 10px; font-size: 13px; }
 .message-site .texte-message { background: var(--fond-gris-clair); border-radius: 8px; padding: 12px 14px; margin: 0 0 12px; font-size: 14px; }
 .message-site.traite { opacity: 0.7; }
+
+/* ── COMPTES PARENTS ──────────────────────────────────────── */
+.login-lien { text-align: center; font-size: 13px; margin: 14px 0 0; }
+.login-lien a, .login-hint a { color: var(--primaire-clair); font-weight: bold; }
+.login-box .parcours li:not(.actuelle) { background: var(--fond-gris-clair); }
+.login-box .erreur { margin: -14px 0 16px; }
+.btn-connexion[disabled] { opacity: 0.5; cursor: not-allowed; }
+.code-valide { display: flex; gap: 10px; align-items: flex-start; background: #d1fae5; color: #065f46; padding: 10px 12px;
+  border-radius: 6px; font-size: 13px; margin: 0 0 16px; }
+.code-valide .icone { flex-shrink: 0; margin-top: 2px; }
+.onglets-enfants a { padding: 5px 14px 5px 5px; }
+.ligne-famille { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--fond-gris-clair); font-size: 13px; }
+.ligne-famille:last-child { border-bottom: none; }
+.ligne-famille .btn-sm { margin-left: auto; }
+.acces-parent h2 { display: flex; align-items: center; gap: 8px; }
+.periode-courte { display: none; }
+.table-parent .nowrap { white-space: nowrap; }
+@media (max-width: 760px) {
+  .table-parent th, .table-parent td { padding: 8px 5px; font-size: 12px; }
+  .table-parent .periode-longue, .table-parent .col-mode { display: none; }
+  .table-parent .periode-courte { display: inline; }
+  .ligne-famille .btn-sm { margin-left: 0; }
+}

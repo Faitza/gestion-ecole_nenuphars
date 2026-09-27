@@ -3,7 +3,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from .models import Eleve, Employe, Preinscription, Professeur
+from .models import Eleve, Employe, Parent, Preinscription, Professeur
 from .photos import supprimer_fichier
 from . import roles
 
@@ -19,6 +19,12 @@ def employe_supprime(sender, instance, **kwargs):
 def professeur_supprime(sender, instance, **kwargs):
     if instance.utilisateur_id:
         roles.retirer_roles(instance.utilisateur, {roles.PROFESSEUR})
+
+
+@receiver(post_delete, sender=Parent)
+def parent_supprime(sender, instance, **kwargs):
+    if instance.utilisateur_id:
+        roles.retirer_roles(instance.utilisateur, {roles.PARENT})
 
 
 @receiver(post_delete, sender=Eleve)

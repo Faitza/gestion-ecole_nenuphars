@@ -2,7 +2,8 @@
 # Préinscriptions envoyées depuis le site public, de la demande à
 # l'inscription : le secrétariat vérifie le dossier et le transmet, la
 # direction de la section accepte ou refuse, puis le secrétariat inscrit
-# l'élève (sa fiche est créée dans la classe demandée). Aussi : les messages
+# l'élève (sa fiche est créée dans la classe demandée, et la famille reçoit
+# le code d'accès de son compte parent). Aussi : les messages
 # de la page Contact.
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -15,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from . import choices
+from . import choices, parents
 from .forms import PreinscriptionGestionForm
 from .models import Eleve, MessageContact, Preinscription
 from .roles import acces_requis, filtrer, peut, peut_decider_preinscription
@@ -129,8 +130,15 @@ def preinscription_etape(request, pk):
             messages.error(request, "Choisissez d'abord la classe demandée (bouton Modifier).")
             return redirect("core:preinscription_fiche", pk=dossier.pk)
         eleve = _inscrire(dossier)
+        famille = eleve.parents.first()
+        if famille is None:
+            suite = "Ajoutez le téléphone du parent sur la fiche pour lui créer son accès."
+        elif famille.utilisateur_id:
+            suite = f"Le compte parent de {famille.nom} voit maintenant cet enfant."
+        else:
+            suite = f"Code d'accès du compte parent : {famille.code_acces} (fiche à imprimer ci-dessous)."
         messages.success(request, f"{eleve.prenom} {eleve.nom} est inscrit(e) en {eleve.classe}. "
-                                  "La famille règle les frais d'inscription à la caisse.")
+                                  f"La famille règle les frais d'inscription à la caisse. {suite}")
         return redirect("core:eleve_fiche", pk=eleve.pk)
 
     return redirect("core:preinscription_fiche", pk=dossier.pk)
@@ -153,6 +161,8 @@ def _inscrire(dossier):
         eleve.save()
         dossier.eleve, dossier.etape = eleve, choices.ETAPE_INSCRITE
         dossier.save(update_fields=["eleve", "etape", "mise_a_jour"])
+        # La famille (trouvée par son téléphone) reçoit un code pour créer son compte parent
+        parents.parent_de_l_eleve(eleve)
     return eleve
 
 
