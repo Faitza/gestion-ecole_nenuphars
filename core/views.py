@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Sum, Q
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -13,6 +14,7 @@ from .forms import LoginForm, EleveForm, ProfesseurForm, EmployeForm, PaiementFo
 from .roles import acces_requis, filtrer, peut, roles_de, utilise_la_gestion
 from . import anniversaires, bulletins, choices, professeurs, roles, views_parents
 from . import notes as notes_par_classe
+from .pagination import paginer
 from .views_professeurs import espace_professeur
 
 
@@ -121,7 +123,8 @@ def eleve_liste(request):
     eleves = filtrer(request.user, "eleves", Eleve.objects.select_related("classe"))
     if q:
         eleves = eleves.filter(Q(nom__icontains=q) | Q(prenom__icontains=q) | Q(nom_parent_tuteur__icontains=q))
-    return render(request, "core/eleve_liste.html", {"eleves": eleves, "q": q})
+    page = paginer(request, eleves)
+    return render(request, "core/eleve_liste.html", {"eleves": page.object_list, "page": page, "q": q})
 
 
 @acces_requis("eleves", ecriture=True)
@@ -210,7 +213,8 @@ def classe_supprimer(request, pk):
 @acces_requis("professeurs")
 def professeur_liste(request):
     liste = filtrer(request.user, "professeurs", Professeur.objects.select_related("section").prefetch_related("classes"))
-    return render(request, "core/professeur_liste.html", {"professeurs": liste})
+    page = paginer(request, liste)
+    return render(request, "core/professeur_liste.html", {"professeurs": page.object_list, "page": page})
 
 
 @acces_requis("professeurs", ecriture=True)
@@ -242,7 +246,8 @@ def professeur_supprimer(request, pk):
 @acces_requis("employes")
 def employe_liste(request):
     employes = filtrer(request.user, "employes", Employe.objects.select_related("section"))
-    return render(request, "core/employe_liste.html", {"employes": employes})
+    page = paginer(request, employes)
+    return render(request, "core/employe_liste.html", {"employes": page.object_list, "page": page})
 
 
 @acces_requis("employes", ecriture=True)
@@ -287,15 +292,29 @@ def employe_supprimer(request, pk):
 def paiement_liste(request):
     paiements = filtrer(request.user, "paiements", Paiement.objects.select_related("eleve"))
     total = paiements.filter(statut="Payé").aggregate(total=Sum("montant"))["total"] or 0
-    return render(request, "core/paiement_liste.html", {"paiements": paiements, "total": total})
+    page = paginer(request, paiements)
+    return render(request, "core/paiement_liste.html", {"paiements": page.object_list, "page": page, "total": total})
 
 
 @acces_requis("paiements", ecriture=True)
 def paiement_creer(request):
     if request.method == "POST":
+        jeton = (request.POST.get("jeton") or "")[:32] or None
+        if jeton and Paiement.objects.filter(jeton=jeton).exists():
+            # Même formulaire envoyé une deuxième fois (double clic, page rechargée)
+            messages.info(request, "Ce paiement était déjà enregistré : il n'a pas été compté deux fois.")
+            return redirect("core:paiement_liste")
         form = PaiementForm(request.POST)
         if form.is_valid():
-            form.save()
+            paiement = form.save(commit=False)
+            paiement.jeton = jeton
+            try:
+                with transaction.atomic():
+                    paiement.save()
+            except IntegrityError:
+                # Les deux envois sont arrivés en même temps : le premier a été enregistré
+                messages.info(request, "Ce paiement était déjà enregistré : il n'a pas été compté deux fois.")
+                return redirect("core:paiement_liste")
             messages.success(request, "Paiement enregistré avec succès!")
             return redirect("core:paiement_liste")
     else:

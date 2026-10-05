@@ -1,0 +1,8 @@
+{% extends "erreurs/page.html" %}
+{% block titre %}Erreur du site{% endblock %}
+{% block code %}ERREUR 500{% endblock %}
+{% block message %}Le site a rencontré un problème{% endblock %}
+{% block explication %}<p>Ce n'est pas de votre faute. L'erreur a été enregistrée et l'école est prévenue.</p>
+<p>Réessayez dans un instant. Si vous remplissiez un formulaire, vérifiez s'il a été enregistré avant de l'envoyer de nouveau.</p>{% endblock %}
+{% block actions %}<button type="button" class="btn btn-principal" onclick="location.reload()">Réessayer</button>
+<a class="btn btn-secondaire" href="/">Accueil du site</a>{% endblock %}

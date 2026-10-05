@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from . import notifications
+from .pagination import paginer
 from .forms import AnnonceForm
 from .models import Annonce
 from .roles import acces_requis, portee, section_de
@@ -28,12 +29,13 @@ def visibles(user, ecriture=False):
 
 @acces_requis("annonces")
 def annonce_liste(request):
-    annonces = list(visibles(request.user))
+    page = paginer(request, visibles(request.user))
+    annonces = list(page.object_list)
     modifiables = set(visibles(request.user, ecriture=True).values_list("pk", flat=True)) \
         if portee(request.user, "annonces", ecriture=True) else set()
     for annonce in annonces:
         annonce.modifiable = annonce.pk in modifiables
-    return render(request, "core/annonce_liste.html", {"annonces": annonces})
+    return render(request, "core/annonce_liste.html", {"annonces": annonces, "page": page})
 
 
 @acces_requis("annonces", ecriture=True)

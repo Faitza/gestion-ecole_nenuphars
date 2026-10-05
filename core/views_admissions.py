@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import choices, parents
+from .pagination import paginer
 from .forms import PreinscriptionGestionForm
 from .models import Eleve, MessageContact, Preinscription
 from .roles import acces_requis, filtrer, peut, peut_decider_preinscription
@@ -61,7 +62,8 @@ def preinscription_liste(request):
     if q:
         dossiers = dossiers.filter(Q(nom__icontains=q) | Q(prenom__icontains=q) | Q(numero__icontains=q)
                                    | Q(nom_parent__icontains=q) | Q(telephone_parent__icontains=q))
-    dossiers = list(dossiers)
+    page = paginer(request, dossiers)
+    dossiers = list(page.object_list)
     for dossier in dossiers:
         dossier.actions = actions_possibles(request.user, dossier)
 
@@ -70,7 +72,7 @@ def preinscription_liste(request):
     onglets += [(etape, etape, nombres.get(etape, 0)) for etape in choices.ETAPES_PREINSCRIPTION]
     onglets.append((TOUTES, "Toutes", sum(nombres.values())))
     return render(request, "core/preinscription_liste.html", {
-        "dossiers": dossiers, "onglets": onglets, "filtre": filtre, "q": q,
+        "dossiers": dossiers, "page": page, "onglets": onglets, "filtre": filtre, "q": q,
     })
 
 
@@ -206,8 +208,9 @@ def message_liste(request):
     liste = MessageContact.objects.select_related("traite_par")
     if not tous:
         liste = liste.filter(traite=False)
+    page = paginer(request, liste)
     return render(request, "core/message_liste.html", {
-        "liste": liste, "tous": tous, "nb_a_traiter": MessageContact.objects.filter(traite=False).count(),
+        "liste": page.object_list, "page": page, "tous": tous, "nb_a_traiter": MessageContact.objects.filter(traite=False).count(),
     })
 
 

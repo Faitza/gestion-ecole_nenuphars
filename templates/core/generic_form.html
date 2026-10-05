@@ -8,7 +8,9 @@
     <p class="required-note">* Champs obligatoires</p>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {% for field in form %}
+        {% for champ in form.hidden_fields %}{{ champ }}{% endfor %}
+        {% if form.non_field_errors %}<p class="message error">{% icone "attention" %} {{ form.non_field_errors|striptags }}</p>{% endif %}
+        {% for field in form.visible_fields %}
             <label>{{ field.label }}</label>
             {{ field }}
             {% if field.help_text %}<p style="font-size:11px;color:var(--texte-clair);">{{ field.help_text }}</p>{% endif %}

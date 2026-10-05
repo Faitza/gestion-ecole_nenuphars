@@ -125,6 +125,8 @@ class Eleve(AvecPhoto):
 
     class Meta:
         ordering = ["nom", "prenom"]
+        # Index : la liste et la recherche des élèves sont rangées par nom
+        indexes = [models.Index(fields=["nom", "prenom"], name="eleve_nom_prenom")]
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"
@@ -266,9 +268,14 @@ class Paiement(models.Model):
     methode_paiement = models.CharField(max_length=50, choices=choices.METHODES_PAIEMENT_CHOICES)
     date_paiement = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(max_length=50, choices=choices.STATUTS_PAIEMENT_CHOICES, default="Payé")
+    # Numéro unique du formulaire rempli : le même formulaire envoyé deux fois (double clic,
+    # page rechargée) n'enregistre qu'un paiement.
+    jeton = models.CharField(max_length=32, unique=True, null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ["-date_paiement"]
+        indexes = [models.Index(fields=["-date_paiement"], name="paiement_date"),
+                   models.Index(fields=["eleve", "type_paiement", "date_paiement"], name="paiement_eleve_type_date")]
 
     def __str__(self):
         return f"{self.eleve} - {self.montant} HTG"
@@ -288,6 +295,9 @@ class Note(models.Model):
 
     class Meta:
         ordering = ["-date_note"]
+        # Index : les notes sont presque toujours lues pour une année et un trimestre
+        indexes = [models.Index(fields=["annee_scolaire", "periode"], name="note_annee_periode"),
+                   models.Index(fields=["eleve", "annee_scolaire", "periode"], name="note_eleve_annee_periode")]
 
     def __str__(self):
         return f"{self.eleve} - {self.matiere} : {self.note}/100"
@@ -415,6 +425,7 @@ class Preinscription(AvecPhoto):
 
     class Meta:
         ordering = ["-date_demande"]
+        indexes = [models.Index(fields=["etape", "-date_demande"], name="preinscription_etape_date")]
         verbose_name = "préinscription"
 
     def __str__(self):
@@ -457,6 +468,7 @@ class MessageContact(models.Model):
 
     class Meta:
         ordering = ["traite", "-recu_le"]
+        indexes = [models.Index(fields=["traite", "-recu_le"], name="message_traite_recu")]
         verbose_name = "message du site"
         verbose_name_plural = "messages du site"
 
@@ -479,6 +491,7 @@ class Annonce(models.Model):
 
     class Meta:
         ordering = ["-publiee_le"]
+        indexes = [models.Index(fields=["-publiee_le"], name="annonce_publiee")]
 
     def __str__(self):
         return self.titre
@@ -520,6 +533,7 @@ class Absence(models.Model):
 
     class Meta:
         ordering = ["-date", "eleve__nom", "eleve__prenom"]
+        indexes = [models.Index(fields=["date", "type"], name="absence_date_type")]
         constraints = [models.UniqueConstraint(fields=["eleve", "date"], name="une_absence_par_eleve_et_par_jour")]
 
     def __str__(self):
@@ -543,6 +557,7 @@ class Incident(models.Model):
 
     class Meta:
         ordering = ["-date", "-cree_le"]
+        indexes = [models.Index(fields=["statut"], name="incident_statut")]
 
     def __str__(self):
         return f"{self.eleve} - incident du {self.date:%d/%m/%Y}"
@@ -660,6 +675,7 @@ class Activite(models.Model):
 
     class Meta:
         ordering = ["-date", "-pk"]
+        indexes = [models.Index(fields=["publiee", "-date"], name="activite_publiee_date")]
         verbose_name = "activité"
 
     def __str__(self):

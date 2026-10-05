@@ -22,6 +22,7 @@ from django.views.decorators.http import require_POST
 from . import bulletins as calcul_bulletins
 from . import choices, notifications, parents
 from . import notes as outils_notes
+from .pagination import paginer
 from .forms import CodeParentForm, CompteExistantForm, MotDePasseParentForm
 from .models import Bulletin, Eleve, Note, Parent
 from .professeurs import nouveau_mot_de_passe
@@ -263,7 +264,9 @@ def parent_liste(request):
     compte = Parent.objects.aggregate(tous=Count("pk"), actifs=Count("pk", filter=Q(utilisateur__isnull=False)))
     onglets = [("", "Toutes", compte["tous"]), (A_REMETTRE, "Code à remettre", compte["tous"] - compte["actifs"]),
                (ACTIFS, "Compte actif", compte["actifs"])]
-    return render(request, "core/parent_liste.html", {"familles": familles, "onglets": onglets, "filtre": filtre, "q": q})
+    page = paginer(request, familles)
+    return render(request, "core/parent_liste.html", {"familles": page.object_list, "page": page, "onglets": onglets,
+                                                      "filtre": filtre, "q": q})
 
 
 @acces_requis("parents")

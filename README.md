@@ -43,6 +43,19 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
 - **Production** : `DJANGO_DEBUG=0`, une `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`,
   puis `DB_ENGINE=postgresql` avec `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` et `DB_PORT`.
 
+## Mise en ligne, sauvegardes et protection du site
+
+Tout est expliqué dans [docs/production.md](docs/production.md), point par point : limite de
+requêtes par visiteur, pages d'erreur, barre de chargement, double clic et double paiement,
+pages des longues listes, poids des fichiers, journal des erreurs, alerte « site en panne »
+(adresse `/sante/`), test avec plusieurs visiteurs et sauvegardes.
+
+```bash
+python manage.py sauvegarder            # base + photos dans sauvegardes/, puis restauration d'essai
+python manage.py verifier_sauvegarde    # restaure la dernière sauvegarde à part et compare tout
+python manage.py restaurer_sauvegarde fichier.zip   # sur une base neuve et vide seulement
+```
+
 ## Sections et rôles
 
 - 3 sections : **Kindergarten** (1ère à 3ème Année Kinder), **Primaire** (1ère à 6ème AF),
@@ -259,6 +272,10 @@ core/
     views_activites.py    → activités et concours du site public, avec leurs photos
     notes.py              → notes par classe, puis par matière
     photos.py             → réduction et rangement des photos
+    protection.py         → limite de requêtes par visiteur et poids maximal des envois
+    pagination.py         → longues listes découpées en pages
+    sauvegardes.py        → sauvegarde (base + photos), vérification par restauration
+    views_sante.py        → adresse /sante/ pour l'alerte « site en panne »
     anniversaires.py      → anniversaires et années à l'école du personnel
     templatetags/icones.py → balise {% icone "nom" %}
     templatetags/texte.py → espaces insécables avant « : ; ! ? » dans les titres
@@ -268,9 +285,14 @@ core/
     tests*.py             → tests automatiques (python manage.py test)
     admin.py              → gestion des données dans /admin/
     management/commands/seed_data.py → crée les classes et des données d'exemple
+    management/commands/sauvegarder.py, verifier_sauvegarde.py, restaurer_sauvegarde.py
+templates/400.html ... 500.html → pages d'erreur (page introuvable, accès refusé, erreur du site...)
+outils/test_charge.py     → plusieurs visiteurs en même temps sur le site
+docs/production.md        → mise en ligne, alerte, sauvegardes
 templates/core/           → les pages de la gestion
 templates/site_public/    → les pages du site public
-static/css/style.css      → gestion ; static/css/site.css → site public
+static/css/style.css      → gestion ; static/css/site.css → site public ; static/css/commun.css → les deux
+static/js/chargement.js   → barre de chargement, un seul envoi par formulaire, fichiers trop lourds
 static/icones/icones.svg  → toutes les icônes du site
 ```
 
@@ -317,4 +339,4 @@ static/icones/icones.svg  → toutes les icônes du site
 - Ajouter le calendrier de l'année au site public.
 - Montrer aux parents le solde à payer (il faut d'abord enregistrer les frais de chaque classe).
 - Exporter les listes d'élèves et de paiements en PDF ou en Excel.
-- Mettre le site en ligne (Render, Railway, PythonAnywhere).
+- Mettre le site en ligne (Render, Railway, PythonAnywhere) en suivant docs/production.md.

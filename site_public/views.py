@@ -1,11 +1,14 @@
 # site_public/views.py
 # Pages publiques de l'école : ouvertes à tous, sans connexion.
+from django.conf import settings
 from django.contrib import messages
+from django.core.cache import cache
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core import choices, roles
 from core.classes import par_section
+from core.pagination import paginer
 from core.models import Activite, Classe, Employe, PhotoActivite, Preinscription
 
 from . import contenu
@@ -14,21 +17,30 @@ from .forms import MessageContactForm, PreinscriptionPubliqueForm
 SESSION_DOSSIER = "preinscription_envoyee"
 
 
+# Les sections et leurs classes changent rarement : gardées en mémoire, et oubliées dès
+# qu'une classe ou une section est modifiée (core/signals.py).
+CLE_SECTIONS = "site:sections"
+
+
 def _sections():
     """[{section, classes, niveaux, texte}] pour l'accueil et la page Niveaux."""
+    resultat = cache.get(CLE_SECTIONS)
+    if resultat is not None:
+        return resultat
     resultat = []
     for section, classes in par_section(Classe.objects.select_related("section")):
         if section is None:
             continue
         textes = contenu.SECTIONS.get(section.nom, {})
         resultat.append({"section": section, "classes": classes, **textes})
+    cache.set(CLE_SECTIONS, resultat, settings.DUREE_MEMOIRE_SITE_PUBLIC)
     return resultat
 
 
 def accueil(request):
     return render(request, "site_public/accueil.html", {
         "sections": _sections(),
-        "nb_classes": Classe.objects.count(),
+        "nb_classes": sum(len(s["classes"]) for s in _sections()),
         "nb_matieres": len([m for m in choices.MATIERES if m != "Autre"]),
         "nb_bulletins": len(choices.PERIODES),
         "annee": choices.annee_scolaire_courante(),
@@ -107,8 +119,9 @@ def activites(request):
     else:
         categorie = ""
     presentes = set(Activite.objects.filter(publiee=True).values_list("categorie", flat=True))
+    page = paginer(request, liste, par_page=12)
     return render(request, "site_public/activites.html", {
-        "activites": liste, "categorie": categorie,
+        "activites": page.object_list, "page": page, "categorie": categorie,
         "categories": [c for c in choices.CATEGORIES_ACTIVITE if c in presentes],
     })
 
@@ -135,5 +148,6 @@ def photo_activite(request, pk, taille):
     except (FileNotFoundError, ValueError):
         raise Http404
     reponse = FileResponse(fichier, content_type="image/jpeg")
-    reponse["Cache-Control"] = "public, max-age=3600" if publique else "private, no-store"
+    # Une photo d'activité ne change jamais à la même adresse : gardée une journée par le navigateur
+    reponse["Cache-Control"] = "public, max-age=86400" if publique else "private, no-store"
     return reponse

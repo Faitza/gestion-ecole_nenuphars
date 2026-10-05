@@ -36,4 +36,5 @@
 {% empty %}
 <div class="bloc"><p class="aide">Aucun message {% if not tous %}à traiter{% endif %}.</p></div>
 {% endfor %}
+{% include "_pagination.html" %}
 {% endblock %}

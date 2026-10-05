@@ -7,6 +7,7 @@
     <title>{% block title %}Institution Les Nénuphars{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/commun.css' %}">
 </head>
 <body>
 <div class="app-layout">
@@ -115,5 +116,6 @@
         });
     })();
 </script>
+<script src="{% static 'js/chargement.js' %}" defer></script>
 </body>
 </html>

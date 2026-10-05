@@ -1,7 +1,11 @@
 # core/forms.py
+import uuid
+from datetime import timedelta
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.urls import reverse
+from django.utils import timezone
 from .models import (Activite, AlerteSante, Annonce, Classe, Creneau, Eleve, Employe, Incident, Note, Paiement,
                      PhotoActivite, Preinscription, Professeur, Section, Utilisateur)
 from . import anniversaires, choices, photos, professeurs, roles
@@ -35,7 +39,7 @@ class PhotoMixin:
 
 def _photo_widget():
     # Sur un téléphone, le bouton propose aussi l'appareil photo
-    return PhotoWidget(attrs={"class": "form-control", "accept": "image/*"})
+    return PhotoWidget(attrs={"class": "form-control", "accept": "image/*", "data-taille-max-mo": 5})
 
 
 def _ctrl(widget_cls, **kwargs):
@@ -260,6 +264,38 @@ class EmployeForm(PhotoMixin, forms.ModelForm):
 
 
 class PaiementForm(forms.ModelForm):
+    """Un paiement. Le même formulaire envoyé deux fois n'enregistre qu'un paiement (champ jeton),
+    et un paiement identique enregistré il y a peu doit être confirmé."""
+    MINUTES_DOUBLON = 15
+    jeton = forms.CharField(widget=forms.HiddenInput, required=False, max_length=32)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound:
+            self.initial["jeton"] = uuid.uuid4().hex
+
+    def doublon_recent(self):
+        """Le même paiement (élève, montant, type) enregistré dans les dernières minutes, s'il existe."""
+        donnees = self.cleaned_data
+        if not all(donnees.get(c) for c in ("eleve", "montant", "type_paiement")):
+            return None
+        depuis = timezone.now() - timedelta(minutes=self.MINUTES_DOUBLON)
+        return Paiement.objects.filter(eleve=donnees["eleve"], montant=donnees["montant"],
+                                       type_paiement=donnees["type_paiement"], date_paiement__gte=depuis).first()
+
+    def clean(self):
+        donnees = super().clean()
+        doublon = self.doublon_recent()
+        if doublon is not None and not self.data.get("confirmer_doublon"):
+            # La case n'apparaît que lorsqu'il faut confirmer
+            self.fields["confirmer_doublon"] = forms.BooleanField(
+                required=False, label="Oui, c'est bien un deuxième paiement à enregistrer")
+            raise forms.ValidationError(
+                f"Attention : un paiement de {doublon.montant} HTG ({doublon.type_paiement}) a déjà été enregistré "
+                f"pour {doublon.eleve} à {timezone.localtime(doublon.date_paiement):%H:%M}. "
+                "Si c'est bien un deuxième paiement, cochez la case puis enregistrez.")
+        return donnees
+
     class Meta:
         model = Paiement
         fields = ["eleve", "montant", "type_paiement", "methode_paiement", "statut"]
@@ -316,7 +352,7 @@ class PreinscriptionForm(PhotoMixin, forms.ModelForm):
         }
         help_texts = {"photo": ""}
         widgets = {
-            "photo": forms.FileInput(attrs={"accept": "image/*"}),
+            "photo": forms.FileInput(attrs={"accept": "image/*", "data-taille-max-mo": 5}),
             "date_naissance": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "nom_parent": forms.TextInput(attrs={"autocomplete": "name"}),
             "telephone_parent": forms.TextInput(attrs={"inputmode": "tel", "autocomplete": "tel", "placeholder": "ex : 3712 3456"}),
@@ -556,11 +592,15 @@ class PlusieursFichiersInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
 
+# Photos d'activité envoyées en une fois (au-delà, l'envoi serait trop long sur une connexion lente)
+PHOTOS_PAR_ENVOI = 20
+
+
 class PlusieursPhotosField(forms.FileField):
     """Plusieurs photos d'un coup (on les choisit ensemble dans la galerie du téléphone)."""
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", PlusieursFichiersInput(attrs={"accept": "image/*", "multiple": True}))
+        kwargs.setdefault("widget", PlusieursFichiersInput(attrs={"accept": "image/*", "multiple": True, "data-taille-max-mo": 10, "data-nombre-max": PHOTOS_PAR_ENVOI}))
         super().__init__(*args, **kwargs)
 
     def clean(self, data, initial=None):
@@ -572,7 +612,7 @@ class PlusieursPhotosField(forms.FileField):
 
 class ActiviteForm(forms.ModelForm):
     photos = PlusieursPhotosField(label="Ajouter des photos", required=False,
-                                  help_text="Vous pouvez en choisir plusieurs à la fois (10 Mo au plus chacune).")
+                                  help_text=f"Vous pouvez en choisir plusieurs à la fois ({PHOTOS_PAR_ENVOI} au plus, 10 Mo au plus chacune).")
 
     class Meta:
         model = Activite
@@ -591,6 +631,8 @@ class ActiviteForm(forms.ModelForm):
 
     def clean_photos(self):
         """Chaque photo est remise dans le bon sens et réduite : (grande image, vignette)."""
+        if len(self.cleaned_data["photos"]) > PHOTOS_PAR_ENVOI:
+            raise forms.ValidationError(f"{PHOTOS_PAR_ENVOI} photos au plus à la fois : envoyez les autres ensuite.")
         return [photos.preparer_photo_activite(f) for f in self.cleaned_data["photos"]]
 
     def save(self, commit=True):

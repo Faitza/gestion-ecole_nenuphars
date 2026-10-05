@@ -1,0 +1,5 @@
+{% extends "erreurs/page.html" %}
+{% block titre %}Envoi trop lourd{% endblock %}
+{% block code %}ENVOI TROP LOURD{% endblock %}
+{% block message %}Les fichiers sont trop lourds{% endblock %}
+{% block explication %}<p>Un envoi ne peut pas dépasser {{ mo_max|default:"60" }} Mo en tout. Revenez en arrière et envoyez moins de photos à la fois.</p>{% endblock %}
