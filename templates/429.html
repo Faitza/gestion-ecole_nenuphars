@@ -1,0 +1,6 @@
+{% extends "erreurs/page.html" %}
+{% block titre %}Trop de demandes{% endblock %}
+{% block code %}PATIENTEZ UN PEU{% endblock %}
+{% block message %}Trop de demandes en peu de temps{% endblock %}
+{% block explication %}<p>Pour protéger le site, le nombre d'essais est limité. Attendez {% if attente >= 120 %}{% widthratio attente 60 1 %} minutes{% else %}une minute{% endif %}, puis réessayez.</p>{% endblock %}
+{% block actions %}<button type="button" class="btn btn-secondaire" onclick="history.back()">Revenir en arrière</button>{% endblock %}

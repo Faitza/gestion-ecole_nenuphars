@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -86,15 +87,24 @@ LOGOUT_REDIRECT_URL = 'core:login'
 # Session fermée après 30 minutes sans activité
 SESSION_COOKIE_AGE = 30 * 60
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+# Cookies envoyés seulement en https en production. DJANGO_HTTPS=0 sert seulement aux
+# essais en production sur votre ordinateur (http://127.0.0.1), par exemple outils/test_charge.py.
+_HTTPS = _env_bool("DJANGO_HTTPS", not DEBUG)
+SESSION_COOKIE_SECURE = _HTTPS
+CSRF_COOKIE_SECURE = _HTTPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Fichiers statiques compressés et gardés en mémoire par le navigateur
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Envoi trop lourd refusé avant d'être lu
+    'core.protection.TailleEnvoiMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Nombre de requêtes limité par visiteur (après la connexion : chaque compte a sa limite)
+    'core.protection.LimiteRequetesMiddleware',
     'core.middleware.ChangementMotDePasseMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -195,21 +205,148 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# En production, WhiteNoise sert les fichiers statiques compressés (gzip et brotli) avec un
+# nom qui change à chaque modification : le navigateur peut les garder un an sans risque.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG
+        else "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+# Un fichier statique oublié dans collectstatic ne doit pas faire planter la page
+WHITENOISE_MANIFEST_STRICT = False
 
 # Photos et pièces jointes. Elles ne sont jamais servies directement : une vue
 # vérifie les droits avant d'envoyer une photo (voir core/photos.py).
 MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT") or BASE_DIR / "media")
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
+# Poids total d'un envoi (toutes les photos ensemble) et nombre de fichiers par envoi.
+# Au-delà, la requête est refusée avant d'être lue (core/protection.py).
+TAILLE_MAX_ENVOI = int(os.environ.get("DJANGO_TAILLE_MAX_ENVOI_MO") or 60) * 1024 * 1024
+DATA_UPLOAD_MAX_NUMBER_FILES = 40   # le formulaire des activités en accepte 20 et le dit
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Sauvegardes (python manage.py sauvegarder) : à garder AUSSI hors du serveur
+DOSSIER_SAUVEGARDES = Path(os.environ.get("DJANGO_DOSSIER_SAUVEGARDES") or BASE_DIR / "sauvegardes")
 
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+# Sans EMAIL_HOST, les e-mails sont seulement écrits dans la console (développement).
+_email_hote = os.environ.get("EMAIL_HOST", "")
+if _email_hote:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': _email_hote,
+                'port': int(os.environ.get("EMAIL_PORT") or 587),
+                'username': os.environ.get("EMAIL_HOST_USER", ""),
+                'password': os.environ.get("EMAIL_HOST_PASSWORD", ""),
+                'use_tls': _env_bool("EMAIL_USE_TLS", True),
+                # Un serveur d'e-mail qui ne répond pas ne doit pas bloquer le site
+                'timeout': 10,
+            },
+        },
+    }
+else:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        },
+    }
+DEFAULT_FROM_EMAIL = SERVER_EMAIL = os.environ.get("EMAIL_EXPEDITEUR") or "site@localhost"
+
+# Adresses e-mail prévenues à chaque erreur du site, séparées par des virgules
+ADMINS = _env_liste("DJANGO_ADMINS")
+
+
+# ─────────────────────────────────────────────────────────────
+# Mémoire (cache) : limite de requêtes par visiteur et pages qui changent peu.
+# Par défaut, un dossier sur le disque, partagé par tous les processus du serveur.
+# ─────────────────────────────────────────────────────────────
+_cache_dossier = os.environ.get("DJANGO_CACHE_DOSSIER") or str(BASE_DIR / ".cache")
+if os.environ.get("DJANGO_CACHE_REDIS"):
+    _cache = {"BACKEND": "django.core.cache.backends.redis.RedisCache",
+              "LOCATION": os.environ["DJANGO_CACHE_REDIS"]}
+elif DEBUG:
+    _cache = {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+else:
+    _cache = {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache", "LOCATION": _cache_dossier}
+EN_TEST = len(sys.argv) > 1 and sys.argv[1] == "test"
+if EN_TEST:
+    _cache = {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+CACHES = {"default": _cache}
+# Durée pendant laquelle le site public garde en mémoire les sections et leurs classes
+# (oubliées aussitôt qu'une classe change). Rien n'est gardé pendant les tests.
+DUREE_MEMOIRE_SITE_PUBLIC = 0 if EN_TEST else 24 * 60 * 60
+
+# Nombre de requêtes permises par visiteur (adresse IP) : (nombre, secondes).
+LIMITES_REQUETES = {
+    # Toutes les pages. Une personne connectée a sa propre limite ; les visiteurs du site public
+    # sont comptés par adresse IP, et beaucoup de téléphones partagent la même adresse chez
+    # les opérateurs mobiles : la limite reste large.
+    "pages": (int(os.environ.get("DJANGO_LIMITE_PAGES_PAR_MINUTE") or 600), 60),
+    # Photos (une liste de 50 élèves en affiche 50 d'un coup)
+    "photos": (2000, 60),
+    # Connexion et création du compte parent : par compte essayé
+    "connexion": (10, 5 * 60),
+    # Préinscription et contact (le champ piège arrête déjà la plupart des robots)
+    "formulaires_publics": (30, 10 * 60),
+}
+if EN_TEST:
+    # Les tests envoient des centaines de requêtes depuis la même adresse ; les tests de
+    # la limite elle-même choisissent des limites basses.
+    LIMITES_REQUETES = {nom: (10 ** 6, secondes) for nom, (_, secondes) in LIMITES_REQUETES.items()}
+# Derrière un hébergeur qui transmet l'adresse du visiteur (Render, Railway, nginx...),
+# mettez DJANGO_DERRIERE_UN_PROXY=1 pour lire l'en-tête X-Forwarded-For.
+DERRIERE_UN_PROXY = _env_bool("DJANGO_DERRIERE_UN_PROXY")
+if DERRIERE_UN_PROXY:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+# ─────────────────────────────────────────────────────────────
+# Journal des erreurs : chaque erreur est écrite dans logs/erreurs.log (gardé 10 fichiers
+# de 5 Mo), affichée dans la console de l'hébergeur et envoyée par e-mail aux ADMINS.
+# ─────────────────────────────────────────────────────────────
+DOSSIER_JOURNAUX = Path(os.environ.get("DJANGO_DOSSIER_JOURNAUX") or BASE_DIR / "logs")
+try:
+    DOSSIER_JOURNAUX.mkdir(parents=True, exist_ok=True)
+    _journal_fichier = os.access(DOSSIER_JOURNAUX, os.W_OK)
+except OSError:
+    _journal_fichier = False   # disque en lecture seule chez l'hébergeur : console et e-mail seulement
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "detail": {"format": "{asctime} {levelname} {name} : {message}", "style": "{"},
+    },
+    "filters": {
+        "production": {"()": "django.utils.log.RequireDebugFalse"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "detail"},
+        "fichier": {
+            "class": "logging.handlers.RotatingFileHandler", "formatter": "detail", "level": "WARNING",
+            "filename": DOSSIER_JOURNAUX / "erreurs.log", "maxBytes": 5 * 1024 * 1024, "backupCount": 10,
+            "encoding": "utf-8",
+        },
+        "email": {"class": "django.utils.log.AdminEmailHandler", "level": "ERROR", "filters": ["production"]},
+    },
+    "root": {"handlers": ["console", "fichier"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console", "fichier", "email"], "level": "INFO", "propagate": False},
+        # Les 404 ne sont pas des erreurs du site : console seulement
+        "django.request": {"handlers": ["console", "fichier", "email"], "level": "ERROR", "propagate": False},
+        "nenuphars": {"handlers": ["console", "fichier", "email"], "level": "INFO", "propagate": False},
     },
 }
+if not _journal_fichier:
+    LOGGING["handlers"]["fichier"] = {"class": "logging.NullHandler"}
+if EN_TEST:
+    # Les tests provoquent exprès des erreurs : rien dans la console ni dans logs/erreurs.log
+    LOGGING["handlers"]["console"] = LOGGING["handlers"]["fichier"] = {"class": "logging.NullHandler"}

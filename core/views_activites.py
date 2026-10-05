@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from .pagination import paginer
 from .forms import ActiviteForm
 from .models import Activite, PhotoActivite
 from .roles import acces_requis
@@ -13,8 +14,8 @@ from .roles import acces_requis
 
 @acces_requis("activites")
 def activite_liste(request):
-    activites = Activite.objects.prefetch_related("photos")
-    return render(request, "core/activite_liste.html", {"activites": activites})
+    page = paginer(request, Activite.objects.prefetch_related("photos"), par_page=20)
+    return render(request, "core/activite_liste.html", {"activites": page.object_list, "page": page})
 
 
 @acces_requis("activites", ecriture=True)

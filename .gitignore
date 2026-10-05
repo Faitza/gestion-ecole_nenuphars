@@ -16,3 +16,8 @@ staticfiles/
 .vscode/
 .idea/
 .DS_Store
+
+# Journaux, mémoire du site et sauvegardes (jamais sur GitHub : données des élèves)
+logs/
+.cache/
+sauvegardes/

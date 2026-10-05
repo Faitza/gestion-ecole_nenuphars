@@ -1,11 +1,19 @@
 # core/signals.py
+from django.core.cache import cache
 from django.db import transaction
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import Eleve, Employe, Parent, PhotoActivite, Preinscription, Professeur
+from .models import Classe, Eleve, Employe, Parent, PhotoActivite, Preinscription, Professeur, Section
 from .photos import supprimer_fichier
 from . import roles
+
+
+@receiver([post_save, post_delete], sender=Classe)
+@receiver([post_save, post_delete], sender=Section)
+def classes_modifiees(sender, **kwargs):
+    """Le site public relit les classes à la prochaine visite (voir site_public/views.py)."""
+    cache.delete("site:sections")
 
 
 @receiver(post_delete, sender=Employe)

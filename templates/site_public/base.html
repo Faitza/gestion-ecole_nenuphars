@@ -7,10 +7,11 @@
     <title>{% block title %}{{ site.NOM }}{% endblock %} · {{ site.VILLE }}</title>
     <meta name="description" content="{% block description %}{{ site.PRESENTATION }}{% endblock %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icones/favicon-32.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'icones/apple-touch-icon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/polices.css' %}">
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    <link rel="stylesheet" href="{% static 'css/commun.css' %}">
 </head>
 <body>
 <a class="aller-au-contenu" href="#contenu">Aller au contenu</a>
@@ -68,8 +69,11 @@
             <p><a href="{% url 'core:login' %}">Parents, professeurs et personnel</a></p>
         </div>
     </div>
-    <p class="pied-bas">&copy; {% now "Y" %} {{ site.NOM }} · {{ site.VILLE }}, Haïti</p>
+    <p class="pied-bas">&copy; {% now "Y" %} {{ site.NOM }} · {{ site.VILLE }}, Haïti ·
+        <a href="{% url 'site:confidentialite' %}">Confidentialité</a> ·
+        <a href="{% url 'site:conditions' %}">Conditions d'utilisation</a></p>
 </footer>
 {% block scripts %}{% endblock %}
+<script src="{% static 'js/chargement.js' %}" defer></script>
 </body>
 </html>

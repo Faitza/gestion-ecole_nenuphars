@@ -1,0 +1,2 @@
+{# Comment joindre l'école pour une question sur les données ou les conditions #}
+au secrétariat de l'école{% if site.ADRESSE %} ({{ site.ADRESSE }}){% endif %}{% if site.TELEPHONES %}, par téléphone au {{ site.TELEPHONES|join:" ou " }}{% endif %}{% if site.COURRIEL %}, par e-mail à <a href="mailto:{{ site.COURRIEL }}">{{ site.COURRIEL }}</a>{% endif %}, ou par la <a href="{% url 'site:contact' %}">page Contact</a>

@@ -1,0 +1,9 @@
+{# Liens vers les autres pages d'une longue liste ; rien quand tout tient sur une page. #}
+{% if page.paginator.num_pages > 1 %}
+<nav class="pagination" aria-label="Pages de la liste">
+    {% if page.has_previous %}<a href="?{% if page.parametres %}{{ page.parametres }}&amp;{% endif %}page={{ page.previous_page_number }}" rel="prev">‹ Précédente</a>{% endif %}
+    {% for numero in page.numeros %}{% if numero == page.number %}<span class="pagination-ici" aria-current="page">{{ numero }}</span>{% elif numero == page.paginator.ELLIPSIS %}<span class="pagination-total">…</span>{% else %}<a href="?{% if page.parametres %}{{ page.parametres }}&amp;{% endif %}page={{ numero }}">{{ numero }}</a>{% endif %}{% endfor %}
+    {% if page.has_next %}<a href="?{% if page.parametres %}{{ page.parametres }}&amp;{% endif %}page={{ page.next_page_number }}" rel="next">Suivante ›</a>{% endif %}
+    <span class="pagination-total">{{ page.start_index }} à {{ page.end_index }} sur {{ page.paginator.count }}</span>
+</nav>
+{% endif %}

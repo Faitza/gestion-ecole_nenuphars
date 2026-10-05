@@ -48,7 +48,8 @@ def photo(request, modele, pk):
     except FileNotFoundError:
         raise Http404
     reponse = FileResponse(fichier, content_type="image/jpeg")
-    reponse["Cache-Control"] = "private, max-age=3600"
+    # L'adresse change avec la photo (?v=...) : le navigateur peut la garder une journée
+    reponse["Cache-Control"] = "private, max-age=86400"
     return reponse
 
 

@@ -332,9 +332,9 @@ details.classe-notes:not([open]) > summary::after { content: "▸"; }
 
 /* ── PRÉINSCRIPTIONS ET MESSAGES DU SITE ──────────────────── */
 .onglets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-.onglets a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 99px; background: white;
+.onglets a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: white;
   color: var(--texte-moyen); text-decoration: none; font-size: 13px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
-.onglets a span { background: var(--fond-gris-clair); border-radius: 99px; padding: 0 8px; font-size: 12px; }
+.onglets a span { background: var(--fond-gris-clair); border-radius: 6px; padding: 0 8px; font-size: 12px; }
 .onglets a.actif { background: #0f766e; color: white; }
 .onglets a.actif span { background: rgba(255,255,255,0.2); }
 .etape { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: bold; white-space: nowrap; }
@@ -467,7 +467,7 @@ a.lien-icone { color: var(--primaire); }
 .puce-nouveau { display: inline-block; background: #0f766e; color: white; font-size: 10px; font-weight: bold; text-transform: uppercase;
   letter-spacing: 0.5px; padding: 2px 7px; border-radius: 99px; vertical-align: middle; }
 .sommaire-enfant { display: flex; flex-wrap: wrap; gap: 6px; }
-.sommaire-enfant a { font-size: 12px; font-weight: bold; color: #0f766e; background: #ccfbf1; padding: 5px 10px; border-radius: 99px; text-decoration: none; }
+.sommaire-enfant a { font-size: 12px; font-weight: bold; color: #0f766e; background: #ccfbf1; padding: 5px 10px; border-radius: 6px; text-decoration: none; }
 .titre-section[id] { scroll-margin-top: 12px; }
 .incident-parent strong { font-weight: 600; }
 .sidebar nav a .compteur { margin-left: auto; background: #f59e0b; color: white; border-radius: 99px; font-size: 11px; padding: 1px 7px; font-weight: bold; }
@@ -505,3 +505,7 @@ a.lien-icone { color: var(--primaire); }
 .galerie-gestion { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .galerie-gestion figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .galerie-gestion img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+
+/* Liens Confidentialité et Conditions sous les pages de connexion */
+.login-legal { text-align: center; font-size: 12px; color: var(--texte-clair); margin: 12px 0 0; }
+.login-legal a { color: var(--texte-moyen); }

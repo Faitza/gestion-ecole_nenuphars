@@ -1,0 +1,51 @@
+{% extends "site_public/base.html" %}
+{% block title %}Confidentialité{% endblock %}
+{% block description %}Les informations que l'Institution Les Nénuphars garde sur les élèves et les familles, qui les voit et comment les faire corriger ou effacer.{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">Mise à jour le {{ site.MISE_A_JOUR_PAGES_LEGALES }}</p>
+    <h1>Confidentialité et données personnelles</h1>
+    <p class="chapo">Ce que l'école garde sur votre enfant et sur vous, pourquoi, qui peut le voir et combien de temps.</p>
+</section>
+
+<section class="bande texte legal">
+    <h2>Qui est responsable</h2>
+    <p>{{ site.NOM }}, {{ site.VILLE }}, Haïti. Pour toute question sur vos données, adressez-vous {% include "site_public/_nous_joindre.html" %}.</p>
+
+    <h2>Ce que nous gardons</h2>
+    <ul>
+        <li><strong>Préinscription</strong> : nom, prénom, date de naissance et genre de l'enfant, classe demandée, école précédente, photo, acte de naissance et dernier bulletin si vous les joignez ; nom, téléphone, e-mail et adresse du parent ou tuteur.</li>
+        <li><strong>Message de la page Contact</strong> : nom, téléphone, e-mail et message.</li>
+        <li><strong>Élève inscrit</strong> : fiche de l'élève, classe, notes, bulletins, absences et retards, comportement, élève malade signalé à l'école, paiements.</li>
+        <li><strong>Compte parent, professeur ou membre du personnel</strong> : identifiant, téléphone, e-mail. Le mot de passe est enregistré chiffré : personne à l'école ne peut le lire.</li>
+        <li><strong>Données techniques</strong> : l'adresse IP de chaque visite est gardée quelques minutes pour limiter les abus (trop de demandes, essais de mots de passe). Les erreurs du site sont notées dans un journal, avec l'adresse IP et la page, pour les corriger.</li>
+    </ul>
+
+    <h2>Pourquoi</h2>
+    <p>Seulement pour la scolarité : étudier une demande d'inscription, suivre l'élève, préparer les bulletins, tenir les familles informées et gérer les paiements. Rien n'est vendu ni utilisé pour de la publicité.</p>
+
+    <h2>Qui peut les voir</h2>
+    <ul>
+        <li>Le secrétariat, la caisse et la direction, chacun pour ce qui concerne son travail et sa section.</li>
+        <li>Les professeurs, pour les élèves de leurs classes.</li>
+        <li>Les parents, pour leurs propres enfants seulement, dans l'espace parent.</li>
+    </ul>
+    <p>Les photos d'identité et les pièces jointes ne sont jamais publiées : le site vérifie les droits de la personne connectée avant de les montrer. Seules les photos d'activités que l'école choisit de publier paraissent sur la page <a href="{% url 'site:activites' %}">Activités</a>. Si vous ne voulez pas que votre enfant y figure, dites-le au secrétariat : la photo est retirée.</p>
+
+    <h2>Combien de temps</h2>
+    <ul>
+        <li>Une préinscription qui n'aboutit pas : {{ site.CONSERVATION_PREINSCRIPTION }}.</li>
+        <li>Le dossier d'un élève : pendant sa scolarité, puis {{ site.CONSERVATION_DOSSIER_ELEVE }}.</li>
+        <li>Un compte qui n'est plus utilisé est fermé à la demande de la personne ou quand elle quitte l'école.</li>
+    </ul>
+
+    <h2>Cookies</h2>
+    <p>Le site utilise deux cookies techniques, indispensables : l'un garde votre connexion ouverte, l'autre protège les formulaires. Il n'y a ni mesure d'audience, ni publicité, ni bouton de réseau social, et le site ne charge rien depuis d'autres sites.</p>
+
+    <h2>Sécurité</h2>
+    <p>Le site fonctionne en connexion chiffrée (https). Chaque personne n'accède qu'à ce que son rôle permet. Une connexion inactive se ferme après 30 minutes. Les sauvegardes sont gardées dans un lieu qui n'est pas public.</p>
+
+    <h2>Vos droits</h2>
+    <p>Vous pouvez demander à voir les informations que l'école garde sur vous ou sur votre enfant, les faire corriger, ou les faire effacer quand l'école n'est plus obligée de les garder. Adressez-vous {% include "site_public/_nous_joindre.html" %}. Ces règles suivent les principes du RGPD européen.</p>
+</section>
+{% endblock %}

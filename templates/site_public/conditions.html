@@ -1,0 +1,48 @@
+{% extends "site_public/base.html" %}
+{% block title %}Conditions d'utilisation{% endblock %}
+{% block description %}Les règles d'utilisation du site de l'Institution Les Nénuphars et des espaces réservés aux parents, aux professeurs et au personnel.{% endblock %}
+{% block content %}
+<section class="page-titre">
+    <p class="kick">Mise à jour le {{ site.MISE_A_JOUR_PAGES_LEGALES }}</p>
+    <h1>Conditions d'utilisation</h1>
+    <p class="chapo">Les règles du site de l'école et des espaces réservés aux familles, aux professeurs et au personnel.</p>
+</section>
+
+<section class="bande texte legal">
+    <h2>Le site</h2>
+    <p>Ce site est celui de {{ site.NOM }}, {{ site.VILLE }}, Haïti. Les pages publiques sont ouvertes à tous. Les espaces réservés (parents, professeurs, personnel) demandent un compte remis par l'école.</p>
+
+    <h2>Votre compte</h2>
+    <ul>
+        <li>Le compte est personnel : ne donnez votre mot de passe à personne, pas même à quelqu'un de l'école.</li>
+        <li>Changez le mot de passe provisoire dès la première connexion, et prévenez le secrétariat si vous pensez que quelqu'un d'autre le connaît.</li>
+        <li>Déconnectez-vous après avoir utilisé un téléphone ou un ordinateur partagé.</li>
+    </ul>
+
+    <h2>Préinscription</h2>
+    <p>La préinscription en ligne est une demande : elle ne réserve pas de place. L'inscription est finalisée après le rendez-vous au secrétariat, l'accord de la direction de la section et le paiement des frais d'inscription. Les informations données doivent être exactes ; l'école peut demander les originaux des pièces.</p>
+
+    <h2>Notes, bulletins et paiements</h2>
+    <p>Les notes et bulletins affichés en ligne sont ceux saisis par les professeurs et validés par la direction. En cas de différence, le bulletin signé remis par l'école fait foi. Un paiement apparaît en ligne une fois enregistré par la caisse ; gardez votre reçu.</p>
+
+    <h2>Photos et textes</h2>
+    <p>Les textes et photos du site appartiennent à l'école. Les photos d'élèves ne doivent pas être copiées, partagées ou publiées ailleurs sans l'accord de l'école et des parents concernés.</p>
+
+    <h2>Ce qui est interdit</h2>
+    <ul>
+        <li>Essayer d'entrer dans un compte ou un espace qui n'est pas le vôtre.</li>
+        <li>Utiliser des robots ou envoyer un grand nombre de demandes : le site les bloque automatiquement.</li>
+        <li>Envoyer par les formulaires des contenus faux, insultants ou sans rapport avec l'école.</li>
+    </ul>
+    <p>L'école peut fermer un compte qui ne respecte pas ces règles.</p>
+
+    <h2>Disponibilité</h2>
+    <p>L'école fait le nécessaire pour que le site fonctionne, mais il peut être interrompu pour une panne ou une mise à jour. Les informations urgentes passent toujours aussi par le secrétariat.</p>
+
+    <h2>Données personnelles</h2>
+    <p>Voir la page <a href="{% url 'site:confidentialite' %}">Confidentialité et données personnelles</a>.</p>
+
+    <h2>Questions et changements</h2>
+    <p>Pour toute question, adressez-vous {% include "site_public/_nous_joindre.html" %}. Ces conditions peuvent changer ; la date en haut de la page indique la dernière mise à jour.</p>
+</section>
+{% endblock %}

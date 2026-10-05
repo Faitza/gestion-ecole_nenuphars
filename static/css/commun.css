@@ -1,0 +1,48 @@
+/* static/css/commun.css : barre de chargement, avertissements et pagination, sur tout le site */
+
+/* Barre de chargement en haut de la page pendant qu'une page ou un envoi se prépare */
+.barre-chargement {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 9999;
+  background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, .6);
+  opacity: 0; transition: width 8s cubic-bezier(.1, .7, .2, 1), opacity .2s;
+  pointer-events: none;
+}
+html.en-chargement .barre-chargement { width: 90%; opacity: 1; }
+
+/* Bouton d'envoi désactivé pendant l'envoi (pas de double clic) */
+button.en-cours, input.en-cours { opacity: .7; cursor: progress; }
+button.en-cours::after {
+  content: ""; display: inline-block; width: .8em; height: .8em; margin-left: .5em; vertical-align: -.1em;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: tourne .7s linear infinite;
+}
+@keyframes tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .barre-chargement { transition: opacity .2s; }
+  button.en-cours::after { animation: none; }
+}
+
+/* Petit avertissement en bas de l'écran : connexion lente, plus d'Internet, fichier trop lourd */
+.avertissement-reseau {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9999;
+  max-width: calc(100% - 32px); width: max-content;
+  background: #1e293b; color: #fff; border-radius: 10px; padding: 12px 16px;
+  font: 14px/1.4 Arial, "Helvetica Neue", sans-serif; box-shadow: 0 6px 24px rgba(15, 23, 42, .25);
+}
+.avertissement-reseau button {
+  margin-left: 10px; background: transparent; color: #93c5fd; border: 0; font: inherit; cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Pages d'une longue liste */
+.pagination {
+  display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;
+  margin: 18px 0 6px; font-size: 14px;
+}
+.pagination a, .pagination span {
+  padding: 7px 12px; border-radius: 8px; text-decoration: none; color: #1e293b; background: #fff;
+  border: 1px solid #e2e8f0;
+}
+.pagination a:hover { border-color: #3b82f6; color: #1e3a8a; }
+.pagination .pagination-ici { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
+.pagination .pagination-total { background: transparent; border: 0; color: #475569; }

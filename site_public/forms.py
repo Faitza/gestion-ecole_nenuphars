@@ -24,8 +24,8 @@ class PreinscriptionPubliqueForm(PiegeARobotsMixin, PreinscriptionForm):
                   "acte_naissance": "Acte de naissance", "dernier_bulletin": "Dernier bulletin"}
         widgets = {
             **PreinscriptionForm.Meta.widgets,
-            "acte_naissance": forms.FileInput(attrs={"accept": "image/*,application/pdf"}),
-            "dernier_bulletin": forms.FileInput(attrs={"accept": "image/*,application/pdf"}),
+            "acte_naissance": forms.FileInput(attrs={"accept": "image/*,application/pdf", "data-taille-max-mo": 5}),
+            "dernier_bulletin": forms.FileInput(attrs={"accept": "image/*,application/pdf", "data-taille-max-mo": 5}),
         }
 
     def clean_acte_naissance(self):
