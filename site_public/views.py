@@ -110,6 +110,14 @@ def contact(request):
     return render(request, "site_public/contact.html", {"form": form})
 
 
+def confidentialite(request):
+    return render(request, "site_public/confidentialite.html")
+
+
+def conditions(request):
+    return render(request, "site_public/conditions.html")
+
+
 # ─────────────────────────── Activités et concours ───────────────────────────
 def activites(request):
     liste = Activite.objects.filter(publiee=True).prefetch_related("photos")

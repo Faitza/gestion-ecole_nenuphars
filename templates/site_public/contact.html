@@ -29,6 +29,7 @@
             {% include "site_public/_champ.html" with champ=form.message large=True %}
         </div>
         <div class="piege" aria-hidden="true">{{ form.site_web.label_tag }}{{ form.site_web }}</div>
+        <p class="aide">Votre message est lu par le secrétariat seulement. <a href="{% url 'site:confidentialite' %}">Vos données et vos droits</a>.</p>
         <div class="actions"><button class="btn btn-lily" type="submit">{% icone "envoyer" %} Envoyer</button></div>
     </form>
 </div>

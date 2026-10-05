@@ -14,6 +14,7 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .activite-image img, .galerie img { transition: none; } }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
 img { max-width: 100%; }
 a { color: var(--navy); }
@@ -104,7 +105,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .niveau { border-top: 1px solid var(--line); }
 .classes, .matieres { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.classes li { padding: 6px 12px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; font-size: 14px; }
+.classes li { padding: 6px 12px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; font-size: 14px; }
 .matieres li { padding: 4px 10px; border-radius: 6px; background: var(--leaf-soft); color: var(--leaf); font-size: 14px; }
 
 .liste-coches { list-style: none; padding: 0; margin: 0 0 12px; }
@@ -123,7 +124,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .page-titre .kick a { color: inherit; font-size: inherit; }
 .texte-activite { font-size: 18px; max-width: 68ch; }
 .filtres { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
-.filtres a { padding: 6px 14px; border-radius: 99px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
+.filtres a { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
 .filtres a.on { background: var(--lily); border-color: var(--lily); color: #fff; }
 .activites { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 .activite-carte { display: flex; flex-direction: column; gap: 6px; color: var(--ink); text-decoration: none; }
@@ -137,7 +138,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .activite-carte:hover .activite-image img { transform: scale(1.03); }
 .activite-image > .icone { width: 48px; height: 48px; }
 .nb-photos { position: absolute; right: 10px; bottom: 10px; display: inline-flex; gap: 6px; align-items: center;
-  background: rgba(27,35,51,.75); color: #fff; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 99px; }
+  background: rgba(27,35,51,.75); color: #fff; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
 .galerie { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .galerie a { display: block; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
 .galerie img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform .3s; }
@@ -204,6 +205,7 @@ legend { display: flex; align-items: center; gap: 8px; font-family: var(--displa
 .pied-grille { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 24px; }
 .pied-nom { font-family: var(--display); font-weight: 800; font-size: 20px; color: #fff; }
 .pied-titre { font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; }
+.pied-bas a { color: inherit; }
 .pied-bas { border-top: 1px solid rgba(255,255,255,.2); margin-top: 20px !important; padding-top: 14px; font-size: 13px; color: #b8c6ef; }
 
 /* ── Téléphone ───────────────────────────────────────────── */
@@ -237,3 +239,9 @@ legend { display: flex; align-items: center; gap: 8px; font-family: var(--displa
 @media print {
   .pnav, .pied, .cta, .messages { display: none !important; }
 }
+
+/* Pages Confidentialité et Conditions d'utilisation */
+.legal { max-width: 760px; }
+.legal h2 { font-size: 22px; margin: 30px 0 10px; }
+.legal ul { padding-left: 20px; }
+.legal li { margin: 4px 0; }

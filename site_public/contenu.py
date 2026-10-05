@@ -24,15 +24,24 @@ PIECES_A_FOURNIR = [
 
 # ── Présentation ───────────────────────────────────────────────────
 # Grand titre de l'accueil : la deuxième partie est mise en couleur
-ACCROCHE = ("Chaque enfant grandit à son rythme,", "du Kindergarten à la NSIV.")
+ACCROCHE = ("École du Kindergarten à la NSIV,", "aux Cayes.")
 PRESENTATION = (
-    "L'Institution Les Nénuphars accueille les enfants aux Cayes, du Kindergarten jusqu'au "
-    "Nouveau Secondaire. Chaque section a sa propre direction, proche des élèves et des familles, "
-    "et les notes sont suivies à chaque trimestre."
+    "L'Institution Les Nénuphars accueille les élèves de la 1re année Kinder jusqu'à la NSIV, en trois "
+    "sections : Kindergarten, primaire et secondaire. Chaque section a sa direction. Les parents suivent "
+    "en ligne les notes, les absences et les bulletins de leurs enfants."
 )
 HISTOIRE = []                   # un paragraphe par élément de la liste
 MOT_DE_LA_DIRECTRICE = []       # idem ; signé par la directrice en chef
 VALEURS = []                    # ex : [("Rigueur", "Un travail suivi chaque jour..."), ("Bienveillance", "...")]
+
+# ── Pages « Confidentialité » et « Conditions d'utilisation » ───────
+# Date affichée en haut des deux pages : à changer quand leur texte change
+MISE_A_JOUR_PAGES_LEGALES = "5 octobre 2026"
+# Durée de conservation d'une préinscription qui n'aboutit pas à une inscription.
+# À confirmer par la direction ; le secrétariat efface ensuite le dossier (rubrique Préinscriptions).
+CONSERVATION_PREINSCRIPTION = "jusqu'à la fin de l'année scolaire demandée"
+# Durée de conservation du dossier d'un élève après son départ de l'école (à confirmer par la direction)
+CONSERVATION_DOSSIER_ELEVE = "tant que la loi ou l'école en a besoin pour délivrer des certificats et relevés de notes"
 
 # Texte de chaque section, sur l'accueil et la page Niveaux
 SECTIONS = {

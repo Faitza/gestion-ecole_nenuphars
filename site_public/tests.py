@@ -297,3 +297,30 @@ class MessagesDuSiteTests(TestCase):
         reponse = self.client.post(reverse("site:contact"), {"nom": "Marie", "telephone": "", "message": "Bonjour"})
         self.assertEqual(reponse.status_code, 200)
         self.assertFalse(MessageContact.objects.exists())
+
+
+class PagesLegalesEtCredibiliteTests(TestCase):
+    """Confidentialité, conditions d'utilisation, et rien de chargé depuis un autre site."""
+
+    def test_pages_legales(self):
+        for nom, titre in (("site:confidentialite", "Confidentialité et données personnelles"),
+                           ("site:conditions", "Conditions d'utilisation")):
+            with self.subTest(nom=nom):
+                self.assertContains(self.client.get(reverse(nom)), titre)
+
+    def test_liens_en_bas_de_chaque_page_et_sur_les_formulaires(self):
+        accueil = self.client.get(reverse("site:accueil"))
+        self.assertContains(accueil, reverse("site:confidentialite"))
+        self.assertContains(accueil, reverse("site:conditions"))
+        for nom in ("site:preinscription", "site:contact", "core:login", "core:inscription"):
+            with self.subTest(nom=nom):
+                self.assertContains(self.client.get(reverse(nom)), reverse("site:confidentialite"))
+
+    def test_aucune_ressource_externe_ni_tiret_long(self):
+        for nom in ("site:accueil", "site:ecole", "site:niveaux", "site:admissions", "site:contact",
+                    "site:activites", "site:confidentialite", "site:conditions"):
+            with self.subTest(nom=nom):
+                html = self.client.get(reverse(nom)).content.decode()
+                self.assertNotIn("fonts.googleapis", html)
+                self.assertNotIn("—", html)
+                self.assertIn("apple-touch-icon", html)

@@ -28,6 +28,29 @@ Pour chaque point : ce que fait le site, et ce qu'il reste à faire chez l'hébe
 | 19 | Tester avec plusieurs visiteurs en même temps | Script `outils/test_charge.py`. Essai fait : 30 visiteurs pendant 30 secondes, environ 200 pages par seconde, médiane 134 ms, aucune erreur. | Le relancer sur le serveur choisi avant l'ouverture. |
 | 20 | Vérifier que la sauvegarde se restaure | `sauvegarder` crée un .zip (base + photos) puis le restaure dans une base à part pour le vérifier ; `verifier_sauvegarde` et `restaurer_sauvegarde` (voir plus bas). | Programmer la sauvegarde chaque nuit et en garder une copie hors du serveur. |
 
+## Apparence et crédibilité du site public
+
+| Point | État |
+|-------|------|
+| Faux avis | Aucun avis ni témoignage sur le site. |
+| Mention « fait avec l'IA » | Aucune. |
+| Animation du curseur, animations exagérées au défilement | Aucune. Les petits effets au survol s'arrêtent si le téléphone demande moins d'animations. |
+| Titre d'accueil vague | Remplacé par ce que l'école est et où : « École du Kindergarten à la NSIV, aux Cayes. » (`site_public/contenu.py`). |
+| Dégradés violets | Aucun : couleurs de l'école (bleu marine, rose nénuphar, vert). |
+| Tirets longs (—) dans les textes | Aucun sur le site public ; un test le vérifie. |
+| Faux chiffres | Les chiffres de l'accueil viennent de la base (classes, sections) ou des réglages de l'école (matières, bulletins par an). |
+| Photos générées par IA | Aucune : seules les photos d'activités envoyées par l'école. L'image d'accueil est un dessin de nénuphars. |
+| Emojis à la place des icônes | Aucun : vraies icônes (`static/icones/icones.svg`). |
+| Textes qui sonnent « IA » | Textes courts et concrets ; à relire par la direction quand elle remplit `contenu.py`. |
+| Boutons en forme de pilule | Retirés : filtres, onglets et étiquettes ont des coins légèrement arrondis comme les autres boutons. |
+| Page RGPD | Page « Confidentialité » (`/confidentialite/`), liée en bas de chaque page et sous chaque formulaire. Les durées de conservation sont dans `contenu.py`, à confirmer par la direction. |
+| Favicon | Icône de l'école (SVG, plus PNG pour les anciens navigateurs et l'écran d'accueil des iPhone). |
+| Nom de domaine | À choisir et acheter avec l'hébergeur (par exemple lesnenuphars.edu.ht ou lesnenuphars.ht), puis l'ajouter à `DJANGO_ALLOWED_HOSTS` et `DJANGO_CSRF_TRUSTED_ORIGINS`. |
+| Page CGU | Page « Conditions d'utilisation » (`/conditions-d-utilisation/`). |
+
+Les polices sont servies par le site lui-même (`static/fonts/`) : aucune visite n'est
+transmise à Google, ce que dit la page Confidentialité.
+
 ## Démarrer le site en production
 
 ```bash

@@ -59,6 +59,8 @@
         {# Piège à robots : caché aux visiteurs #}
         <div class="piege" aria-hidden="true">{{ form.site_web.label_tag }}{{ form.site_web }}</div>
 
+        <p class="aide">Ces informations servent seulement à traiter la demande d'inscription. Elles sont lues par le
+            secrétariat et la direction de la section, jamais publiées. <a href="{% url 'site:confidentialite' %}">Vos données et vos droits</a>.</p>
         <div class="actions">
             <button class="btn btn-lily" type="submit">{% icone "envoyer" %} Envoyer la demande</button>
         </div>
