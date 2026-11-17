@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Créer mon compte parent - Institution Les Nénuphars</title>
+    <title>Créer mon compte parent - {{ ecole.nom }}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icones/favicon-32.png' %}">
     <link rel="apple-touch-icon" href="{% static 'icones/apple-touch-icon.png' %}">
@@ -15,8 +15,8 @@
 <div class="login-wrapper">
     <div class="login-left">
         <div class="login-logo">{% icone "famille" %}</div>
-        <h1>INSTITUTION</h1>
-        <h2>LES NÉNUPHARS</h2>
+        {% if ecole.sur_titre %}<h1>{{ ecole.sur_titre|upper }}</h1>{% endif %}
+        <h2>{{ ecole.nom_affiche|upper }}</h2>
         <hr>
         <p class="login-message"><strong>Pourquoi un code ?</strong><br>
             Seuls les parents d'un élève doivent voir ses notes et ses paiements.

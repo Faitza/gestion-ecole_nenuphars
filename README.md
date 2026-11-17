@@ -43,6 +43,20 @@ Le code ne contient plus aucun secret. Tous les réglages sont dans le fichier
 - **Production** : `DJANGO_DEBUG=0`, une `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`,
   puis `DB_ENGINE=postgresql` avec `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` et `DB_PORT`.
 
+## Plusieurs écoles (SaaS)
+
+Le même site peut servir plusieurs écoles, chacune avec son adresse (`nenuphars.ekol.ht`,
+`stjoseph.ekol.ht`...) et sa propre base de données. Une plateforme, à l'adresse principale,
+permet d'ouvrir, modifier et suspendre les écoles. Il suffit du réglage `SAAS_DOMAINE` ; sans lui,
+le site sert une seule école comme avant. Tout est expliqué dans
+[docs/plusieurs-ecoles.md](docs/plusieurs-ecoles.md).
+
+```bash
+python manage.py migrer_ecoles                       # à la place de « migrate »
+python manage.py creer_ecole stjoseph "Collège Saint-Joseph" --ville Jacmel --telephone "3712 3456" --prenom Jean --nom Louis
+python manage.py ecole --toutes sauvegarder          # une commande pour chaque école
+```
+
 ## Mise en ligne, sauvegardes et protection du site
 
 Tout est expliqué dans [docs/production.md](docs/production.md), point par point : limite de
@@ -286,6 +300,15 @@ core/
     admin.py              → gestion des données dans /admin/
     management/commands/seed_data.py → crée les classes et des données d'exemple
     management/commands/sauvegarder.py, verifier_sauvegarde.py, restaurer_sauvegarde.py
+plateforme/                → plusieurs écoles (SaaS)
+    models.py             → Ecole : nom, adresse, base de données, coordonnées du site public
+    ecoles.py             → l'école en cours, sa base, sa création
+    middleware.py         → reconnaît l'école à l'adresse du site
+    routeur.py            → envoie chaque requête à la base de l'école
+    stockage.py           → un dossier de photos par école
+    views.py              → pages de la plateforme : écoles, nouvelle école, suspension
+    management/commands/  → ecole, creer_ecole, migrer_ecoles
+docs/plusieurs-ecoles.md  → mise en ligne avec plusieurs écoles
 templates/400.html ... 500.html → pages d'erreur (page introuvable, accès refusé, erreur du site...)
 outils/test_charge.py     → plusieurs visiteurs en même temps sur le site
 docs/production.md        → mise en ligne, alerte, sauvegardes

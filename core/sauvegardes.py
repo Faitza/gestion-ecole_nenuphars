@@ -17,19 +17,36 @@ from pathlib import Path
 import django
 from django.apps import apps
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import connections
 from django.utils import timezone
 
-# Tables recréées toutes seules par « migrate », ou sans valeur à garder
-EXCLUES = ["contenttypes", "auth.permission", "sessions", "admin.logentry"]
-FORMAT_NOM = "nenuphars-%Y%m%d-%H%M%S.zip"
+from plateforme import ecoles
+
+# Tables recréées toutes seules par « migrate », ou sans valeur à garder.
+# « plateforme » (la liste des écoles) n'appartient à aucune école.
+EXCLUES = ["contenttypes", "auth.permission", "sessions", "admin.logentry", "plateforme"]
+# Avec plusieurs écoles, chaque école sauvegarde la sienne :
+#   python manage.py ecole nenuphars sauvegarder   (ou : python manage.py ecole --toutes sauvegarder)
+
+
+def format_nom():
+    """nenuphars-20261117-210000.zip : le code de l'école, puis la date."""
+    return f"{ecoles.courante().code}-%Y%m%d-%H%M%S.zip"
 
 
 def dossier_des_sauvegardes():
     dossier = Path(getattr(settings, "DOSSIER_SAUVEGARDES", settings.BASE_DIR / "sauvegardes"))
+    if ecoles.active() is not None:
+        dossier = dossier / ecoles.active().code
     dossier.mkdir(parents=True, exist_ok=True)
     return dossier
+
+
+def dossier_media():
+    """Le dossier des photos de l'école en cours (voir plateforme/stockage.py)."""
+    return Path(default_storage.location)
 
 
 def modeles_sauvegardes():
@@ -41,12 +58,14 @@ def modeles_sauvegardes():
             and m._meta.managed and not m._meta.proxy]
 
 
-def compter(alias="default"):
+def compter(alias=None):
+    alias = alias or ecoles.alias()
     return {m._meta.label: m._default_manager.using(alias).count() for m in modeles_sauvegardes()}
 
 
-def fichiers_references(alias="default"):
-    """Tous les fichiers (photos, pièces) dont la base a besoin, relatifs à MEDIA_ROOT."""
+def fichiers_references(alias=None):
+    """Tous les fichiers (photos, pièces) dont la base a besoin, relatifs au dossier des photos."""
+    alias = alias or ecoles.alias()
     noms = set()
     for modele in modeles_sauvegardes():
         champs = [c.name for c in modele._meta.get_fields() if c.get_internal_type() in ("FileField", "ImageField")]
@@ -61,18 +80,18 @@ def sauvegarder(dossier=None):
     """Crée la sauvegarde et renvoie (chemin du .zip, contenu)."""
     dossier = Path(dossier) if dossier else dossier_des_sauvegardes()
     dossier.mkdir(parents=True, exist_ok=True)
-    chemin = dossier / timezone.localtime().strftime(FORMAT_NOM)
-    media = Path(settings.MEDIA_ROOT)
+    chemin = dossier / timezone.localtime().strftime(format_nom())
+    media = dossier_media()
     with tempfile.TemporaryDirectory() as temporaire:
         json_donnees = Path(temporaire) / "donnees.json"
         call_command("dumpdata", exclude=EXCLUES, natural_foreign=True, natural_primary=True,
-                     output=str(json_donnees), verbosity=0)
+                     output=str(json_donnees), verbosity=0, database=ecoles.alias())
         fichiers = fichiers_references()
         manquants = [f for f in fichiers if not (media / f).is_file()]
         contenu = {
             "cree_le": timezone.localtime().isoformat(timespec="seconds"),
             "django": django.get_version(),
-            "base": connections["default"].vendor,
+            "base": connections[ecoles.alias()].vendor,
             "lignes": compter(),
             "fichiers": [f for f in fichiers if f not in manquants],
             "fichiers_deja_manquants": manquants,
@@ -89,7 +108,7 @@ def sauvegarder(dossier=None):
 def supprimer_anciennes(garder, dossier=None):
     """Garde les « garder » sauvegardes les plus récentes ; renvoie les fichiers effacés."""
     dossier = Path(dossier) if dossier else dossier_des_sauvegardes()
-    toutes = sorted(dossier.glob("nenuphars-*.zip"))
+    toutes = sorted(dossier.glob(f"{ecoles.courante().code}-*.zip"))
     anciennes = toutes[:-garder] if garder > 0 else []
     for fichier in anciennes:
         fichier.unlink()
@@ -98,7 +117,7 @@ def supprimer_anciennes(garder, dossier=None):
 
 def derniere_sauvegarde(dossier=None):
     dossier = Path(dossier) if dossier else dossier_des_sauvegardes()
-    toutes = sorted(dossier.glob("nenuphars-*.zip"))
+    toutes = sorted(dossier.glob(f"{ecoles.courante().code}-*.zip"))
     return toutes[-1] if toutes else None
 
 
@@ -108,11 +127,12 @@ def restaurer_dans_la_base_du_site(chemin_zip, dossier_media):
     with zipfile.ZipFile(chemin_zip) as archive, tempfile.TemporaryDirectory() as temporaire:
         contenu = json.loads(archive.read("contenu.json"))
         archive.extract("donnees.json", temporaire)
-        call_command("migrate", interactive=False, verbosity=0)
+        base = ecoles.alias()
+        call_command("migrate", interactive=False, verbosity=0, database=base)
         # Les données de départ créées par les migrations (sections, rôles, horaires) sont
         # remplacées par celles de la sauvegarde.
-        call_command("flush", interactive=False, verbosity=0)
-        call_command("loaddata", str(Path(temporaire) / "donnees.json"), verbosity=0)
+        call_command("flush", interactive=False, verbosity=0, database=base)
+        call_command("loaddata", str(Path(temporaire) / "donnees.json"), verbosity=0, database=base)
         dossier_media = Path(dossier_media)
         for nom in archive.namelist():
             if nom.startswith("media/") and not nom.endswith("/"):

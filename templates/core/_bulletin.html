@@ -3,8 +3,8 @@
     <header class="bulletin-entete">
         <div class="bulletin-logo">{% icone "logo" %}</div>
         <div>
-            <h2>Institution Les Nénuphars</h2>
-            <p>Les Cayes, Haïti · Année scolaire {{ annee }}</p>
+            <h2>{{ ecole.nom }}</h2>
+            <p>{{ ecole.ville }}, Haïti · Année scolaire {{ annee }}</p>
         </div>
         <div class="bulletin-titre">Bulletin<br><strong>{{ periode }}</strong></div>
     </header>

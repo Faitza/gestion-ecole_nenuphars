@@ -8,13 +8,14 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
-from django.db import transaction
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from plateforme import ecoles
 
 from . import choices, parents
 from .pagination import paginer
@@ -148,7 +149,7 @@ def preinscription_etape(request, pk):
 
 def _inscrire(dossier):
     """Crée la fiche de l'élève dans la classe demandée, avec la photo du dossier."""
-    with transaction.atomic():
+    with ecoles.atomic():
         eleve = Eleve(
             nom=dossier.nom, prenom=dossier.prenom, date_naissance=dossier.date_naissance, genre=dossier.genre,
             classe=dossier.classe_demandee, nom_parent_tuteur=dossier.nom_parent,

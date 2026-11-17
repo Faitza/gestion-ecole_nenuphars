@@ -1,0 +1,13 @@
+{% extends "plateforme/base.html" %}
+{% block title %}École créée{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h1 style="margin-top:0;font-size:20px">{{ fiche.nom }} est ouverte</h1>
+    <p>Adresse du site : <a href="{{ adresse }}" target="_blank" rel="noopener">{{ adresse }}</a></p>
+    <p>Compte de {{ compte.first_name }} {{ compte.last_name }} (Directrice en chef) :</p>
+    <p>Identifiant : <strong>{{ compte.telephone }}</strong> (son numéro de téléphone)</p>
+    <p>Mot de passe provisoire :<br><span class="pf-secret">{{ mot_de_passe }}</span></p>
+    <ul class="messages"><li class="message warning">Notez ce mot de passe maintenant : il n'est affiché qu'une fois. Il sera changé à la première connexion.</li></ul>
+    <p><a class="btn btn-ok" href="{% url 'plateforme:ecoles' %}">Retour aux écoles</a></p>
+</div>
+{% endblock %}

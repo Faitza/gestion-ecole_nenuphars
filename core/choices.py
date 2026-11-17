@@ -4,6 +4,10 @@
 
 NOM_ECOLE = "Institution Les Nénuphars"
 VILLE_ECOLE = "Les Cayes"
+# Nom en haut du site public, et préfixe des sauvegardes. Avec plusieurs écoles (SaaS),
+# ces quatre valeurs viennent de la fiche de chaque école (plateforme/models.py).
+NOM_COURT_ECOLE = "Les Nénuphars"
+CODE_ECOLE = "nenuphars"
 
 
 def _vers_choix(liste):

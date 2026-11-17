@@ -5,8 +5,8 @@
 {% block header_title %}{% icone "convocation" %} CONVOCATION{% endblock %}
 {% block content %}
 <div class="fiche-acces lettre">
-    <h2>Institution Les Nénuphars</h2>
-    <p class="aide">Les Cayes, le {% now "j F Y" %}</p>
+    <h2>{{ ecole.nom }}</h2>
+    <p class="aide">{{ ecole.ville }}, le {% now "j F Y" %}</p>
     <p>Madame, Monsieur {{ incident.eleve.nom_parent_tuteur }},</p>
     <p>Vous êtes prié(e) de vous présenter à l'école le <strong>{{ incident.convocation_le|date:"l j F Y à G \h i" }}</strong>,
         au bureau de la vie scolaire, au sujet de votre enfant <strong>{{ incident.eleve.prenom }} {{ incident.eleve.nom }}</strong>{% if incident.eleve.classe %} ({{ incident.eleve.classe }}){% endif %}.</p>

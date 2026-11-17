@@ -1,7 +1,6 @@
 # core/management/commands/restaurer_sauvegarde.py
 import json
 
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from core import sauvegardes
@@ -29,8 +28,8 @@ class Command(BaseCommand):
                 "Créez une base neuve et vide (voir docs/production.md), puis relancez.")
 
         if options["essai"]:
-            sauvegardes.restaurer_dans_la_base_du_site(options["fichier"], settings.MEDIA_ROOT)
-            etat = sauvegardes.etat_de_la_base(settings.MEDIA_ROOT)
+            sauvegardes.restaurer_dans_la_base_du_site(options["fichier"], sauvegardes.dossier_media())
+            etat = sauvegardes.etat_de_la_base(sauvegardes.dossier_media())
             with open(options["essai"], "w", encoding="utf-8") as rapport:
                 json.dump(etat, rapport)
             return
@@ -41,7 +40,7 @@ class Command(BaseCommand):
             for probleme in problemes:
                 self.stderr.write(self.style.ERROR(f"✗ {probleme}"))
             raise CommandError("Cette sauvegarde ne se restaure pas entièrement : choisissez-en une autre.")
-        sauvegardes.restaurer_dans_la_base_du_site(options["fichier"], settings.MEDIA_ROOT)
+        sauvegardes.restaurer_dans_la_base_du_site(options["fichier"], sauvegardes.dossier_media())
         self.stdout.write(self.style.SUCCESS(
             f"✓ Sauvegarde du {contenu['cree_le']} restaurée, avec {len(contenu['fichiers'])} fichiers. "
             "Les comptes et mots de passe sont ceux du jour de la sauvegarde."))

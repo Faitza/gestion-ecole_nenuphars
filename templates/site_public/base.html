@@ -18,7 +18,7 @@
 <header class="pnav">
     <a class="logo" href="{% url 'site:accueil' %}">
         <svg width="36" height="36" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="var(--leaf-soft)"/><path d="M17 8c3 4 3 9 0 13-3-4-3-9 0-13z" fill="var(--lily)"/><path d="M9 14c4 1 7 4 8 7-4 0-7-3-8-7zM25 14c-4 1-7 4-8 7 4 0 7-3 8-7z" fill="var(--lily)" opacity=".7"/><path d="M7 23c6 3 14 3 20 0" stroke="var(--leaf)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        <span>Les Nénuphars<small>Institution · {{ site.VILLE }}</small></span>
+        <span>{{ ecole.nom_affiche }}<small>{% if ecole.sur_titre %}{{ ecole.sur_titre }} · {% endif %}{{ site.VILLE }}</small></span>
     </a>
     {% with nom=request.resolver_match.url_name %}
     <nav aria-label="Pages du site">

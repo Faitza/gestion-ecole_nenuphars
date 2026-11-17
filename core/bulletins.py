@@ -10,9 +10,10 @@
 # deux élèves à égalité ont le même rang.
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
+
+from plateforme import ecoles
 
 from . import choices
 from .models import Absence, Bulletin, Cours, Note
@@ -118,9 +119,13 @@ def enregistrer_remarques(classe, periode, annee, remarques):
         bulletin.save()
 
 
-@transaction.atomic
 def valider(classe, periode, annee, par):
     """Fige le bulletin de chaque élève de la classe et le publie aux parents."""
+    with ecoles.atomic():
+        return _valider(classe, periode, annee, par)
+
+
+def _valider(classe, periode, annee, par):
     from . import notifications
 
     existants = brouillons(classe, periode, annee)

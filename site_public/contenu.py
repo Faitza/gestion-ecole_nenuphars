@@ -61,3 +61,26 @@ SECTIONS = {
                  "au Nouveau Secondaire et jusqu'aux examens officiels.",
     },
 }
+
+# Textes des sections pour les autres écoles de la plateforme (SaaS), sans détail propre aux Nénuphars
+SECTIONS_GENERIQUES = {
+    choices.SECTION_KINDERGARTEN: {
+        "niveaux": "1re à 3e année Kinder",
+        "texte": "Éveil, langage, jeux et premières lettres pour les tout-petits.",
+    },
+    choices.SECTION_PRIMAIRE: {
+        "niveaux": "1re à 6e année fondamentale",
+        "texte": "Lecture, écriture et calcul en français et en créole, sciences et éducation civique.",
+    },
+    choices.SECTION_SECONDAIRE: {
+        "niveaux": "7e année fondamentale à NSIV",
+        "texte": "Un professeur par matière, du 3e cycle fondamental au Nouveau Secondaire et jusqu'aux "
+                 "examens officiels.",
+    },
+}
+
+
+def du_site():
+    """Les textes du site public de l'école en cours : ce fichier, ou la fiche de l'école (SaaS)."""
+    from plateforme import ecoles
+    return ecoles.courante().contenu_site()
