@@ -1,0 +1,10 @@
+{% extends "plateforme/base.html" %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h1 style="margin-top:0">{{ ecole.nom }}</h1>
+    <p class="pf-aide">Chaque école a sa propre adresse, par exemple <strong>votre-ecole.{{ request.get_host }}</strong>.
+        Les parents, les professeurs et le personnel se connectent à l'adresse de leur école.</p>
+    <p><a class="btn btn-ok" href="{% url 'plateforme:connexion' %}">Espace administrateur de la plateforme</a></p>
+</div>
+{% endblock %}

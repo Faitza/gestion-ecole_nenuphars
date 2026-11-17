@@ -62,6 +62,23 @@ ALLOWED_HOSTS = _env_liste("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1" if DEBU
 CSRF_TRUSTED_ORIGINS = _env_liste("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 
+# ─────────────────────────────────────────────────────────────
+# Plusieurs écoles (SaaS). Avec SAAS_DOMAINE=ecoles.ht par exemple :
+#   ecoles.ht                → la plateforme (liste des écoles, création d'une école)
+#   nenuphars.ecoles.ht      → l'école « nenuphars », avec sa propre base de données
+# Sans SAAS_DOMAINE, le site sert une seule école, comme avant (voir plateforme/ecoles.py).
+# ─────────────────────────────────────────────────────────────
+SAAS_DOMAINE = (os.environ.get("SAAS_DOMAINE") or "").strip().lower().lstrip(".")
+SAAS_NOM = os.environ.get("SAAS_NOM") or "Gestion d'école"
+# Bases SQLite des écoles (avec PostgreSQL ou MySQL, chaque école a sa base sur le même serveur)
+DOSSIER_BASES_ECOLES = Path(os.environ.get("DJANGO_DOSSIER_BASES_ECOLES") or BASE_DIR / "bases_ecoles")
+if SAAS_DOMAINE:
+    # La plateforme et toutes ses sous-adresses
+    ALLOWED_HOSTS += [SAAS_DOMAINE, "." + SAAS_DOMAINE]
+    _schema = "http" if DEBUG else "https"
+    CSRF_TRUSTED_ORIGINS += [f"{_schema}://{SAAS_DOMAINE}", f"{_schema}://*.{SAAS_DOMAINE}"]
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -73,6 +90,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'site_public',
+    'plateforme',
 ]
 
 AUTH_USER_MODEL = 'core.Utilisateur'
@@ -97,6 +115,8 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     # Fichiers statiques compressés et gardés en mémoire par le navigateur
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    # L'école est reconnue à l'adresse avant tout le reste (session, compte, limites)
+    'plateforme.middleware.EcoleMiddleware',
     # Envoi trop lourd refusé avant d'être lu
     'core.protection.TailleEnvoiMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -124,6 +144,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.acces',
                 'site_public.context_processors.site',
+                'plateforme.context_processors.ecole',
             ],
         },
     },
@@ -167,6 +188,9 @@ else:
         }
     }
 
+# Chaque requête part vers la base de l'école de l'adresse (plateforme/routeur.py)
+DATABASE_ROUTERS = ['plateforme.routeur.RouteurEcoles']
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
@@ -208,7 +232,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # En production, WhiteNoise sert les fichiers statiques compressés (gzip et brotli) avec un
 # nom qui change à chaque modification : le navigateur peut les garder un an sans risque.
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    # Un dossier de photos par école (plateforme/stockage.py)
+    "default": {"BACKEND": "plateforme.stockage.StockageParEcole"},
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG
         else "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -280,6 +305,8 @@ else:
 EN_TEST = len(sys.argv) > 1 and sys.argv[1] == "test"
 if EN_TEST:
     _cache = {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+# Chaque école a ses propres clés : compteurs de requêtes, sections du site public...
+_cache["KEY_FUNCTION"] = "plateforme.ecoles.cle_cache"
 CACHES = {"default": _cache}
 # Durée pendant laquelle le site public garde en mémoire les sections et leurs classes
 # (oubliées aussitôt qu'une classe change). Rien n'est gardé pendant les tests.

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Institution Les Nénuphars{% endblock %}</title>
+    <title>{% block title %}{{ ecole.nom }}{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icones/favicon-32.png' %}">
     <link rel="apple-touch-icon" href="{% static 'icones/apple-touch-icon.png' %}">
@@ -16,8 +16,8 @@
     <aside class="sidebar">
         <div class="brand">
             <div class="logo">{% icone "logo" %}</div>
-            <h2>LES NÉNUPHARS</h2>
-            <span>Les Cayes</span>
+            <h2>{{ ecole.nom_affiche|upper }}</h2>
+            <span>{{ ecole.ville }}</span>
         </div>
         <nav>
             {% with nom=request.resolver_match.url_name %}
@@ -67,7 +67,7 @@
                     {% if "bienvenue" in message.tags %}
                         {# Message de bienvenue après la connexion, dans une petite fenêtre #}
                         <dialog class="bienvenue" id="bienvenue">
-                            <div class="bienvenue-titre">{% icone "logo" %} Institution Les Nénuphars</div>
+                            <div class="bienvenue-titre">{% icone "logo" %} {{ ecole.nom }}</div>
                             <div class="bienvenue-corps">{% icone "info" "bienvenue-icone" %}<p>{{ message|linebreaksbr }}</p></div>
                             <form method="dialog" class="bienvenue-pied"><button class="btn btn-ok" autofocus>OK</button></form>
                         </dialog>

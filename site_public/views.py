@@ -31,7 +31,7 @@ def _sections():
     for section, classes in par_section(Classe.objects.select_related("section")):
         if section is None:
             continue
-        textes = contenu.SECTIONS.get(section.nom, {})
+        textes = contenu.du_site().SECTIONS.get(section.nom, {})
         resultat.append({"section": section, "classes": classes, **textes})
     cache.set(CLE_SECTIONS, resultat, settings.DUREE_MEMOIRE_SITE_PUBLIC)
     return resultat
@@ -63,7 +63,7 @@ def ecole(request):
         personnes.setdefault(employe.poste, employe)
     organisation = [
         {"titre": titre, "perimetre": perimetre, "personne": personnes.get(poste),
-         "texte": texte or contenu.SECTIONS.get(perimetre, {}).get("niveaux", "")}
+         "texte": texte or contenu.du_site().SECTIONS.get(perimetre, {}).get("niveaux", "")}
         for poste, titre, perimetre, texte in ORGANISATION
     ]
     return render(request, "site_public/ecole.html", {"organisation": organisation})

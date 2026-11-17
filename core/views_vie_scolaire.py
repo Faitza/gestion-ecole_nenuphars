@@ -10,12 +10,13 @@ from datetime import date as Date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from plateforme import ecoles
 
 from . import choices, notifications
 from .classes import dans_l_ordre
@@ -88,7 +89,7 @@ def appel(request, pk):
 
     if request.method == "POST":
         compte = {choices.PRESENT: 0, choices.RETARD: 0, choices.ABSENCE: 0}
-        with transaction.atomic():
+        with ecoles.atomic():
             for eleve in eleves:
                 statut = request.POST.get(f"e{eleve.pk}", choices.PRESENT)
                 if statut not in compte:
@@ -211,7 +212,7 @@ def incident_fiche(request, pk):
                          if incident.informer_parents else "Suite enregistrée. Les parents ne sont pas informés.")
         return redirect("core:incident_fiche", pk=incident.pk)
     autres = Incident.objects.filter(eleve=incident.eleve).exclude(pk=incident.pk)[:5]
-    message = f"Institution Les Nénuphars : au sujet de {incident.eleve.prenom} {incident.eleve.nom}. {incident.description}"
+    message = f"{ecoles.courante().nom} : au sujet de {incident.eleve.prenom} {incident.eleve.nom}. {incident.description}"
     if incident.sanction:
         message += f" Suite donnée : {incident.sanction}."
     if incident.convocation_le:
@@ -269,7 +270,7 @@ def sante_nouvelle(request):
 def sante_fiche(request, pk):
     alerte = get_object_or_404(_alertes_visibles(request.user), pk=pk)
     eleve = alerte.eleve
-    message = (f"Institution Les Nénuphars : {eleve.prenom} {eleve.nom} est malade à l'école. "
+    message = (f"{ecoles.courante().nom} : {eleve.prenom} {eleve.nom} est malade à l'école. "
                f"{alerte.description} Ce que fait l'école : {alerte.mesure}.")
     return render(request, "core/sante_fiche.html", {
         "alerte": alerte,

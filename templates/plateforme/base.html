@@ -1,0 +1,63 @@
+{% load static icones %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>{% block title %}{{ ecole.nom }}{% endblock %} · Plateforme</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'icones/favicon.svg' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/commun.css' %}">
+    <style>
+        body { background: var(--fond-gris-clair); }
+        .pf-entete { background: var(--primaire); color: #fff; display: flex; align-items: center; justify-content: space-between;
+                     gap: 12px; padding: 14px 20px; flex-wrap: wrap; }
+        .pf-entete a { color: #fff; text-decoration: none; }
+        .pf-entete .pf-nom { font-weight: bold; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+        .pf-entete form { margin: 0; }
+        .pf-entete button { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); border-radius: 6px;
+                            padding: 7px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+        .pf-contenu { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+        .pf-titre { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+        .pf-titre h1 { margin: 0; font-size: 22px; color: var(--texte-fonce); }
+        .pf-aide { color: var(--texte-moyen); font-size: 14px; line-height: 1.5; }
+        .pf-etat { display: inline-block; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 4px; }
+        .pf-etat.ouverte { background: #d1fae5; color: #065f46; }
+        .pf-etat.suspendue { background: #fee2e2; color: #991b1b; }
+        .pf-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 18px; }
+        .pf-grille .champ-large { grid-column: 1 / -1; }
+        .form-card { max-width: none; }
+        .form-card h2 { font-size: 16px; margin: 18px 0 12px; color: var(--primaire); }
+        .champ { margin-bottom: 14px; }
+        .champ .aide { font-size: 12px; color: var(--texte-moyen); margin: 4px 0 0; }
+        .champ .erreur { font-size: 12px; color: var(--erreur); margin: 4px 0 0; }
+        .champ-erreur .form-control { border-color: var(--erreur); }
+        .pf-secret { font-family: monospace; font-size: 20px; letter-spacing: 2px; background: var(--primaire-tres-clair);
+                     color: var(--primaire); padding: 10px 14px; border-radius: 6px; display: inline-block; }
+        table.pf-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table.pf-table th, table.pf-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--fond-gris); vertical-align: middle; }
+        table.pf-table th { font-size: 12px; color: var(--texte-moyen); text-transform: uppercase; letter-spacing: .04em; }
+        table.pf-table td form { display: inline; margin: 0; }
+        table.pf-table .btn-sm { border: 0; cursor: pointer; font-family: inherit; }
+        @media (max-width: 640px) {
+            table.pf-table thead { display: none; }
+            table.pf-table tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--fond-gris); }
+            table.pf-table td { display: block; border: 0; padding: 3px 0; }
+        }
+    </style>
+</head>
+<body>
+<header class="pf-entete">
+    <a class="pf-nom" href="{% url 'plateforme:accueil' %}">{% icone "logo" %} {{ ecole.nom }}</a>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'plateforme:deconnexion' %}">{% csrf_token %}<button type="submit">Se déconnecter</button></form>
+    {% endif %}
+</header>
+<main class="pf-contenu">
+    {% if messages %}<ul class="messages">{% for m in messages %}<li class="message {{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+    {% block content %}{% endblock %}
+</main>
+<script src="{% static 'js/chargement.js' %}" defer></script>
+</body>
+</html>

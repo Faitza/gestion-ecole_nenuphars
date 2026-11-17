@@ -7,6 +7,8 @@ from datetime import date, timedelta
 
 from django.utils import timezone
 
+from plateforme import ecoles
+
 JOURS_D_AVANCE = 7
 
 NAISSANCE = "naissance"
@@ -132,7 +134,7 @@ def message_de_bienvenue(user):
     lignes = [f"Bienvenue, {prenom} !", f"Nous sommes le {date_format(aujourd_hui(), 'l j F Y')}."]
     if c_est_sa_fete(fiche_de(user)):
         lignes[0] = f"Joyeux anniversaire, {prenom} !"
-        lignes.insert(1, "Toute l'équipe des Nénuphars vous souhaite une belle journée.")
+        lignes.insert(1, f"Toute {ecoles.courante().equipe} vous souhaite une belle journée.")
     fetes = [e for e in anniversaires_du_jour(personnel_visible(user)) if e.personne != fiche_de(user)]
     if fetes:
         noms = [f"{e.personne.prenom} {e.personne.nom}" for e in fetes]

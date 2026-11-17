@@ -11,13 +11,14 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.db import transaction
 from django.db.models import Count, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from plateforme import ecoles
 
 from . import bulletins as calcul_bulletins
 from . import choices, notifications, parents
@@ -93,7 +94,7 @@ def inscription_mot_de_passe(request):
 
     if form.is_bound:
         if form.is_valid():
-            with transaction.atomic():
+            with ecoles.atomic():
                 # Deux clics sur « Créer mon compte » ne créent qu'un compte
                 parent = Parent.objects.select_for_update().filter(pk=parent.pk, utilisateur__isnull=True).first()
                 if parent is None:

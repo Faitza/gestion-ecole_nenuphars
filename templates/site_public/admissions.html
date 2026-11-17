@@ -4,7 +4,7 @@
 {% block content %}
 <section class="page-titre">
     <p class="kick">Admissions {{ annee }}</p>
-    <h1>Inscrire votre enfant aux Nénuphars</h1>
+    <h1>Inscrire votre enfant {{ ecole.chez }}</h1>
     <p class="chapo">La préinscription se fait en ligne, depuis un téléphone, ou au secrétariat de l'école.</p>
     <div class="cta"><a class="btn btn-lily" href="{% url 'site:preinscription' %}">{% icone "inscrire" %} Préinscrire mon enfant</a></div>
 </section>

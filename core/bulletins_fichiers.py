@@ -16,7 +16,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from xml.sax.saxutils import escape
 
-from . import choices
+from plateforme import ecoles
+
 
 BLEU = colors.HexColor("#1e3a8a")
 VIOLET = colors.HexColor("#7c3aed")
@@ -58,9 +59,9 @@ def _entete(periode, annee):
         canvas.rect(0, hauteur - 32 * mm, largeur, 32 * mm, stroke=0, fill=1)
         canvas.setFillColor(colors.white)
         canvas.setFont("Helvetica-Bold", 19)
-        canvas.drawString(18 * mm, hauteur - 15 * mm, choices.NOM_ECOLE)
+        canvas.drawString(18 * mm, hauteur - 15 * mm, ecoles.courante().nom)
         canvas.setFont("Helvetica", 10)
-        canvas.drawString(18 * mm, hauteur - 22 * mm, f"{choices.VILLE_ECOLE}, Haïti · Année scolaire {annee}")
+        canvas.drawString(18 * mm, hauteur - 22 * mm, f"{ecoles.courante().ville}, Haïti · Année scolaire {annee}")
         canvas.setFont("Helvetica", 9)
         canvas.drawRightString(largeur - 18 * mm, hauteur - 14 * mm, "BULLETIN")
         canvas.setFont("Helvetica-Bold", 14)
@@ -146,7 +147,7 @@ def pdf(fiches, periode, annee):
     tampon = BytesIO()
     document = SimpleDocTemplate(tampon, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm,
                                  topMargin=42 * mm, bottomMargin=16 * mm,
-                                 title=f"Bulletins · {periode} · {annee}", author=choices.NOM_ECOLE)
+                                 title=f"Bulletins · {periode} · {annee}", author=ecoles.courante().nom)
     elements = []
     for i, fiche in enumerate(fiches):
         if i:

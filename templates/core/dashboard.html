@@ -4,7 +4,7 @@
 {% block header_title %}{% icone "tableau-de-bord" %} TABLEAU DE BORD{% endblock %}
 {% block content %}
 {% if ma_fete %}
-<div class="fete">{% icone "gateau" %}<div><strong>Joyeux anniversaire, {{ prenom }} !</strong><br>Toute l'équipe des Nénuphars vous souhaite une belle journée.</div></div>
+<div class="fete">{% icone "gateau" %}<div><strong>Joyeux anniversaire, {{ prenom }} !</strong><br>Toute {{ ecole.equipe }} vous souhaite une belle journée.</div></div>
 {% endif %}
 <div class="salutation">
     <h2>Bonjour, {{ prenom }}</h2>

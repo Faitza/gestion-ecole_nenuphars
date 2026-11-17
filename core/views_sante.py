@@ -5,9 +5,11 @@
 import logging
 
 from django.core.cache import cache
-from django.db import connection
+from django.db import connections
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
+
+from plateforme import ecoles
 
 journal = logging.getLogger("nenuphars")
 
@@ -16,7 +18,8 @@ journal = logging.getLogger("nenuphars")
 def sante(request):
     verifications = {}
     try:
-        with connection.cursor() as curseur:
+        # La base de l'école de l'adresse, ou celle de la plateforme
+        with connections[ecoles.alias()].cursor() as curseur:
             curseur.execute("SELECT 1")
         verifications["base_de_donnees"] = "ok"
     except Exception:

@@ -3,10 +3,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+
+from plateforme import ecoles
 
 from . import anniversaires, choices, professeurs
 from .forms import AffectationForm, CoursFormSet, ProfesseurForm
@@ -43,7 +45,7 @@ def professeur_inscrire(request):
         valide = form.is_valid() and (affectation_form.is_valid() if affectation_form else cours_formset.is_valid())
         if valide:
             try:
-                with transaction.atomic():
+                with ecoles.atomic():
                     professeur = form.save(commit=False)
                     professeur.section = section
                     professeur.save()
@@ -124,7 +126,7 @@ def professeur_affecter(request, pk):
     form = AffectationForm(request.POST or None, initial=initial, section=professeur.section, professeur=professeur)
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
-        with transaction.atomic():
+        with ecoles.atomic():
             professeurs.affecter(professeur, d["classe"], d["role"], remplacer=d["a_remplacer"])
         messages.success(request, f"{professeur} est maintenant en {d['classe']}.")
         return redirect("core:professeur_fiche", pk=pk)
@@ -150,7 +152,7 @@ def professeur_cours(request, pk):
     formset = CoursFormSet(request.POST or None, section=professeur.section, professeur=professeur, prefix="cours")
     if request.method == "POST" and formset.is_valid():
         try:
-            with transaction.atomic():
+            with ecoles.atomic():
                 professeurs.ajouter_cours(professeur, formset.lignes())
         except IntegrityError:
             messages.error(request, "Un de ces horaires vient d'être pris. Vérifiez et recommencez.")

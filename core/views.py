@@ -3,10 +3,12 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.db.models import Count, Sum, Q
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+
+from plateforme import ecoles
 
 from .models import (Absence, Classe, Eleve, Employe, Incident, MessageContact, Note, Paiement, Preinscription,
                      Professeur)
@@ -309,7 +311,7 @@ def paiement_creer(request):
             paiement = form.save(commit=False)
             paiement.jeton = jeton
             try:
-                with transaction.atomic():
+                with ecoles.atomic():
                     paiement.save()
             except IntegrityError:
                 # Les deux envois sont arrivés en même temps : le premier a été enregistré

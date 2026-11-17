@@ -5,7 +5,7 @@
 {% block header_title %}{% icone "cle" %} ACCÈS PARENT{% endblock %}
 {% block content %}
 <div class="fiche-acces">
-    <h2>Institution Les Nénuphars</h2>
+    <h2>{{ ecole.nom }}</h2>
     <p><strong>{{ parent.nom }}</strong><br>
         {% for e in enfants %}{{ e.prenom }} {{ e.nom }}{% if e.classe %} ({{ e.classe }}){% endif %}{% if not forloop.last %}, {% endif %}{% empty %}Aucun enfant relié{% endfor %}</p>
     {% if parent.utilisateur_id %}

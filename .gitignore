@@ -21,3 +21,4 @@ staticfiles/
 logs/
 .cache/
 sauvegardes/
+bases_ecoles/

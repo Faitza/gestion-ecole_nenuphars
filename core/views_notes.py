@@ -7,11 +7,12 @@ from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.text import slugify
+
+from plateforme import ecoles
 
 from . import choices, professeurs
 from . import notes as outils_notes
@@ -86,7 +87,7 @@ def saisie_notes(request):
 
         if request.method == "POST" and not erreurs:
             nb = 0
-            with transaction.atomic():
+            with ecoles.atomic():
                 for ligne in lignes:
                     note, nouvelle = ligne["note"], ligne["nouvelle"]
                     if nouvelle is None:
